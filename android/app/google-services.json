@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "136794753205",
+    "project_id": "kitab-mandi",
+    "storage_bucket": "kitab-mandi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:136794753205:android:f2a4ea411fd2ef17e316fc",
+        "android_client_info": {
+          "package_name": "com.appvora.kitabmandi"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "136794753205-phl6jpg0k79rvntcs3qt5lb1qlj2491v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.appvora.kitabmandi",
+            "certificate_hash": "4af51b26670af808f36b5709c4eea81941f1c4ab"
+          }
+        },
+        {
+          "client_id": "136794753205-210rggct227ahdu5t70ckn30rejonctk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDInW_AkHCMhKsF6OcavbZMHOvZI6oaREM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "136794753205-210rggct227ahdu5t70ckn30rejonctk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
