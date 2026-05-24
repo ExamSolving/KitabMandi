@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>136794753205-5vam4sf1gun8att02luv8obvddu3kgvd.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.136794753205-5vam4sf1gun8att02luv8obvddu3kgvd</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>136794753205-3k84ga3t2eha4q399upmukupl1p74cg7.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBHfMoubPJXIMqleGxsXjMgT5TqDu-IOu0</string>
+	<key>GCM_SENDER_ID</key>
+	<string>136794753205</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.appvora.kitabmandi</string>
+	<key>PROJECT_ID</key>
+	<string>kitab-mandi</string>
+	<key>STORAGE_BUCKET</key>
+	<string>kitab-mandi.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:136794753205:ios:7bc55409db34b7f6e316fc</string>
+</dict>
+</plist>

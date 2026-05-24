@@ -7,8 +7,8 @@ class DefaultFirebaseOptions {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
-      // case TargetPlatform.iOS:
-      //   return ios;
+      case TargetPlatform.iOS:
+        return ios;
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions are not supported for this platform.',
@@ -24,13 +24,14 @@ class DefaultFirebaseOptions {
     storageBucket: 'kitab-mandi.firebasestorage.app',
   );
 
-  // static const FirebaseOptions ios = FirebaseOptions(
-  //   apiKey: 'YOUR_API_KEY',
-  //   appId: 'YOUR_APP_ID',
-  //   messagingSenderId: 'YOUR_SENDER_ID',
-  //   projectId: 'YOUR_PROJECT_ID',
-  //   storageBucket: 'YOUR_STORAGE_BUCKET',
-  //   iosClientId: 'YOUR_IOS_CLIENT_ID',
-  //   iosBundleId: 'YOUR_BUNDLE_ID',
-  // );
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyBHfMoubPJXIMqleGxsXjMgT5TqDu-IOu0',
+    appId: '1:136794753205:ios:7bc55409db34b7f6e316fc',
+    messagingSenderId: '136794753205',
+    projectId: 'kitab-mandi',
+    storageBucket: 'kitab-mandi.firebasestorage.app',
+    iosClientId:
+        '136794753205-5vam4sf1gun8att02luv8obvddu3kgvd.apps.googleusercontent.com',
+    iosBundleId: 'com.appvora.kitabmandi',
+  );
 }

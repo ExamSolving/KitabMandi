@@ -18,8 +18,15 @@ class HomeView extends StatelessWidget {
   final List<Map<String, dynamic>> categories = [
     {
       "icon": Icons.menu_book_rounded,
-      "title": "Books",
+      "title": "Collage",
+      "subtitle": "Books",
       "color": const Color(0xFF7CFFB2),
+    },
+    {
+      "icon": Icons.library_books_rounded,
+      "title": "School",
+      "subtitle": "Books",
+      "color": const Color(0xFFFF8E8E),
     },
     {
       "icon": Icons.notes_rounded,
@@ -36,12 +43,6 @@ class HomeView extends StatelessWidget {
       "title": "Competitive",
       "subtitle": "Exams",
       "color": const Color(0xFFFF7AA2),
-    },
-    {
-      "icon": Icons.library_books_rounded,
-      "title": "School",
-      "subtitle": "Books",
-      "color": const Color(0xFFFF8E8E),
     },
   ];
 
@@ -90,7 +91,7 @@ class HomeView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: bgColor,
-      appBar: const LocationAppBar(),
+      appBar: LocationAppBar(),
 
       body: RefreshIndicator(
         onRefresh: () async {
@@ -491,13 +492,13 @@ class HomeView extends StatelessWidget {
                                     textAlign: TextAlign.center,
                                     maxLines: 1,
 
-                                    style: theme.textTheme.bodySmall?.copyWith(
+                                    style: theme.textTheme.bodyMedium?.copyWith(
                                       fontSize: responsiveText(
                                         context,
-                                        mobile: 10,
-                                        tablet: 11,
+                                        mobile: 11,
+                                        tablet: 12.5,
                                       ),
-                                      fontWeight: FontWeight.w500,
+                                      fontWeight: FontWeight.w600,
                                       color: secondaryText,
                                     ),
                                   ),

@@ -362,25 +362,51 @@ class HelpSupportShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return ListView.builder(
       padding: const EdgeInsets.all(16),
-      children: List.generate(
-        8,
-        (index) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+      itemCount: 8,
+
+      itemBuilder: (_, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+
           child: Shimmer.fromColors(
-            baseColor: Colors.grey.shade300,
-            highlightColor: Colors.grey.shade100,
+            baseColor: isDark ? const Color(0xFF1E2430) : Colors.grey.shade300,
+
+            highlightColor: isDark
+                ? const Color(0xFF2A3140)
+                : Colors.grey.shade100,
+
             child: Container(
-              height: 60,
+              height: 68,
+
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                color: isDark ? const Color(0xFF171B22) : Colors.white,
+
+                borderRadius: BorderRadius.circular(18),
+
+                border: Border.all(
+                  color: isDark ? Colors.white10 : Colors.black12,
+                ),
+
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? Colors.black.withOpacity(0.25)
+                        : Colors.black.withOpacity(0.04),
+
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

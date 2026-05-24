@@ -302,21 +302,51 @@ class _ShimmerList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: 6,
-      itemBuilder: (_, __) => Shimmer.fromColors(
-        baseColor: Colors.grey.shade300,
-        highlightColor: Colors.grey.shade100,
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 14),
-          height: 100,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+
+      itemBuilder: (_, __) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+
+          child: Shimmer.fromColors(
+            baseColor: isDark ? const Color(0xFF1E2430) : Colors.grey.shade300,
+
+            highlightColor: isDark
+                ? const Color(0xFF2A3140)
+                : Colors.grey.shade100,
+
+            child: Container(
+              height: 100,
+
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF171B22) : Colors.white,
+
+                borderRadius: BorderRadius.circular(20),
+
+                border: Border.all(
+                  color: isDark ? Colors.white10 : Colors.black12,
+                ),
+
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? Colors.black.withOpacity(0.25)
+                        : Colors.black.withOpacity(0.04),
+
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -595,30 +625,88 @@ class _ChatTileShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
+
       child: Shimmer.fromColors(
-        baseColor: Colors.grey.shade300,
-        highlightColor: Colors.grey.shade100,
-        child: Row(
-          children: [
-            /// Avatar shimmer
-            const CircleAvatar(radius: 26, backgroundColor: Colors.white),
+        baseColor: isDark ? const Color(0xFF1E2430) : Colors.grey.shade300,
 
-            const SizedBox(width: 12),
+        highlightColor: isDark ? const Color(0xFF2A3140) : Colors.grey.shade100,
 
-            /// Text shimmer
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(height: 10, width: 120, color: Colors.white),
-                  const SizedBox(height: 8),
-                  Container(height: 10, width: 200, color: Colors.white),
-                ],
+        child: Container(
+          padding: const EdgeInsets.all(14),
+
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF171B22) : Colors.white,
+
+            borderRadius: BorderRadius.circular(20),
+
+            border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withOpacity(0.25)
+                    : Colors.black.withOpacity(0.04),
+
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-            ),
-          ],
+            ],
+          ),
+
+          child: Row(
+            children: [
+              /// Avatar shimmer
+              Container(
+                width: 52,
+                height: 52,
+
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isDark ? const Color(0xFF2A3140) : Colors.white,
+                ),
+              ),
+
+              const SizedBox(width: 14),
+
+              /// Text shimmer
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+
+                  children: [
+                    Container(
+                      height: 12,
+                      width: 120,
+
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF2A3140) : Colors.white,
+
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Container(
+                      height: 10,
+                      width: 200,
+
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF2A3140) : Colors.white,
+
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -49,33 +49,45 @@ class LocationAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Row(
         children: [
           Icon(Icons.location_on, color: theme.colorScheme.primary, size: 20),
+
           const SizedBox(width: 8),
 
-          Obx(() {
-            final location = _getDisplayLocation(controller);
+          /// FIXED OVERFLOW
+          Expanded(
+            child: Obx(() {
+              final location = _getDisplayLocation(controller);
 
-            return GestureDetector(
-              onTap: () => _openLocationSheet(context),
-              child: Row(
-                children: [
-                  Text(
-                    location,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: theme.textTheme.bodyLarge?.color,
+              return GestureDetector(
+                onTap: () => _openLocationSheet(context),
+
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        location,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: theme.textTheme.bodyLarge?.color,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 2),
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 18,
-                    color: theme.iconTheme.color,
-                  ),
-                ],
-              ),
-            );
-          }),
+
+                    const SizedBox(width: 2),
+
+                    Icon(
+                      Icons.keyboard_arrow_down,
+                      size: 18,
+                      color: theme.iconTheme.color,
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ),
         ],
       ),
 
