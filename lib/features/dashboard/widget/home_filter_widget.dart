@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kitab_mandi/core/constants/app_color.dart';
 import 'package:kitab_mandi/core/controller/filter_controller.dart';
 import 'package:kitab_mandi/features/dashboard/controller/home_controller.dart';
 
@@ -10,7 +11,7 @@ class FilterScreen extends StatelessWidget {
 
   final categories = [
     {
-      "title": "Books",
+      "title": "Collage Books",
       "icon": Icons.menu_book_rounded,
       "color": const Color(0xFF7CFFB2),
     },
@@ -74,6 +75,11 @@ class FilterScreen extends StatelessWidget {
     return mobile;
   }
 
+  Color _appBarBg(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark ? const Color(0xFF1A1D23) : const Color(0xFFFFFFFF);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -102,7 +108,7 @@ class FilterScreen extends StatelessWidget {
       appBar: AppBar(
         elevation: 0,
         centerTitle: true,
-        backgroundColor: bgColor,
+        backgroundColor: _appBarBg(context),
 
         // leading: IconButton(
         //   onPressed: () => Get.back(),
@@ -130,7 +136,7 @@ class FilterScreen extends StatelessWidget {
               "Reset",
 
               style: TextStyle(
-                color: Colors.green.shade300,
+                color: AppColors.secondaryDark,
                 fontWeight: FontWeight.w600,
                 fontSize: responsiveText(context, mobile: 13, tablet: 14),
               ),
@@ -148,7 +154,7 @@ class FilterScreen extends StatelessWidget {
 
                 padding: const EdgeInsets.symmetric(
                   horizontal: 18,
-                  vertical: 6,
+                  vertical: 15,
                 ),
 
                 child: Column(
@@ -597,7 +603,7 @@ class FilterScreen extends StatelessWidget {
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     elevation: 0,
-                    backgroundColor: const Color(0xFF5DD65D),
+                    backgroundColor: AppColors.secondaryDark,
 
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),

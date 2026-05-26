@@ -16,6 +16,10 @@ class ChatView extends StatelessWidget {
       Theme.of(context).brightness == Brightness.dark
       ? const Color(0xFF121212)
       : Colors.white;
+  Color _appBarBg(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark ? const Color(0xFF1A1D23) : const Color(0xFFFFFFFF);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +29,7 @@ class ChatView extends StatelessWidget {
         backgroundColor: _bg(context),
         appBar: AppBar(
           elevation: 0,
-          backgroundColor: _bg(context),
+          backgroundColor: _appBarBg(context),
           title: const Text(
             "Chats",
             style: TextStyle(fontWeight: FontWeight.w600),
@@ -385,13 +389,18 @@ class UsersListView extends StatelessWidget {
     required this.title,
   });
 
+  Color _appBarBg(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark ? const Color(0xFF1A1D23) : const Color(0xFFFFFFFF);
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<ChatController>();
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(title: Text(title), backgroundColor: _appBarBg(context)),
       body: StreamBuilder<QuerySnapshot>(
         stream: controller.getUsersForListing(listingId),
         builder: (context, snapshot) {

@@ -35,6 +35,11 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     });
   }
 
+  Color _appBarBg(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark ? const Color(0xFF1A1D23) : const Color(0xFFFFFFFF);
+  }
+
   @override
   Widget build(BuildContext context) {
     final chatId = args['chatId'];
@@ -52,7 +57,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       backgroundColor: bgColor,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: isDark ? const Color(0xFF1A1D23) : Colors.white,
+        backgroundColor: _appBarBg(context),
         title: Text(
           args['userName'] ?? "Chat",
           style: const TextStyle(fontWeight: FontWeight.w600),

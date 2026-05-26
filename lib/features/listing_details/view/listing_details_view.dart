@@ -329,7 +329,7 @@ class _ListingDetailsViewState extends State<ListingDetailsView> {
                   Expanded(
                     child: AppButton(
                       backgroundColor: AppColors.secondaryDark,
-                      text: "Chat",
+                      text: "Chat Seller",
                       onPressed: () async {
                         await chatController.startChat(widget.listing);
                       },
@@ -341,7 +341,7 @@ class _ListingDetailsViewState extends State<ListingDetailsView> {
                   // 📞 CALL
                   Expanded(
                     child: AppButton(
-                      text: "Call",
+                      text: "Call Seller",
                       backgroundColor: Colors.green,
                       onPressed: () {
                         controller.makePhoneCall(
