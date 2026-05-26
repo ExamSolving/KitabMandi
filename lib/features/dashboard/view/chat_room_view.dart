@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -13,219 +15,227 @@ class ChatRoomView extends StatefulWidget {
 
 class _ChatRoomViewState extends State<ChatRoomView> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final currentUser = FirebaseAuth.instance.currentUser;
+  final _currentUser = FirebaseAuth.instance.currentUser;
+  final _messageController = TextEditingController();
+  final _scrollController = ScrollController();
+  final _focusNode = FocusNode();
 
-  final args = Get.arguments;
-  final TextEditingController messageController = TextEditingController();
+  late final Map<String, dynamic> _args;
+  late final String _chatId;
 
-  bool _isMarking = false;
-  bool _isInitialLoading = true;
+  bool _isSending = false;
+  bool _isMarkingInProgress = false;
+
+  // Debounce timer to batch seen-marking calls
+  Timer? _seenDebounce;
 
   @override
   void initState() {
     super.initState();
+    _args = Get.arguments as Map<String, dynamic>;
+    _chatId = _args['chatId'] as String;
 
-    /// ⏱ Controlled loader (prevents flicker)
-    Future.delayed(const Duration(milliseconds: 400), () {
-      if (mounted) {
-        setState(() {
-          _isInitialLoading = false;
-        });
+    // Reset unread count immediately on open
+    _resetUnreadCount();
+
+    // Scroll to bottom when keyboard opens
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus) {
+        _scrollToBottom(animated: true);
       }
     });
   }
 
-  Color _appBarBg(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return isDark ? const Color(0xFF1A1D23) : const Color(0xFFFFFFFF);
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    _focusNode.dispose();
+    _seenDebounce?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _resetUnreadCount() async {
+    try {
+      await _firestore.collection('chats').doc(_chatId).update({
+        'unreadCount': 0,
+      });
+    } catch (_) {}
+  }
+
+  void _scrollToBottom({bool animated = false}) {
+    if (!_scrollController.hasClients) return;
+    final maxExtent = _scrollController.position.maxScrollExtent;
+    if (animated) {
+      _scrollController.animateTo(
+        maxExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    } else {
+      _scrollController.jumpTo(maxExtent);
+    }
+  }
+
+  Future<void> _sendMessage() async {
+    final text = _messageController.text.trim();
+    if (text.isEmpty || _isSending) return;
+
+    setState(() => _isSending = true);
+    _messageController.clear();
+
+    try {
+      final batch = _firestore.batch();
+
+      final msgRef = _firestore
+          .collection('chats')
+          .doc(_chatId)
+          .collection('messages')
+          .doc();
+
+      batch.set(msgRef, {
+        "senderId": _currentUser!.uid,
+        "message": text,
+        "timestamp": FieldValue.serverTimestamp(),
+        "isSeen": false,
+      });
+
+      final chatRef = _firestore.collection('chats').doc(_chatId);
+      batch.update(chatRef, {
+        "lastMessage": text,
+        "lastSenderId": _currentUser.uid,
+        "isSeen": false,
+        "lastMessageTime": FieldValue.serverTimestamp(),
+        "unreadCount": FieldValue.increment(1),
+      });
+
+      await batch.commit();
+
+      // Scroll to bottom after send
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToBottom(animated: true);
+      });
+    } catch (e) {
+      // Restore text on failure
+      _messageController.text = text;
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Failed to send message")));
+      }
+    } finally {
+      if (mounted) setState(() => _isSending = false);
+    }
+  }
+
+  /// Debounced mark-as-seen to avoid repeated Firestore writes
+  void _scheduleMarkAsSeen(List<QueryDocumentSnapshot> messages) {
+    _seenDebounce?.cancel();
+    _seenDebounce = Timer(const Duration(milliseconds: 500), () {
+      _markMessagesAsSeen(messages);
+    });
+  }
+
+  Future<void> _markMessagesAsSeen(List<QueryDocumentSnapshot> messages) async {
+    if (_isMarkingInProgress) return;
+    _isMarkingInProgress = true;
+
+    try {
+      final unseenFromOther = messages.where((msg) {
+        final data = msg.data() as Map<String, dynamic>;
+        return data['senderId'] != _currentUser!.uid &&
+            (data['isSeen'] == false);
+      }).toList();
+
+      if (unseenFromOther.isEmpty) return;
+
+      final batch = _firestore.batch();
+
+      for (final msg in unseenFromOther) {
+        batch.update(
+          _firestore
+              .collection('chats')
+              .doc(_chatId)
+              .collection('messages')
+              .doc(msg.id),
+          {"isSeen": true},
+        );
+      }
+
+      batch.update(_firestore.collection('chats').doc(_chatId), {
+        "isSeen": true,
+        "unreadCount": 0,
+      });
+
+      await batch.commit();
+    } catch (_) {
+    } finally {
+      _isMarkingInProgress = false;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final chatId = args['chatId'];
-
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final bgColor = isDark ? const Color(0xFF0F1115) : const Color(0xFFF5F7FB);
-
-    final otherMsgColor = isDark
-        ? const Color(0xFF1F2937)
-        : Colors.grey.shade200;
+    final bgColor = isDark ? const Color(0xFF0F1115) : const Color(0xFFF2F4F8);
+    final appBarBg = isDark ? const Color(0xFF1A1D23) : Colors.white;
 
     return Scaffold(
       backgroundColor: bgColor,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: _appBarBg(context),
-        title: Text(
-          args['userName'] ?? "Chat",
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-      ),
+      appBar: _buildAppBar(appBarBg, isDark),
       body: Column(
         children: [
-          /// ================= MESSAGE LIST =================
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore
-                  .collection('chats')
-                  .doc(chatId)
-                  .collection('messages')
-                  .orderBy('timestamp', descending: true)
-                  .snapshots(includeMetadataChanges: true),
-              builder: (context, snapshot) {
-                ///  ERROR
-                if (snapshot.hasError) {
-                  return const Center(child: Text("Something went wrong"));
-                }
+          Expanded(child: _buildMessageList(isDark, theme)),
+          _buildInputBar(isDark),
+        ],
+      ),
+    );
+  }
 
-                ///  INITIAL LOADER (ONLY SHORT TIME)
-                if (_isInitialLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                ///  NO DATA
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final docs = snapshot.data!.docs;
-
-                ///  FILTER VALID MESSAGES
-                final messages = docs.where((doc) {
-                  final data = doc.data() as Map<String, dynamic>;
-                  return data['timestamp'] != null;
-                }).toList();
-
-                /// EMPTY STATE
-                if (messages.isEmpty) {
-                  return const Center(child: Text("Start conversation 👋"));
-                }
-
-                /// MARK AS SEEN
-                Future.microtask(() {
-                  _markMessagesAsSeen(messages, chatId);
-                });
-
-                final grouped = _groupMessagesByDate(messages);
-
-                return AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: ListView.builder(
-                    key: ValueKey(messages.length),
-
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    itemCount: grouped.length,
-                    itemBuilder: (context, index) {
-                      final entry = grouped[index];
-                      final dateLabel = entry['date'];
-                      final msgs = entry['messages'];
-
-                      return Column(
-                        children: [
-                          _dateHeader(dateLabel, isDark),
-                          ...msgs.map((msg) {
-                            final data = msg.data() as Map<String, dynamic>;
-                            final isMe = data['senderId'] == currentUser!.uid;
-
-                            return _messageBubble(
-                              msg: data,
-                              isMe: isMe,
-                              messageId: msg.id,
-                              chatId: chatId,
-                              otherColor: otherMsgColor,
-                              theme: theme,
-                            );
-                          }).toList(),
-                        ],
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
+  PreferredSizeWidget _buildAppBar(Color bg, bool isDark) {
+    return AppBar(
+      elevation: 0,
+      backgroundColor: bg,
+      titleSpacing: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+        onPressed: () => Get.back(),
+      ),
+      title: Row(
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: AppColors.primaryDark.withOpacity(0.15),
+            child: Icon(Icons.person, size: 18, color: AppColors.primaryDark),
           ),
-
-          /// ================= INPUT =================
-          SafeArea(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.4 : 0.05),
-                    blurRadius: 10,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _args['userName'] ?? "Chat",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? const Color(0xFF1A1D23)
-                            : Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: TextField(
-                        controller: messageController,
-                        decoration: const InputDecoration(
-                          hintText: "Type a message...",
-                          border: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                        ),
-                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if ((_args['listingTitle'] ?? "").isNotEmpty)
+                  Text(
+                    _args['listingTitle'],
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? Colors.white54 : Colors.black45,
+                      fontWeight: FontWeight.normal,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () async {
-                      if (messageController.text.trim().isEmpty) return;
-
-                      final text = messageController.text.trim();
-
-                      await _firestore
-                          .collection('chats')
-                          .doc(chatId)
-                          .collection('messages')
-                          .add({
-                            "senderId": currentUser!.uid,
-                            "message": text,
-                            "timestamp": FieldValue.serverTimestamp(),
-                            "isSeen": false,
-                          });
-
-                      await _firestore.collection('chats').doc(chatId).update({
-                        "lastMessage": text,
-                        "lastSenderId": currentUser?.uid,
-                        "isSeen": false,
-                        "lastMessageTime": FieldValue.serverTimestamp(),
-                      });
-
-                      messageController.clear();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryDark,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.send,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
           ),
         ],
@@ -233,52 +243,174 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     );
   }
 
-  /// ================= MARK AS SEEN =================
-  void _markMessagesAsSeen(
-    List<QueryDocumentSnapshot> messages,
-    String chatId,
-  ) async {
-    if (_isMarking) return;
+  Widget _buildMessageList(bool isDark, ThemeData theme) {
+    final otherMsgColor = isDark
+        ? const Color(0xFF1F2937)
+        : Colors.grey.shade200;
 
-    _isMarking = true;
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore
+          .collection('chats')
+          .doc(_chatId)
+          .collection('messages')
+          .orderBy('timestamp', descending: false)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Center(child: Text("Something went wrong"));
+        }
 
-    bool shouldMarkChatSeen = false;
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    for (var msg in messages) {
-      final data = msg.data() as Map<String, dynamic>;
+        // Filter out messages with null timestamp (optimistic local writes)
+        final docs = snapshot.data!.docs;
+        final messages = docs.where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return data['timestamp'] != null;
+        }).toList();
 
-      /// If message is from OTHER user → I am receiver
-      if (data['senderId'] != currentUser!.uid && data['isSeen'] == false) {
-        shouldMarkChatSeen = true;
+        if (messages.isEmpty) {
+          return _buildEmptyConversation(isDark);
+        }
 
-        await _firestore
-            .collection('chats')
-            .doc(chatId)
-            .collection('messages')
-            .doc(msg.id)
-            .update({"isSeen": true});
-      }
-    }
+        // Mark unseen messages (debounced)
+        _scheduleMarkAsSeen(messages);
 
-    ///  ONLY update chat if I am RECEIVER
-    if (shouldMarkChatSeen) {
-      await _firestore.collection("chats").doc(chatId).update({"isSeen": true});
-    }
+        // Scroll to bottom on new message
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) {
+            final pos = _scrollController.position;
+            // Auto-scroll only if near bottom (within 200px)
+            if (pos.maxScrollExtent - pos.pixels < 200) {
+              _scrollToBottom(animated: true);
+            }
+          }
+        });
 
-    _isMarking = false;
+        final grouped = _groupMessagesByDate(messages);
+
+        return ListView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          itemCount: grouped.length,
+          itemBuilder: (context, index) {
+            final entry = grouped[index];
+            final dateLabel = entry['date'] as String;
+            final msgs = entry['messages'] as List<QueryDocumentSnapshot>;
+
+            return Column(
+              children: [
+                _DateHeader(label: dateLabel, isDark: isDark),
+                ...msgs.map((msg) {
+                  final data = msg.data() as Map<String, dynamic>;
+                  final isMe = data['senderId'] == _currentUser!.uid;
+                  return _MessageBubble(
+                    msg: data,
+                    isMe: isMe,
+                    otherColor: otherMsgColor,
+                    theme: theme,
+                  );
+                }),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
-  /// ================= GROUP BY DATE =================
+  Widget _buildEmptyConversation(bool isDark) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.waving_hand_rounded,
+            size: 48,
+            color: isDark ? Colors.white24 : Colors.grey.shade300,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "Say hello!",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: isDark ? Colors.white38 : Colors.grey.shade400,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputBar(bool isDark) {
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1A1D23) : Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: Container(
+                constraints: const BoxConstraints(maxHeight: 120),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF0F1115)
+                      : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.08)
+                        : Colors.black.withOpacity(0.06),
+                  ),
+                ),
+                child: TextField(
+                  controller: _messageController,
+                  focusNode: _focusNode,
+                  maxLines: null,
+                  textCapitalization: TextCapitalization.sentences,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: "Type a message...",
+                    hintStyle: TextStyle(
+                      color: isDark ? Colors.white38 : Colors.black38,
+                      fontSize: 15,
+                    ),
+                    border: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onSubmitted: (_) => _sendMessage(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            _SendButton(isSending: _isSending, onTap: _sendMessage),
+          ],
+        ),
+      ),
+    );
+  }
+
   List<Map<String, dynamic>> _groupMessagesByDate(
     List<QueryDocumentSnapshot> messages,
   ) {
-    messages.sort((a, b) {
-      final aTime = (a['timestamp'] as Timestamp?)?.toDate();
-      final bTime = (b['timestamp'] as Timestamp?)?.toDate();
-      if (aTime == null || bTime == null) return 0;
-      return aTime.compareTo(bTime);
-    });
-
     final Map<String, List<QueryDocumentSnapshot>> grouped = {};
     final List<String> order = [];
 
@@ -286,18 +418,19 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       final ts = msg['timestamp'];
       if (ts == null) continue;
 
-      final date = ts.toDate();
+      final date = (ts as Timestamp).toDate();
       final key = _getDateLabel(date);
 
       if (!grouped.containsKey(key)) {
         grouped[key] = [];
         order.add(key);
       }
-
       grouped[key]!.add(msg);
     }
 
-    return order.map((key) => {"date": key, "messages": grouped[key]}).toList();
+    return order
+        .map((key) => {"date": key, "messages": grouped[key]!})
+        .toList();
   }
 
   String _getDateLabel(DateTime date) {
@@ -308,93 +441,157 @@ class _ChatRoomViewState extends State<ChatRoomView> {
 
     if (diff == 0) return "Today";
     if (diff == 1) return "Yesterday";
-    if (diff <= 7) return _weekdayName(date.weekday);
-
+    if (diff <= 6) {
+      const days = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ];
+      return days[date.weekday - 1];
+    }
     return "${date.day}/${date.month}/${date.year}";
   }
+}
 
-  String _weekdayName(int day) {
-    const days = [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-      "Sunday",
-    ];
-    return days[day - 1];
+///////////////////////////////////////////////////////////////
+/// SEND BUTTON
+///////////////////////////////////////////////////////////////
+class _SendButton extends StatelessWidget {
+  final bool isSending;
+  final VoidCallback onTap;
+
+  const _SendButton({required this.isSending, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: isSending ? null : onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          color: isSending
+              ? AppColors.primaryDark.withOpacity(0.6)
+              : AppColors.primaryDark,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryDark.withOpacity(0.35),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: isSending
+            ? const Padding(
+                padding: EdgeInsets.all(13),
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+      ),
+    );
   }
+}
 
-  Widget _dateHeader(String text, bool isDark) {
+///////////////////////////////////////////////////////////////
+/// DATE HEADER
+///////////////////////////////////////////////////////////////
+class _DateHeader extends StatelessWidget {
+  final String label;
+  final bool isDark;
+
+  const _DateHeader({required this.label, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Center(
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
             color: isDark ? Colors.white10 : Colors.grey.shade200,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
-            text,
+            label,
             style: TextStyle(
               fontSize: 12,
-              color: isDark ? Colors.white70 : Colors.black87,
+              fontWeight: FontWeight.w500,
+              color: isDark ? Colors.white60 : Colors.black54,
             ),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget buildTick(bool isMe, bool isSeen) {
-    if (!isMe) return const SizedBox();
+///////////////////////////////////////////////////////////////
+/// MESSAGE BUBBLE
+///////////////////////////////////////////////////////////////
+class _MessageBubble extends StatelessWidget {
+  final Map<String, dynamic> msg;
+  final bool isMe;
+  final Color otherColor;
+  final ThemeData theme;
 
-    return Icon(
-      Icons.done_all,
-      size: 18,
-      color: isSeen ? Colors.blue : Colors.grey,
-    );
-  }
+  const _MessageBubble({
+    required this.msg,
+    required this.isMe,
+    required this.otherColor,
+    required this.theme,
+  });
 
-  Widget _messageBubble({
-    required Map<String, dynamic> msg,
-    required bool isMe,
-    required String messageId,
-    required String chatId,
-    required Color otherColor,
-    required ThemeData theme,
-  }) {
+  @override
+  Widget build(BuildContext context) {
+    final isSeen = msg['isSeen'] ?? false;
     final time = msg['timestamp'];
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
+        margin: EdgeInsets.only(
+          top: 2,
+          bottom: 2,
+          left: isMe ? 60 : 0,
+          right: isMe ? 0 : 60,
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        constraints: const BoxConstraints(maxWidth: 280),
         decoration: BoxDecoration(
           color: isMe ? AppColors.primary : otherColor,
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: isMe
-                ? const Radius.circular(16)
-                : const Radius.circular(4),
-            bottomRight: isMe
-                ? const Radius.circular(4)
-                : const Radius.circular(16),
+            topLeft: const Radius.circular(18),
+            topRight: const Radius.circular(18),
+            bottomLeft: Radius.circular(isMe ? 18 : 4),
+            bottomRight: Radius.circular(isMe ? 4 : 18),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               msg['message'] ?? "",
               style: TextStyle(
                 color: isMe ? Colors.white : theme.textTheme.bodyLarge?.color,
                 fontSize: 15,
+                height: 1.4,
               ),
             ),
             const SizedBox(height: 4),
@@ -402,14 +599,20 @@ class _ChatRoomViewState extends State<ChatRoomView> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _formatTime(time),
+                  _formatTime(time, context),
                   style: TextStyle(
                     fontSize: 10,
-                    color: isMe ? Colors.white70 : Colors.grey,
+                    color: isMe ? Colors.white60 : Colors.grey.shade500,
                   ),
                 ),
-                const SizedBox(width: 5),
-                buildTick(isMe, msg['isSeen'] ?? false),
+                if (isMe) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.done_all_rounded,
+                    size: 14,
+                    color: isSeen ? Colors.blue.shade200 : Colors.white54,
+                  ),
+                ],
               ],
             ),
           ],
@@ -418,9 +621,13 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     );
   }
 
-  String _formatTime(dynamic timestamp) {
+  String _formatTime(dynamic timestamp, BuildContext context) {
     if (timestamp == null) return "";
-    final DateTime date = timestamp.toDate();
-    return TimeOfDay.fromDateTime(date).format(context);
+    try {
+      final date = (timestamp as Timestamp).toDate();
+      return TimeOfDay.fromDateTime(date).format(context);
+    } catch (_) {
+      return "";
+    }
   }
 }
