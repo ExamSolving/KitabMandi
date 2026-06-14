@@ -1,0 +1,166 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
+import '../services/location_service.dart';
+import '../storage/location_storage.dart';
+
+class LocationController extends GetxController {
+  RxList<String> selectedLocations = <String>[].obs;
+  RxList<String> recentLocations = <String>[].obs;
+
+  RxBool isLoadingLocation = false.obs;
+
+  /// 📍 Coordinates
+  RxDouble latitude = 0.0.obs;
+  RxDouble longitude = 0.0.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    recentLocations.value = LocationStorage.getRecent();
+    initLocation(isNewUser: false);
+  }
+
+  /// Load location from cache, or auto-detect if cache is empty
+  Future<void> initLocation({required bool isNewUser}) async {
+    final saved = LocationStorage.getLocationData();
+    final selected = LocationStorage.getSelected();
+
+    if (saved != null && selected.isNotEmpty) {
+      // Fast path — restore from Hive cache
+      selectedLocations.value = selected;
+      latitude.value = (saved['latitude'] ?? 0.0).toDouble();
+      longitude.value = (saved['longitude'] ?? 0.0).toDouble();
+      // Always push to Firestore so Cloud Functions can find this user in the
+      // 5-km query (Firestore is the source of truth for geo-queries, not Hive)
+      _syncLocationToFirestore(latitude.value, longitude.value);
+      return;
+    }
+
+    // No cache (new install, cleared storage, or any user) — always auto-detect
+    await detectCurrentLocation();
+  }
+
+  /// 📡 AUTO DETECT LOCATION
+  Future<void> detectCurrentLocation() async {
+    try {
+      isLoadingLocation.value = true;
+      final location = await LocationService.getCurrentLocationDetails();
+      if (location != null) {
+        final display =
+            location['formatted_address'] ??
+            location['city'] ??
+            "Unknown Location";
+
+        ///  Update selected
+        selectedLocations.value = [display];
+
+        ///  Save
+        LocationStorage.saveSelected([display]);
+        LocationStorage.saveLocationData(location);
+
+        ///  Assign coordinates
+        latitude.value = (location['latitude'] ?? 0.0).toDouble();
+        longitude.value = (location['longitude'] ?? 0.0).toDouble();
+
+        // Persist to Firestore so Cloud Functions can find nearby users
+        _syncLocationToFirestore(latitude.value, longitude.value);
+      }
+    } catch (e) {
+      selectedLocations.value = ["Location Error"];
+    } finally {
+      isLoadingLocation.value = false;
+    }
+  }
+
+  /// 📍 MANUAL LOCATION (CITY SELECT)
+  void updateLocation(String location) {
+    if (location.isEmpty) return;
+
+    selectedLocations.value = [location];
+
+    /// 💾 Save selected city
+    LocationStorage.saveSelected([location]);
+    recentLocations.value = LocationStorage.getRecent();
+
+    /// ⚠️ IMPORTANT:
+    /// DO NOT reset lat/lng here
+    /// Because radius filter depends on it
+  }
+
+  /// 🏙 Select city from the hierarchical picker — geocodes and saves coords.
+  Future<bool> selectCity({
+    required String city,
+    required String state,
+  }) async {
+    try {
+      isLoadingLocation.value = true;
+      final display = '$city, $state';
+
+      final coords = await LocationService.geocodeCityName('$city, $state, India');
+      if (coords != null) {
+        latitude.value = coords['lat']!;
+        longitude.value = coords['lng']!;
+        LocationStorage.saveLocationData({
+          'latitude': coords['lat'],
+          'longitude': coords['lng'],
+          'city': city,
+          'state': state,
+          'area': '',
+          'locality': city,
+          'district': '',
+          'country': 'India',
+          'pincode': '',
+          'formatted_address': display,
+        });
+      }
+
+      selectedLocations.value = [display];
+      LocationStorage.saveSelected([display]);
+      recentLocations.value = LocationStorage.getRecent();
+
+      // Persist to Firestore so Cloud Functions can find nearby users
+      _syncLocationToFirestore(latitude.value, longitude.value);
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      isLoadingLocation.value = false;
+    }
+  }
+
+  /// 🗑 Remove recent
+  void removeRecent(String location) {
+    LocationStorage.removeRecent(location);
+    recentLocations.value = LocationStorage.getRecent();
+  }
+
+  // Writes the user's current lat/long to their Firestore profile so that
+  // Cloud Functions can query nearby users when a new listing is posted.
+  Future<void> _syncLocationToFirestore(double lat, double long) async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+      await FirebaseFirestore.instance.collection('users').doc(uid).set(
+        {'location': {'lat': lat, 'long': long}},
+        SetOptions(merge: true),
+      );
+    } catch (e) {
+      debugPrint('[LocationController] Firestore sync error: $e');
+    }
+  }
+
+  /// 🔄 RESET EVERYTHING
+  void reset() {
+    selectedLocations.clear();
+    recentLocations.clear();
+
+    latitude.value = 0.0;
+    longitude.value = 0.0;
+
+    LocationStorage.clearAll();
+
+    debugPrint("Location reset");
+  }
+}

@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ────────────────────────────────────────────────────────────────
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    function validListing() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['title', 'price', 'category', 'seller', 'status'])
+          && d.seller.uid == request.auth.uid
+          && d.price is int
+          && d.price > 0
+          && d.price <= 100000
+          && d.status == 'active';
+    }
+
+    // ── Users ──────────────────────────────────────────────────────────────────
+    match /users/{uid} {
+      // Any authenticated user can read a profile (for chat display names etc.)
+      allow read: if isAuth();
+
+      // Only the account owner can create their own profile
+      allow create: if isOwner(uid);
+
+      // Owner can update but cannot change uid, provider, or createdAt
+      allow update: if isOwner(uid)
+          && !request.resource.data.diff(resource.data)
+              .affectedKeys()
+              .hasAny(['uid', 'provider', 'createdAt']);
+
+      // No one can delete user documents through the client
+      allow delete: if false;
+
+      // ── Wishlist subcollection ───────────────────────────────────────────────
+      match /wishlist/{listingId} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // ── Listings ───────────────────────────────────────────────────────────────
+    match /listings/{listingId} {
+      // Any authenticated user can read listings
+      allow read: if isAuth();
+
+      // Authenticated users can create valid listings
+      allow create: if isAuth() && validListing();
+
+      // Seller can update their own listing; anyone can increment views/viewedBy
+      allow update: if isAuth() && (
+          isOwner(resource.data.seller.uid)
+          || request.resource.data.diff(resource.data)
+              .affectedKeys()
+              .hasOnly(['views', 'viewedBy'])
+      );
+
+      // Only the seller can soft-delete (status: deleted) their listing
+      allow delete: if isAuth() && isOwner(resource.data.seller.uid);
+    }
+
+    // ── Chats ──────────────────────────────────────────────────────────────────
+    match /chats/{chatId} {
+      // Only participants can read a chat
+      allow read: if isAuth()
+          && request.auth.uid in resource.data.participants;
+
+      // A buyer can create a new chat thread
+      allow create: if isAuth()
+          && request.auth.uid == request.resource.data.buyerId
+          && request.resource.data.participants.hasAll([
+                request.resource.data.buyerId,
+                request.resource.data.sellerId
+             ]);
+
+      // Participants can update chat metadata (lastMessage, unreadCount, isSeen)
+      allow update: if isAuth()
+          && request.auth.uid in resource.data.participants;
+
+      allow delete: if false;
+
+      // ── Messages subcollection ───────────────────────────────────────────────
+      match /messages/{msgId} {
+        allow read: if isAuth()
+            && request.auth.uid in
+               get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+
+        allow create: if isAuth()
+            && request.auth.uid == request.resource.data.senderId;
+
+        // Only allow marking messages as seen (isSeen field only)
+        allow update: if isAuth()
+            && request.resource.data.diff(resource.data)
+                .affectedKeys()
+                .hasOnly(['isSeen']);
+
+        allow delete: if false;
+      }
+    }
+  }
+}

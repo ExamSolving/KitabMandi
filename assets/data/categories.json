@@ -1,0 +1,591 @@
+{
+  "categories": [
+    {
+      "id": "school_books",
+      "name": "School Books",
+      "icon": "school",
+      "subcategories": [
+        {
+          "id": "sb_cbse",
+          "name": "CBSE",
+          "children": [
+            { "id": "sb_cbse_lkg",  "name": "LKG / UKG" },
+            { "id": "sb_cbse_c1",   "name": "Class 1" },
+            { "id": "sb_cbse_c2",   "name": "Class 2" },
+            { "id": "sb_cbse_c3",   "name": "Class 3" },
+            { "id": "sb_cbse_c4",   "name": "Class 4" },
+            { "id": "sb_cbse_c5",   "name": "Class 5" },
+            { "id": "sb_cbse_c6",   "name": "Class 6" },
+            { "id": "sb_cbse_c7",   "name": "Class 7" },
+            { "id": "sb_cbse_c8",   "name": "Class 8" },
+            { "id": "sb_cbse_c9",   "name": "Class 9" },
+            { "id": "sb_cbse_c10",  "name": "Class 10" },
+            { "id": "sb_cbse_c11",  "name": "Class 11" },
+            { "id": "sb_cbse_c12",  "name": "Class 12" }
+          ]
+        },
+        {
+          "id": "sb_icse",
+          "name": "ICSE / ISC",
+          "children": [
+            { "id": "sb_icse_lkg",  "name": "LKG / UKG" },
+            { "id": "sb_icse_c1",   "name": "Class 1" },
+            { "id": "sb_icse_c2",   "name": "Class 2" },
+            { "id": "sb_icse_c3",   "name": "Class 3" },
+            { "id": "sb_icse_c4",   "name": "Class 4" },
+            { "id": "sb_icse_c5",   "name": "Class 5" },
+            { "id": "sb_icse_c6",   "name": "Class 6" },
+            { "id": "sb_icse_c7",   "name": "Class 7" },
+            { "id": "sb_icse_c8",   "name": "Class 8" },
+            { "id": "sb_icse_c9",   "name": "Class 9" },
+            { "id": "sb_icse_c10",  "name": "Class 10" },
+            { "id": "sb_icse_c11",  "name": "Class 11" },
+            { "id": "sb_icse_c12",  "name": "Class 12" }
+          ]
+        },
+        {
+          "id": "sb_state",
+          "name": "State Board",
+          "children": [
+            { "id": "sb_state_lkg",  "name": "LKG / UKG" },
+            { "id": "sb_state_c1",   "name": "Class 1" },
+            { "id": "sb_state_c2",   "name": "Class 2" },
+            { "id": "sb_state_c3",   "name": "Class 3" },
+            { "id": "sb_state_c4",   "name": "Class 4" },
+            { "id": "sb_state_c5",   "name": "Class 5" },
+            { "id": "sb_state_c6",   "name": "Class 6" },
+            { "id": "sb_state_c7",   "name": "Class 7" },
+            { "id": "sb_state_c8",   "name": "Class 8" },
+            { "id": "sb_state_c9",   "name": "Class 9" },
+            { "id": "sb_state_c10",  "name": "Class 10" },
+            { "id": "sb_state_c11",  "name": "Class 11" },
+            { "id": "sb_state_c12",  "name": "Class 12" }
+          ]
+        },
+        {
+          "id": "sb_ib",
+          "name": "IB / Cambridge",
+          "children": [
+            { "id": "sb_ib_pyp", "name": "Primary Years (PYP)" },
+            { "id": "sb_ib_myp", "name": "Middle Years (MYP)" },
+            { "id": "sb_ib_dp",  "name": "Diploma (DP / A-Level)" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "college_books",
+      "name": "College Books",
+      "icon": "academic",
+      "subcategories": [
+        {
+          "id": "cb_engineering",
+          "name": "Engineering",
+          "children": [
+            { "id": "cb_eng_cse",   "name": "Computer Science" },
+            { "id": "cb_eng_ece",   "name": "Electronics (ECE)" },
+            { "id": "cb_eng_mech",  "name": "Mechanical" },
+            { "id": "cb_eng_civil", "name": "Civil" },
+            { "id": "cb_eng_chem",  "name": "Chemical" },
+            { "id": "cb_eng_eee",   "name": "Electrical (EEE)" },
+            { "id": "cb_eng_it",    "name": "Information Technology" },
+            { "id": "cb_eng_auto",  "name": "Automobile" }
+          ]
+        },
+        {
+          "id": "cb_medical",
+          "name": "Medical & Health",
+          "children": [
+            { "id": "cb_med_mbbs",    "name": "MBBS" },
+            { "id": "cb_med_bds",     "name": "BDS (Dental)" },
+            { "id": "cb_med_bams",    "name": "BAMS (Ayurveda)" },
+            { "id": "cb_med_nursing", "name": "Nursing (B.Sc)" },
+            { "id": "cb_med_pharma",  "name": "Pharmacy (B.Pharm)" },
+            { "id": "cb_med_bpt",     "name": "Physiotherapy (BPT)" },
+            { "id": "cb_med_bsc",     "name": "Allied Health Sciences" }
+          ]
+        },
+        {
+          "id": "cb_commerce",
+          "name": "Commerce & Management",
+          "children": [
+            { "id": "cb_com_bcom",  "name": "B.Com" },
+            { "id": "cb_com_mcom",  "name": "M.Com" },
+            { "id": "cb_com_bba",   "name": "BBA" },
+            { "id": "cb_com_mba",   "name": "MBA" },
+            { "id": "cb_com_ca",    "name": "CA (Foundation / Inter / Final)" },
+            { "id": "cb_com_cma",   "name": "CMA / ICWA" },
+            { "id": "cb_com_cs",    "name": "Company Secretary (CS)" }
+          ]
+        },
+        {
+          "id": "cb_science",
+          "name": "Science",
+          "children": [
+            { "id": "cb_sci_bsc",    "name": "B.Sc (General)" },
+            { "id": "cb_sci_msc",    "name": "M.Sc" },
+            { "id": "cb_sci_phys",   "name": "Physics (Hons)" },
+            { "id": "cb_sci_chem",   "name": "Chemistry (Hons)" },
+            { "id": "cb_sci_bio",    "name": "Biology / Zoology / Botany" },
+            { "id": "cb_sci_math",   "name": "Mathematics (Hons)" },
+            { "id": "cb_sci_comp",   "name": "Computer Science (Hons)" }
+          ]
+        },
+        {
+          "id": "cb_arts",
+          "name": "Arts & Humanities",
+          "children": [
+            { "id": "cb_art_ba",     "name": "BA (General)" },
+            { "id": "cb_art_ma",     "name": "MA" },
+            { "id": "cb_art_hist",   "name": "History" },
+            { "id": "cb_art_pol",    "name": "Political Science" },
+            { "id": "cb_art_psych",  "name": "Psychology" },
+            { "id": "cb_art_socio",  "name": "Sociology" },
+            { "id": "cb_art_eco",    "name": "Economics" },
+            { "id": "cb_art_geo",    "name": "Geography" },
+            { "id": "cb_art_eng",    "name": "English Literature" },
+            { "id": "cb_art_journ",  "name": "Journalism / Mass Comm" }
+          ]
+        },
+        {
+          "id": "cb_law",
+          "name": "Law",
+          "children": [
+            { "id": "cb_law_llb",     "name": "LLB (3-Year)" },
+            { "id": "cb_law_ballb",   "name": "BA LLB (5-Year)" },
+            { "id": "cb_law_llm",     "name": "LLM" },
+            { "id": "cb_law_clat",    "name": "CLAT Preparation" }
+          ]
+        },
+        {
+          "id": "cb_education",
+          "name": "Education & Teaching",
+          "children": [
+            { "id": "cb_edu_bed",  "name": "B.Ed" },
+            { "id": "cb_edu_med",  "name": "M.Ed" },
+            { "id": "cb_edu_deled","name": "D.El.Ed" },
+            { "id": "cb_edu_tet",  "name": "TET / CTET" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "competitive_exams",
+      "name": "Competitive Exams",
+      "icon": "trophy",
+      "subcategories": [
+        {
+          "id": "ce_engineering",
+          "name": "Engineering Entrance",
+          "children": [
+            { "id": "ce_eng_jee_main", "name": "JEE Main" },
+            { "id": "ce_eng_jee_adv",  "name": "JEE Advanced" },
+            { "id": "ce_eng_gate",     "name": "GATE" },
+            { "id": "ce_eng_bitsat",   "name": "BITSAT" },
+            { "id": "ce_eng_viteee",   "name": "VITEEE / SRMJEE" },
+            { "id": "ce_eng_mht_cet",  "name": "MHT CET" }
+          ]
+        },
+        {
+          "id": "ce_medical",
+          "name": "Medical Entrance",
+          "children": [
+            { "id": "ce_med_neet_ug", "name": "NEET UG" },
+            { "id": "ce_med_neet_pg", "name": "NEET PG / INI-CET" },
+            { "id": "ce_med_aiims",   "name": "AIIMS / JIPMER" }
+          ]
+        },
+        {
+          "id": "ce_govt_jobs",
+          "name": "Government Jobs",
+          "children": [
+            { "id": "ce_gov_upsc",     "name": "UPSC IAS / IPS / IFS" },
+            { "id": "ce_gov_ssc_cgl",  "name": "SSC CGL / CHSL / MTS" },
+            { "id": "ce_gov_railway",  "name": "Railway (RRB / NTPC)" },
+            { "id": "ce_gov_banking",  "name": "Banking (IBPS / SBI)" },
+            { "id": "ce_gov_defence",  "name": "Defence (NDA / CDS / AFCAT)" },
+            { "id": "ce_gov_police",   "name": "Police / SI" },
+            { "id": "ce_gov_psc",      "name": "State PSC" }
+          ]
+        },
+        {
+          "id": "ce_management",
+          "name": "Management Entrance",
+          "children": [
+            { "id": "ce_mgt_cat",  "name": "CAT" },
+            { "id": "ce_mgt_xat",  "name": "XAT / SNAP / NMAT" },
+            { "id": "ce_mgt_mat",  "name": "MAT / CMAT" },
+            { "id": "ce_mgt_gmat", "name": "GMAT" },
+            { "id": "ce_mgt_gre",  "name": "GRE" }
+          ]
+        },
+        {
+          "id": "ce_law",
+          "name": "Law Entrance",
+          "children": [
+            { "id": "ce_law_clat",  "name": "CLAT" },
+            { "id": "ce_law_ailet", "name": "AILET / SLAT" },
+            { "id": "ce_law_lsat",  "name": "LSAT India" }
+          ]
+        },
+        {
+          "id": "ce_teaching",
+          "name": "Teaching Exams",
+          "children": [
+            { "id": "ce_tea_ctet",  "name": "CTET" },
+            { "id": "ce_tea_stet",  "name": "State TET" },
+            { "id": "ce_tea_kvs",   "name": "KVS / NVS" },
+            { "id": "ce_tea_dsssb", "name": "DSSSB" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "notes_material",
+      "name": "Notes & Study Material",
+      "icon": "note",
+      "subcategories": [
+        {
+          "id": "nm_handwritten",
+          "name": "Handwritten Notes",
+          "children": [
+            { "id": "nm_hw_math",    "name": "Mathematics" },
+            { "id": "nm_hw_physics", "name": "Physics" },
+            { "id": "nm_hw_chem",    "name": "Chemistry" },
+            { "id": "nm_hw_bio",     "name": "Biology" },
+            { "id": "nm_hw_english", "name": "English" },
+            { "id": "nm_hw_hist",    "name": "History / Social Science" },
+            { "id": "nm_hw_cs",      "name": "Computer Science" },
+            { "id": "nm_hw_eco",     "name": "Economics / Commerce" },
+            { "id": "nm_hw_other",   "name": "Other Subjects" }
+          ]
+        },
+        {
+          "id": "nm_printed",
+          "name": "Printed Notes",
+          "children": [
+            { "id": "nm_pr_math",    "name": "Mathematics" },
+            { "id": "nm_pr_physics", "name": "Physics" },
+            { "id": "nm_pr_chem",    "name": "Chemistry" },
+            { "id": "nm_pr_bio",     "name": "Biology" },
+            { "id": "nm_pr_cs",      "name": "Computer Science" },
+            { "id": "nm_pr_other",   "name": "Other Subjects" }
+          ]
+        },
+        {
+          "id": "nm_coaching",
+          "name": "Coaching Material",
+          "children": [
+            { "id": "nm_c_allen",     "name": "Allen" },
+            { "id": "nm_c_fiitjee",   "name": "FIITJEE" },
+            { "id": "nm_c_resonance", "name": "Resonance" },
+            { "id": "nm_c_aakash",    "name": "Aakash" },
+            { "id": "nm_c_career_pt", "name": "Career Point" },
+            { "id": "nm_c_narayana",  "name": "Narayana / Sri Chaitanya" },
+            { "id": "nm_c_vision",    "name": "Vision IAS" },
+            { "id": "nm_c_vajiram",   "name": "Vajiram & Ravi" },
+            { "id": "nm_c_cl",        "name": "Career Launcher" },
+            { "id": "nm_c_other",     "name": "Other Coaching" }
+          ]
+        },
+        {
+          "id": "nm_pyq",
+          "name": "Previous Year Papers",
+          "children": [
+            { "id": "nm_pyq_jee",     "name": "JEE (Main + Advanced)" },
+            { "id": "nm_pyq_neet",    "name": "NEET" },
+            { "id": "nm_pyq_upsc",    "name": "UPSC / State PSC" },
+            { "id": "nm_pyq_ssc",     "name": "SSC / Railway" },
+            { "id": "nm_pyq_banking", "name": "Banking" },
+            { "id": "nm_pyq_board",   "name": "Board Exams" },
+            { "id": "nm_pyq_gate",    "name": "GATE" },
+            { "id": "nm_pyq_cat",     "name": "CAT / MBA" }
+          ]
+        },
+        {
+          "id": "nm_assignments",
+          "name": "Assignments & Projects",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "reference_books",
+      "name": "Reference Books",
+      "icon": "book",
+      "subcategories": [
+        {
+          "id": "rb_math",
+          "name": "Mathematics",
+          "children": [
+            { "id": "rb_m_rdsh",   "name": "R.D. Sharma" },
+            { "id": "rb_m_sl",     "name": "S.L. Loney" },
+            { "id": "rb_m_arihant","name": "Arihant / Cengage" },
+            { "id": "rb_m_ncert",  "name": "NCERT Exemplar" },
+            { "id": "rb_m_other",  "name": "Other" }
+          ]
+        },
+        {
+          "id": "rb_science",
+          "name": "Science",
+          "children": [
+            { "id": "rb_s_hcv",    "name": "H.C. Verma (Physics)" },
+            { "id": "rb_s_irodov", "name": "I.E. Irodov" },
+            { "id": "rb_s_ncert",  "name": "NCERT Exemplar" },
+            { "id": "rb_s_op",     "name": "O.P. Tandon (Chemistry)" },
+            { "id": "rb_s_other",  "name": "Other Science" }
+          ]
+        },
+        {
+          "id": "rb_english",
+          "name": "English & Language",
+          "children": [
+            { "id": "rb_e_wren",   "name": "Wren & Martin" },
+            { "id": "rb_e_wpme",   "name": "Word Power Made Easy" },
+            { "id": "rb_e_oxford", "name": "Oxford / Cambridge Dict." },
+            { "id": "rb_e_other",  "name": "Other" }
+          ]
+        },
+        {
+          "id": "rb_sst",
+          "name": "Social Science & GK",
+          "children": [
+            { "id": "rb_sst_hist",   "name": "History" },
+            { "id": "rb_sst_geo",    "name": "Geography" },
+            { "id": "rb_sst_pol",    "name": "Political Science" },
+            { "id": "rb_sst_eco",    "name": "Economics" },
+            { "id": "rb_sst_gk",     "name": "General Knowledge" },
+            { "id": "rb_sst_ca",     "name": "Current Affairs" }
+          ]
+        },
+        {
+          "id": "rb_dictionaries",
+          "name": "Dictionaries & Encyclopedia",
+          "children": [
+            { "id": "rb_d_eng",   "name": "English Dictionary" },
+            { "id": "rb_d_hindi", "name": "Hindi Dictionary" },
+            { "id": "rb_d_bilng", "name": "Bilingual" },
+            { "id": "rb_d_enc",   "name": "Encyclopedia" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "children_books",
+      "name": "Children's Books",
+      "icon": "child",
+      "subcategories": [
+        {
+          "id": "chb_picture",
+          "name": "Picture & Board Books",
+          "children": [
+            { "id": "chb_pic_0_2",   "name": "Age 0–2" },
+            { "id": "chb_pic_3_5",   "name": "Age 3–5" },
+            { "id": "chb_pic_6_8",   "name": "Age 6–8" }
+          ]
+        },
+        {
+          "id": "chb_story",
+          "name": "Story & Fiction",
+          "children": [
+            { "id": "chb_st_fairy",   "name": "Fairy Tales" },
+            { "id": "chb_st_fables",  "name": "Fables & Moral Stories" },
+            { "id": "chb_st_india",   "name": "Indian Stories" },
+            { "id": "chb_st_novels",  "name": "Junior Novels" }
+          ]
+        },
+        {
+          "id": "chb_activity",
+          "name": "Activity & Comics",
+          "children": [
+            { "id": "chb_act_drawing",  "name": "Drawing & Colouring" },
+            { "id": "chb_act_puzzle",   "name": "Puzzles & Brain Teasers" },
+            { "id": "chb_act_comics",   "name": "Comics (Tinkle, Chacha Chaudhary)" }
+          ]
+        },
+        {
+          "id": "chb_early_learning",
+          "name": "Early Learning",
+          "children": [
+            { "id": "chb_el_abcd",  "name": "Alphabet & Numbers" },
+            { "id": "chb_el_gk",    "name": "GK & Facts" },
+            { "id": "chb_el_lang",  "name": "Hindi / Regional Language" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "magazines",
+      "name": "Magazines",
+      "icon": "magazine",
+      "subcategories": [
+        {
+          "id": "mag_competitive",
+          "name": "Competitive Exam",
+          "children": [
+            { "id": "mag_c_prat",   "name": "Pratiyogita Darpan" },
+            { "id": "mag_c_csr",    "name": "Competition Success Review" },
+            { "id": "mag_c_chrono", "name": "Chronology / Manorama" },
+            { "id": "mag_c_ya",     "name": "Yojana / Kurukshetra" }
+          ]
+        },
+        {
+          "id": "mag_science",
+          "name": "Science & Technology",
+          "children": [
+            { "id": "mag_s_scireporter", "name": "Science Reporter" },
+            { "id": "mag_s_digit",       "name": "Digit / Chip" },
+            { "id": "mag_s_other",       "name": "Other Tech Magazines" }
+          ]
+        },
+        {
+          "id": "mag_educational",
+          "name": "Educational",
+          "children": [
+            { "id": "mag_e_frontline",  "name": "Frontline" },
+            { "id": "mag_e_outlook",    "name": "Outlook / India Today" },
+            { "id": "mag_e_economist",  "name": "The Economist" }
+          ]
+        },
+        {
+          "id": "mag_kids",
+          "name": "Kids & Comics",
+          "children": [
+            { "id": "mag_k_tinkle",   "name": "Tinkle" },
+            { "id": "mag_k_champak",  "name": "Champak" },
+            { "id": "mag_k_twinkle",  "name": "Twinkle" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stationery",
+      "name": "Stationery",
+      "icon": "pen",
+      "subcategories": [
+        {
+          "id": "st_writing",
+          "name": "Writing Supplies",
+          "children": [
+            { "id": "st_w_pens",        "name": "Pens & Ball Pens" },
+            { "id": "st_w_pencils",     "name": "Pencils & Colours" },
+            { "id": "st_w_markers",     "name": "Markers & Highlighters" },
+            { "id": "st_w_correction",  "name": "Correction Pens / Fluid" }
+          ]
+        },
+        {
+          "id": "st_notebooks",
+          "name": "Notebooks & Diaries",
+          "children": [
+            { "id": "st_nb_registers", "name": "Registers & Notebooks" },
+            { "id": "st_nb_diary",     "name": "Diaries & Planners" },
+            { "id": "st_nb_graph",     "name": "Graph / Practical Books" }
+          ]
+        },
+        {
+          "id": "st_drawing",
+          "name": "Drawing & Art Supplies",
+          "children": [
+            { "id": "st_d_geom",    "name": "Geometry Box & Scale" },
+            { "id": "st_d_color",   "name": "Colour Pencils / Crayons" },
+            { "id": "st_d_poster",  "name": "Poster / Acrylic Colours" },
+            { "id": "st_d_chart",   "name": "Chart Paper & Craft Supplies" }
+          ]
+        },
+        {
+          "id": "st_files",
+          "name": "Files & Organisation",
+          "children": [
+            { "id": "st_f_folder",  "name": "Files & Folders" },
+            { "id": "st_f_binder",  "name": "Binders & Ring Files" },
+            { "id": "st_f_sticky",  "name": "Sticky Notes & Flags" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "electronics",
+      "name": "Electronics",
+      "icon": "laptop",
+      "subcategories": [
+        {
+          "id": "el_laptops",
+          "name": "Laptops & Tablets",
+          "children": [
+            { "id": "el_l_laptop",  "name": "Laptops" },
+            { "id": "el_l_tablet",  "name": "Tablets" },
+            { "id": "el_l_ereader", "name": "E-Readers (Kindle)" }
+          ]
+        },
+        {
+          "id": "el_mobile",
+          "name": "Mobile Phones",
+          "children": [
+            { "id": "el_m_android", "name": "Android" },
+            { "id": "el_m_ios",     "name": "iPhone (iOS)" },
+            { "id": "el_m_basic",   "name": "Basic / Feature Phone" }
+          ]
+        },
+        {
+          "id": "el_calculators",
+          "name": "Calculators",
+          "children": [
+            { "id": "el_c_basic",    "name": "Basic" },
+            { "id": "el_c_scientific","name": "Scientific" },
+            { "id": "el_c_graphic",  "name": "Graphic / Programmable" }
+          ]
+        },
+        {
+          "id": "el_accessories",
+          "name": "Study Gadgets & Accessories",
+          "children": [
+            { "id": "el_a_headphones",  "name": "Headphones & Earphones" },
+            { "id": "el_a_charger",     "name": "Chargers & Power Banks" },
+            { "id": "el_a_pen_drive",   "name": "Pen Drives & Storage" },
+            { "id": "el_a_printer",     "name": "Printers & Scanners" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "others",
+      "name": "Others",
+      "icon": "more",
+      "subcategories": [
+        {
+          "id": "ot_bags",
+          "name": "Bags & Backpacks",
+          "children": [
+            { "id": "ot_b_school",  "name": "School Bags" },
+            { "id": "ot_b_college", "name": "College Backpacks" },
+            { "id": "ot_b_laptop",  "name": "Laptop Bags" }
+          ]
+        },
+        {
+          "id": "ot_lab",
+          "name": "Lab Equipment",
+          "children": [
+            { "id": "ot_l_physics",  "name": "Physics Lab" },
+            { "id": "ot_l_chem",     "name": "Chemistry Lab" },
+            { "id": "ot_l_bio",      "name": "Biology Lab" },
+            { "id": "ot_l_comp",     "name": "Computer Lab Accessories" }
+          ]
+        },
+        {
+          "id": "ot_furniture",
+          "name": "Study Furniture",
+          "children": [
+            { "id": "ot_f_table",   "name": "Study Tables & Desks" },
+            { "id": "ot_f_chair",   "name": "Study Chairs" },
+            { "id": "ot_f_shelf",   "name": "Bookshelves & Racks" }
+          ]
+        },
+        {
+          "id": "ot_uniform",
+          "name": "Uniforms & Sportswear",
+          "children": []
+        }
+      ]
+    }
+  ]
+}

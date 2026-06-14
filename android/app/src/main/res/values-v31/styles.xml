@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+
+        <!-- Transparent background -->
+        <item name="android:windowSplashScreenBackground">@android:color/transparent</item>
+
+        <!-- Remove icon -->
+        <item name="android:windowSplashScreenAnimatedIcon">@null</item>
+
+        <!-- Remove icon background -->
+        <item name="android:windowSplashScreenIconBackgroundColor">@null</item>
+
+    </style>
+
+</resources>
