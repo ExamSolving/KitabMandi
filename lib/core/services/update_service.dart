@@ -26,17 +26,18 @@ class UpdateService {
       final latestVersion = (data['latest_version'] as String?) ?? '';
       final minimumVersion = (data['minimum_version'] as String?) ?? '';
       final isMandatory = (data['is_mandatory'] as bool?) ?? false;
-      final updateMessage = (data['update_message'] as String?) ??
+      final updateMessage =
+          (data['update_message'] as String?) ??
           'We\'ve added new features and improvements. Update for the best experience!';
-      final playStoreUrl =
-          (data['play_store_url'] as String?) ?? _fallbackUrl;
+      final playStoreUrl = (data['play_store_url'] as String?) ?? _fallbackUrl;
 
       if (latestVersion.isEmpty) return;
 
       final info = await PackageInfo.fromPlatform();
       final current = info.version;
 
-      final isForce = minimumVersion.isNotEmpty &&
+      final isForce =
+          minimumVersion.isNotEmpty &&
           _compareVersions(current, minimumVersion) < 0;
       final isOptional =
           !isForce && _compareVersions(current, latestVersion) < 0;
@@ -114,8 +115,7 @@ class _UpdateDialog extends StatelessWidget {
     return PopScope(
       canPop: !isMandatory,
       child: Dialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         clipBehavior: Clip.antiAlias,
         backgroundColor: cardBg,
         insetPadding: const EdgeInsets.symmetric(horizontal: 32),
@@ -140,10 +140,11 @@ class _UpdateDialog extends StatelessWidget {
                   // Version pill
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 5),
+                      horizontal: 14,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
-                      color:
-                          const Color(0xFF1B5E20).withValues(alpha: 0.10),
+                      color: const Color(0xFF1B5E20).withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -159,8 +160,11 @@ class _UpdateDialog extends StatelessWidget {
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 6),
-                          child: Icon(Icons.arrow_forward_rounded,
-                              size: 13, color: const Color(0xFF2E7D32)),
+                          child: Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 13,
+                            color: const Color(0xFF2E7D32),
+                          ),
                         ),
                         Text(
                           'v$latestVersion',
@@ -194,8 +198,7 @@ class _UpdateDialog extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF1B5E20),
                         foregroundColor: Colors.white,
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 15),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -224,8 +227,7 @@ class _UpdateDialog extends StatelessWidget {
                       child: TextButton(
                         onPressed: () => Get.back(),
                         style: TextButton.styleFrom(
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         child: Text(
                           'maybe_later'.tr,
@@ -283,7 +285,9 @@ class _GradientHeader extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.15),
               shape: BoxShape.circle,
               border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.25), width: 1.5),
+                color: Colors.white.withValues(alpha: 0.25),
+                width: 1.5,
+              ),
             ),
             child: const Icon(
               Icons.system_update_rounded,
@@ -294,19 +298,23 @@ class _GradientHeader extends StatelessWidget {
           const SizedBox(height: 12),
           // Badge chip
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.2), width: 1),
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 1,
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.new_releases_rounded,
-                    color: Colors.white, size: 13),
+                const Icon(
+                  Icons.new_releases_rounded,
+                  color: Colors.white,
+                  size: 13,
+                ),
                 const SizedBox(width: 5),
                 Text(
                   'new_version_released'.tr,
