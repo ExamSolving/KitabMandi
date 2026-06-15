@@ -75,8 +75,8 @@ class _ListingGridCardState extends State<ListingGridCard> {
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha:
-                  theme.brightness == Brightness.dark ? 0.25 : 0.08,
+                color: Colors.black.withValues(
+                  alpha: theme.brightness == Brightness.dark ? 0.25 : 0.08,
                 ),
                 blurRadius: 16,
                 offset: const Offset(0, 8),
@@ -126,7 +126,7 @@ class _ListingGridCardState extends State<ListingGridCard> {
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                            Colors.black.withValues(alpha:0.4),
+                            Colors.black.withValues(alpha: 0.4),
                             Colors.transparent,
                           ],
                         ),
@@ -181,7 +181,7 @@ class _ListingGridCardState extends State<ListingGridCard> {
                             padding: const EdgeInsets.all(7),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.black.withValues(alpha:0.4),
+                              color: Colors.black.withValues(alpha: 0.4),
                             ),
                             child: Icon(
                               isFav ? Icons.favorite : Icons.favorite_border,
@@ -204,7 +204,7 @@ class _ListingGridCardState extends State<ListingGridCard> {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha:0.6),
+                        color: Colors.black.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(

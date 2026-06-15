@@ -42,8 +42,8 @@ class SellerListingView extends StatelessWidget {
               ),
               Text(
                 controller.isEdit.value
-                    ? 'update your listing details'
-                    : 'Fill in the details below',
+                    ? 'update_listing_subtitle'.tr
+                    : 'fill_details_below'.tr,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w400,
@@ -75,8 +75,8 @@ class SellerListingView extends StatelessWidget {
             // ── Step 1: Photos ─────────────────────────────────────────
             _SectionCard(
               step: 1,
-              title: 'Photos',
-              subtitle: 'Add up to 3 clear photos',
+              title: 'step_photos'.tr,
+              subtitle: 'step_photos_subtitle'.tr,
               icon: Icons.camera_alt_rounded,
               isDark: isDark,
               theme: theme,
@@ -92,8 +92,8 @@ class SellerListingView extends StatelessWidget {
             // ── Step 2: Category ───────────────────────────────────────
             _SectionCard(
               step: 2,
-              title: 'Category',
-              subtitle: 'Help buyers find your item',
+              title: 'step_category'.tr,
+              subtitle: 'step_category_subtitle'.tr,
               icon: Icons.category_rounded,
               isDark: isDark,
               theme: theme,
@@ -109,8 +109,8 @@ class SellerListingView extends StatelessWidget {
             // ── Step 3: Details ────────────────────────────────────────
             _SectionCard(
               step: 3,
-              title: 'Details',
-              subtitle: 'Title, price & description',
+              title: 'step_details'.tr,
+              subtitle: 'step_details_subtitle'.tr,
               icon: Icons.edit_note_rounded,
               isDark: isDark,
               theme: theme,
@@ -126,8 +126,8 @@ class SellerListingView extends StatelessWidget {
             // ── Step 4: Condition ──────────────────────────────────────
             _SectionCard(
               step: 4,
-              title: 'Condition',
-              subtitle: 'Describe the item\'s condition',
+              title: 'step_condition'.tr,
+              subtitle: 'step_condition_subtitle'.tr,
               icon: Icons.stars_rounded,
               isDark: isDark,
               theme: theme,
@@ -143,8 +143,8 @@ class SellerListingView extends StatelessWidget {
             // ── Step 5: Location ───────────────────────────────────────
             _SectionCard(
               step: 5,
-              title: 'Location',
-              subtitle: 'Where can buyers pick it up?',
+              title: 'step_location'.tr,
+              subtitle: 'step_location_subtitle'.tr,
               icon: Icons.location_on_rounded,
               isDark: isDark,
               theme: theme,
@@ -419,9 +419,9 @@ class _ImagesSection extends StatelessWidget {
                                 color: AppColors.primary,
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: const Text(
-                                'MAIN',
-                                style: TextStyle(
+                              child: Text(
+                                'main_badge'.tr,
+                                style: const TextStyle(
                                   fontSize: 9,
                                   fontWeight: FontWeight.w800,
                                   color: Colors.white,
@@ -493,7 +493,7 @@ class _ImagesSection extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Add Photo',
+                          'add_photo'.tr,
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -522,7 +522,7 @@ class _ImagesSection extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                'First photo is the cover image',
+                'first_photo_cover'.tr,
                 style: TextStyle(fontSize: 11.5, color: theme.hintColor),
               ),
             ],
@@ -556,7 +556,7 @@ class _CounterBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        '$current / $max photos',
+        'photos_counter'.trArgs([current.toString(), max.toString()]),
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
@@ -636,13 +636,13 @@ class _ImagePickerSheet extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Add Photo',
+                    'add_photo'.tr,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   Text(
-                    'Choose how to add your listing photo',
+                    'choose_photo_source'.tr,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.hintColor,
                     ),
@@ -660,8 +660,8 @@ class _ImagePickerSheet extends StatelessWidget {
               Expanded(
                 child: _PickerOption(
                   icon: Icons.camera_alt_rounded,
-                  label: 'Camera',
-                  sublabel: 'Take a new photo',
+                  label: 'camera'.tr,
+                  sublabel: 'take_new_photo'.tr,
                   gradientColors: const [Color(0xFF6C63FF), Color(0xFF9C95FF)],
                   surfaceColor: surfaceColor,
                   isDark: isDark,
@@ -676,8 +676,8 @@ class _ImagePickerSheet extends StatelessWidget {
               Expanded(
                 child: _PickerOption(
                   icon: Icons.photo_library_rounded,
-                  label: 'Gallery',
-                  sublabel: 'Pick existing photo',
+                  label: 'gallery'.tr,
+                  sublabel: 'pick_existing_photo'.tr,
                   gradientColors: const [Color(0xFF11998E), Color(0xFF38EF7D)],
                   surfaceColor: surfaceColor,
                   isDark: isDark,
@@ -820,7 +820,7 @@ class _CategorySection extends StatelessWidget {
       () => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _FieldLabel(label: 'Category', theme: theme),
+          _FieldLabel(label: 'field_category'.tr, theme: theme),
           const SizedBox(height: 8),
           _PillWrap(
             items: controller.categories
@@ -893,22 +893,22 @@ class _DetailsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _FieldLabel(label: 'Title', theme: theme),
+        _FieldLabel(label: 'field_title'.tr, theme: theme),
         const SizedBox(height: 6),
         AppTextField(
           controller: controller.titleController,
-          hintText: 'e.g. NCERT Physics Class 12',
+          hintText: 'hint_book_title'.tr,
           prefixIcon: const Icon(Icons.title_rounded),
           textInputAction: TextInputAction.next,
         ),
 
         const SizedBox(height: 14),
 
-        _FieldLabel(label: 'Price (₹)', theme: theme),
+        _FieldLabel(label: 'field_price'.tr, theme: theme),
         const SizedBox(height: 6),
         AppTextField(
           controller: controller.priceController,
-          hintText: 'Enter price',
+          hintText: 'hint_enter_price'.tr,
           prefixIcon: const Icon(Icons.currency_rupee_rounded),
           keyboardType: TextInputType.number,
           formatters: [
@@ -920,11 +920,11 @@ class _DetailsSection extends StatelessWidget {
 
         const SizedBox(height: 14),
 
-        _FieldLabel(label: 'Description', theme: theme),
+        _FieldLabel(label: 'field_description'.tr, theme: theme),
         const SizedBox(height: 6),
         AppTextField(
           controller: controller.descriptionController,
-          hintText: 'Describe the condition, edition, author, etc.',
+          hintText: 'hint_describe_book'.tr,
           maxLines: 4,
           textInputAction: TextInputAction.done,
         ),
@@ -1001,17 +1001,27 @@ class _ConditionSection extends StatelessWidget {
     required this.theme,
   });
 
-  static const _conditionMeta = {
-    'New': (Icons.auto_awesome_rounded, 'Brand new, never used'),
-    'Like New': (Icons.grade_rounded, 'Gently used, excellent condition'),
-    'Used': (Icons.menu_book_rounded, 'Normal wear and tear'),
+  static Map<String, (IconData, String)> _conditionMeta() => {
+    'New': (Icons.auto_awesome_rounded, 'cond_new_desc'.tr),
+    'Like New': (Icons.grade_rounded, 'cond_like_new_desc'.tr),
+    'Used': (Icons.menu_book_rounded, 'cond_used_desc'.tr),
   };
+
+  static String _condLabel(String cond) {
+    switch (cond) {
+      case 'New': return 'cond_new'.tr;
+      case 'Like New': return 'cond_like_new'.tr;
+      case 'Used': return 'cond_used'.tr;
+      default: return cond;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final condMeta = _conditionMeta();
     return Column(
       children: controller.conditions.map((cond) {
-        final meta = _conditionMeta[cond];
+        final meta = condMeta[cond];
         final icon = meta?.$1 ?? Icons.circle;
         final desc = meta?.$2 ?? '';
         return Obx(() {
@@ -1065,7 +1075,7 @@ class _ConditionSection extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          cond,
+                          _condLabel(cond),
                           style: TextStyle(
                             fontSize: 13.5,
                             fontWeight: selected
@@ -1185,7 +1195,7 @@ class _LocationSection extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        hasAddr ? 'Location Detected' : 'No location yet',
+                        hasAddr ? 'location_detected'.tr : 'no_location_yet'.tr,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -1196,7 +1206,7 @@ class _LocationSection extends StatelessWidget {
                       Text(
                         hasAddr
                             ? controller.fullAddress.value
-                            : 'Tap "Detect" to auto-fill your location',
+                            : 'tap_detect_location'.tr,
                         style: TextStyle(
                           fontSize: 12,
                           color: hasAddr
@@ -1262,7 +1272,7 @@ class _LocationSection extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            hasAddr ? 'Re-detect Location' : 'detect'.tr,
+                            hasAddr ? 're_detect_location'.tr : 'detect'.tr,
                             style: const TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w700,

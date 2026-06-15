@@ -33,9 +33,9 @@ class AboutView extends StatelessWidget {
                 size: 20,
               ),
             ),
-            title: const Text(
-              'About KitabMandi',
-              style: TextStyle(
+            title: Text(
+              'about_kitabmandi'.tr,
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
                 fontSize: 17,
@@ -54,15 +54,15 @@ class AboutView extends StatelessWidget {
                 children: [
                   _StatsRow(isDark: isDark, theme: theme),
                   const SizedBox(height: 28),
-                  const _SectionLabel(label: 'Our Mission'),
+                  _SectionLabel(label: 'our_mission'.tr),
                   const SizedBox(height: 12),
                   _MissionCard(isDark: isDark, theme: theme),
                   const SizedBox(height: 28),
-                  const _SectionLabel(label: 'Key Features'),
+                  _SectionLabel(label: 'key_features'.tr),
                   const SizedBox(height: 12),
                   _FeaturesGrid(isDark: isDark, theme: theme),
                   const SizedBox(height: 28),
-                  const _SectionLabel(label: 'Get in Touch'),
+                  _SectionLabel(label: 'get_in_touch'.tr),
                   const SizedBox(height: 12),
                   _ContactCard(isDark: isDark, theme: theme),
                   const SizedBox(height: 32),
@@ -133,7 +133,7 @@ class _AboutHero extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Buy & Sell Books. Smart. Simple. Fast.',
+                'tagline_smart'.tr,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 13,
@@ -154,9 +154,9 @@ class _AboutHero extends StatelessWidget {
                     width: 1,
                   ),
                 ),
-                child: const Text(
-                  'Version 1.0.0',
-                  style: TextStyle(
+                child: Text(
+                  'version'.tr,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -234,7 +234,7 @@ class _StatsRow extends StatelessWidget {
       children: [
         _StatCell(
           value: '10K+',
-          label: 'Students',
+          label: 'stat_students'.tr,
           icon: Icons.people_alt_rounded,
           isDark: isDark,
           theme: theme,
@@ -242,7 +242,7 @@ class _StatsRow extends StatelessWidget {
         const SizedBox(width: 10),
         _StatCell(
           value: '50K+',
-          label: 'Books',
+          label: 'stat_books'.tr,
           icon: Icons.menu_book_rounded,
           isDark: isDark,
           theme: theme,
@@ -250,7 +250,7 @@ class _StatsRow extends StatelessWidget {
         const SizedBox(width: 10),
         _StatCell(
           value: '4.8',
-          label: 'Rating',
+          label: 'stat_rating'.tr,
           icon: Icons.star_rounded,
           isDark: isDark,
           theme: theme,
@@ -379,19 +379,15 @@ class _MissionCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
-                'What We Stand For',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              Text(
+                'what_we_stand_for'.tr,
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
               ),
             ],
           ),
           const SizedBox(height: 16),
           Text(
-            'KitabMandi is a smart marketplace built for students across India. '
-            'We believe education should be affordable — buying and selling '
-            'second-hand books helps students save money while reducing waste.\n\n'
-            'Connect with buyers and sellers near you, list your books in seconds, '
-            'and close deals through real-time chat.',
+            'mission_text'.tr,
             style: TextStyle(
               fontSize: 13.5,
               height: 1.65,
@@ -411,37 +407,13 @@ class _FeaturesGrid extends StatelessWidget {
   final ThemeData theme;
   const _FeaturesGrid({required this.isDark, required this.theme});
 
-  static const _items = [
-    (
-      icon: Icons.swap_horiz_rounded,
-      label: 'Buy & Sell',
-      desc: 'List or buy instantly',
-    ),
-    (
-      icon: Icons.chat_bubble_outline_rounded,
-      label: 'Live Chat',
-      desc: 'Real-time messaging',
-    ),
-    (
-      icon: Icons.location_on_rounded,
-      label: 'Near You',
-      desc: 'Location-based listings',
-    ),
-    (
-      icon: Icons.lock_outline_rounded,
-      label: 'Secure',
-      desc: 'Safe login & data',
-    ),
-    (
-      icon: Icons.photo_camera_outlined,
-      label: 'Easy Upload',
-      desc: 'Post in under a minute',
-    ),
-    (
-      icon: Icons.search_rounded,
-      label: 'Smart Search',
-      desc: 'Find by name or class',
-    ),
+  static List<({IconData icon, String label, String desc})> _items() => [
+    (icon: Icons.swap_horiz_rounded, label: 'feature_buy_sell'.tr, desc: 'feature_buy_sell_desc'.tr),
+    (icon: Icons.chat_bubble_outline_rounded, label: 'feature_live_chat'.tr, desc: 'feature_live_chat_desc'.tr),
+    (icon: Icons.location_on_rounded, label: 'feature_near_you'.tr, desc: 'feature_near_you_desc'.tr),
+    (icon: Icons.lock_outline_rounded, label: 'feature_secure'.tr, desc: 'feature_secure_desc'.tr),
+    (icon: Icons.photo_camera_outlined, label: 'feature_easy_upload'.tr, desc: 'feature_easy_upload_desc'.tr),
+    (icon: Icons.search_rounded, label: 'feature_smart_search'.tr, desc: 'feature_smart_search_desc'.tr),
   ];
 
   @override
@@ -456,9 +428,9 @@ class _FeaturesGrid extends StatelessWidget {
         mainAxisSpacing: 10,
         childAspectRatio: 1.38,
       ),
-      itemCount: _items.length,
+      itemCount: _items().length,
       itemBuilder: (_, i) {
-        final f = _items[i];
+        final f = _items()[i];
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -554,7 +526,7 @@ class _ContactCard extends StatelessWidget {
         children: [
           _ContactRow(
             icon: Icons.email_outlined,
-            label: 'Email Support',
+            label: 'email_support'.tr,
             value: 'support@kitabmandi.com',
             onTap: () => _launch('mailto:support@kitabmandi.com'),
             isDark: isDark,
@@ -563,7 +535,7 @@ class _ContactCard extends StatelessWidget {
           ),
           _ContactRow(
             icon: Icons.language_rounded,
-            label: 'Website',
+            label: 'website'.tr,
             value: 'www.kitabmandi.in',
             onTap: () => _launch('https://www.kitabmandi.in'),
             isDark: isDark,
@@ -698,7 +670,7 @@ class _Footer extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          '© 2026 KitabMandi. All rights reserved.\nCrafted for students across India.',
+          'copyright_footer'.tr,
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 12, color: theme.hintColor, height: 1.65),
         ),

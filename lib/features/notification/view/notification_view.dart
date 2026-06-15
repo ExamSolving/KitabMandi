@@ -306,10 +306,10 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = label == 'today'
-        ? 'Today'
+        ? 'today_label'.tr
         : label == 'yesterday'
-            ? 'Yesterday'
-            : 'Earlier';
+            ? 'yesterday_label'.tr
+            : 'earlier_label'.tr;
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 8),
       child: Text(
@@ -361,20 +361,20 @@ class _NotifCard extends StatelessWidget {
 
   String _typeLabel() {
     switch (notif.type) {
-      case NotifType.chat:    return 'Chat';
-      case NotifType.listing: return 'Listing';
-      case NotifType.offer:   return 'Offer';
-      case NotifType.system:  return 'System';
+      case NotifType.chat:    return 'notif_type_chat'.tr;
+      case NotifType.listing: return 'notif_type_listing'.tr;
+      case NotifType.offer:   return 'notif_type_offer'.tr;
+      case NotifType.system:  return 'notif_type_system'.tr;
     }
   }
 
   String _timeAgo() {
     final diff = DateTime.now().difference(notif.createdAt);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays == 1) return 'Yesterday';
-    return '${diff.inDays}d ago';
+    if (diff.inMinutes < 1) return 'just_now'.tr;
+    if (diff.inMinutes < 60) return 'minutes_ago'.trArgs([diff.inMinutes.toString()]);
+    if (diff.inHours < 24) return 'hours_ago'.trArgs([diff.inHours.toString()]);
+    if (diff.inDays == 1) return 'yesterday_label'.tr;
+    return 'days_ago'.trArgs([diff.inDays.toString()]);
   }
 
   @override
@@ -495,9 +495,9 @@ class _NotifCard extends StatelessWidget {
                                   color: tc,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: const Text(
-                                  'NEW',
-                                  style: TextStyle(
+                                child: Text(
+                                  'new_badge'.tr,
+                                  style: const TextStyle(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w800,
                                     color: Colors.white,
@@ -507,7 +507,7 @@ class _NotifCard extends StatelessWidget {
                               )
                             else
                               Text(
-                                'READ',
+                                'read_badge'.tr,
                                 style: TextStyle(
                                   fontSize: 9,
                                   fontWeight: FontWeight.w600,

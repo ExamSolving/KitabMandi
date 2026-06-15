@@ -5,6 +5,7 @@ import 'package:kitab_mandi/widgets/kitab_shimmer.dart';
 import 'package:kitab_mandi/core/controller/language_controller.dart';
 import 'package:kitab_mandi/core/controller/theme_controller.dart';
 import 'package:kitab_mandi/core/services/share_service.dart';
+import 'package:kitab_mandi/core/services/update_service.dart';
 import 'package:kitab_mandi/features/about_app/about_app_view.dart';
 import 'package:kitab_mandi/features/about_app/terms_policies_view.dart';
 import 'package:kitab_mandi/features/auth/controller/auth_controller.dart';
@@ -101,7 +102,7 @@ class ProfileView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ── My Activity ──────────────────────────────────────
-                  _SectionHead(label: 'MY ACTIVITY', theme: theme),
+                  _SectionHead(label: 'my_activity'.tr.toUpperCase(), theme: theme),
                   const SizedBox(height: 10),
                   Obx(
                     () => _ActivityRow(
@@ -113,7 +114,7 @@ class ProfileView extends StatelessWidget {
                   const SizedBox(height: 28),
 
                   // ── Preferences ───────────────────────────────────────
-                  _SectionHead(label: 'PREFERENCES', theme: theme),
+                  _SectionHead(label: 'preferences'.tr.toUpperCase(), theme: theme),
                   const SizedBox(height: 10),
                   _PrefsCard(
                     themeCtrl: themeCtrl,
@@ -375,21 +376,21 @@ class _StatsCard extends StatelessWidget {
           _StatCell(
             icon: Icons.article_outlined,
             count: listings,
-            label: 'Listings',
+            label: 'stat_listings'.tr,
             color: const Color(0xFF2E7D32),
           ),
           Container(width: 1, height: 52, color: divColor),
           _StatCell(
             icon: Icons.sell_outlined,
             count: sold,
-            label: 'Sold',
+            label: 'stat_sold'.tr,
             color: const Color(0xFFF57C00),
           ),
           Container(width: 1, height: 52, color: divColor),
           _StatCell(
             icon: Icons.shopping_bag_outlined,
             count: bought,
-            label: 'Bought',
+            label: 'stat_bought'.tr,
             color: const Color(0xFF1976D2),
           ),
         ],
@@ -561,7 +562,7 @@ class _ActivityRow extends StatelessWidget {
           child: _ActivityCard(
             icon: Icons.article_rounded,
             label: 'my_listings'.tr,
-            sublabel: '$listingCount active',
+            sublabel: 'count_active'.trArgs([listingCount.toString()]),
             color: const Color(0xFF2E7D32),
             isDark: isDark,
             cardBg: cardBg,
@@ -576,7 +577,7 @@ class _ActivityRow extends StatelessWidget {
           child: _ActivityCard(
             icon: Icons.favorite_rounded,
             label: 'my_wishlist'.tr,
-            sublabel: 'Saved items',
+            sublabel: 'saved_items'.tr,
             color: const Color(0xFFE91E63),
             isDark: isDark,
             cardBg: cardBg,
@@ -659,7 +660,7 @@ class _ActivityCard extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'View all',
+                  'view_all'.tr,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -734,7 +735,7 @@ class _PrefsCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        isDark ? 'Dark theme active' : 'Light theme active',
+                        isDark ? 'dark_theme_active'.tr : 'light_theme_active'.tr,
                         style: TextStyle(fontSize: 12, color: theme.hintColor),
                       ),
                     ],
@@ -775,7 +776,7 @@ class _PrefsCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'App display language',
+                        'app_display_language'.tr,
                         style: TextStyle(fontSize: 12, color: theme.hintColor),
                       ),
                     ],
@@ -915,7 +916,7 @@ class _SupportList extends StatelessWidget {
         icon: Icons.help_outline_rounded,
         color: const Color(0xFF7C4DFF),
         label: 'help_support'.tr,
-        sub: 'FAQs and contact us',
+        sub: 'faqs_and_contact'.tr,
         onTap: () {
           HapticFeedback.lightImpact();
           Get.toNamed(AppRoutes.helpSupport);
@@ -925,7 +926,7 @@ class _SupportList extends StatelessWidget {
         icon: Icons.share_rounded,
         color: const Color(0xFF4DA3FF),
         label: 'share_app'.tr,
-        sub: 'Tell a friend about us',
+        sub: 'tell_friend'.tr,
         onTap: () {
           HapticFeedback.lightImpact();
           ShareService.shareApp();
@@ -935,17 +936,27 @@ class _SupportList extends StatelessWidget {
         icon: Icons.policy_outlined,
         color: const Color(0xFFF57C00),
         label: 'terms_policies'.tr,
-        sub: 'Privacy and legal info',
+        sub: 'privacy_legal'.tr,
         onTap: () {
           HapticFeedback.lightImpact();
           Get.to(TermsPoliciesView());
         },
       ),
       _SItem(
+        icon: Icons.star_rounded,
+        color: const Color(0xFFFFB300),
+        label: 'rate_us'.tr,
+        sub: 'rate_us_subtitle'.tr,
+        onTap: () {
+          HapticFeedback.lightImpact();
+          UpdateService.openPlayStore();
+        },
+      ),
+      _SItem(
         icon: Icons.info_outline_rounded,
         color: const Color(0xFF26C6DA),
         label: 'about_app'.tr,
-        sub: 'Version and credits',
+        sub: 'version_and_credits'.tr,
         onTap: () {
           HapticFeedback.lightImpact();
           Get.to(AboutView());
@@ -1109,7 +1120,7 @@ class _SignOutRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Sign out of your account',
+                      'sign_out_subtitle'.tr,
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.red.withValues(alpha: 0.6),

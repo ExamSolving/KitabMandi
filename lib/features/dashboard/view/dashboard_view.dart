@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/route_manager.dart';
 import 'package:kitab_mandi/core/services/fcm_service.dart';
+import 'package:kitab_mandi/core/services/update_service.dart';
 import 'package:kitab_mandi/features/dashboard/binding/chat_binding.dart';
 import 'package:kitab_mandi/features/dashboard/binding/dashboard_binding.dart';
 import 'package:kitab_mandi/features/dashboard/binding/home_binding.dart';
@@ -49,6 +50,7 @@ class _DashboardViewState extends State<DashboardView> {
     // navigate to the correct screen once the dashboard is fully rendered.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FCMService.instance.consumePendingNavigation();
+      UpdateService.checkForUpdate();
     });
   }
 

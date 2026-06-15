@@ -12,7 +12,7 @@ class LocationAppBar extends StatelessWidget implements PreferredSizeWidget {
   final homeCtrl = Get.find<HomeController>();
   final filterCtrl = Get.find<FilterController>();
 
-  Color _background(BuildContext context) {
+  Color _appBarbackground(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return isDark ? const Color(0xFF1A1D23) : const Color(0xFFFFFFFF);
   }
@@ -27,7 +27,7 @@ class LocationAppBar extends StatelessWidget implements PreferredSizeWidget {
     // ThemeData theme = Theme.of(context);
     return AppBar(
       elevation: 0,
-      backgroundColor: _background(context),
+      backgroundColor: _appBarbackground(context),
       shape: Border(bottom: BorderSide(color: _border(context), width: 1)),
       titleSpacing: 12,
       // 🔝 TOP ROW (Location)

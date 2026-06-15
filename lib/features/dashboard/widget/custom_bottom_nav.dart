@@ -67,115 +67,121 @@ class _CustomBottomNavState extends State<CustomBottomNav>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+    final isDark = theme.brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF0E1117) : const Color(0xFFF1F3F8);
     return SizedBox(
       height: 95,
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        clipBehavior: Clip.none,
-        children: [
-          // ── Nav bar ────────────────────────────────────────────────────────
-          ClipPath(
-            clipper: _NavBarClipper(),
-            child: Container(
-              height: 75,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              decoration: BoxDecoration(
-                color: _navBackground(context),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(
-                      alpha: theme.brightness == Brightness.dark ? 0.4 : 0.1,
-                    ),
-                    blurRadius: 30,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-                border: Border.all(color: _borderColor(context), width: 0.8),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _NavItem(
-                      selectedIcon: Icons.home_rounded,
-                      unselectedIcon: Icons.home_outlined,
-                      label: 'home'.tr,
-                      index: 0,
-                      currentIndex: widget.currentIndex,
-                      onTap: _onTabTap,
-                    ),
-                  ),
-                  Expanded(
-                    child: _NavItem(
-                      selectedIcon: Icons.chat_bubble_rounded,
-                      unselectedIcon: Icons.chat_bubble_outline_rounded,
-                      label: 'chat'.tr,
-                      index: 1,
-                      currentIndex: widget.currentIndex,
-                      onTap: _onTabTap,
-                    ),
-                  ),
-                  const SizedBox(width: 62),
-                  Expanded(
-                    child: _NavItem(
-                      selectedIcon: Icons.view_list_rounded,
-                      unselectedIcon: Icons.view_list_outlined,
-                      label: 'my_ads'.tr,
-                      index: 2,
-                      currentIndex: widget.currentIndex,
-                      onTap: _onTabTap,
-                    ),
-                  ),
-                  Expanded(
-                    child: _NavItem(
-                      selectedIcon: Icons.person_rounded,
-                      unselectedIcon: Icons.person_outline_rounded,
-                      label: 'profile'.tr,
-                      index: 3,
-                      currentIndex: widget.currentIndex,
-                      onTap: _onTabTap,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // ── Floating sell button ───────────────────────────────────────────
-          Positioned(
-            top: 0,
-            child: GestureDetector(
-              onTap: _onTapSell,
-              child: AnimatedBuilder(
-                animation: _sellScale,
-                builder: (_, child) => Transform.scale(
-                  scale: _sellScale.value,
-                  child: child,
-                ),
-                child: Container(
-                  height: 60,
-                  width: 60,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [AppColors.primary, AppColors.primaryDark],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.45),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
+      child: Container(
+        color: bgColor,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          clipBehavior: Clip.none,
+          children: [
+            // ── Nav bar ────────────────────────────────────────────────────────
+            ClipPath(
+              clipper: _NavBarClipper(),
+              child: Container(
+                height: 75,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                decoration: BoxDecoration(
+                  color: _navBackground(context),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(
+                        alpha: theme.brightness == Brightness.dark ? 0.4 : 0.1,
                       ),
-                    ],
-                  ),
-                  child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+                      blurRadius: 30,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                  border: Border.all(color: _borderColor(context), width: 0.8),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _NavItem(
+                        selectedIcon: Icons.home_rounded,
+                        unselectedIcon: Icons.home_outlined,
+                        label: 'home'.tr,
+                        index: 0,
+                        currentIndex: widget.currentIndex,
+                        onTap: _onTabTap,
+                      ),
+                    ),
+                    Expanded(
+                      child: _NavItem(
+                        selectedIcon: Icons.chat_bubble_rounded,
+                        unselectedIcon: Icons.chat_bubble_outline_rounded,
+                        label: 'chat'.tr,
+                        index: 1,
+                        currentIndex: widget.currentIndex,
+                        onTap: _onTabTap,
+                      ),
+                    ),
+                    const SizedBox(width: 62),
+                    Expanded(
+                      child: _NavItem(
+                        selectedIcon: Icons.view_list_rounded,
+                        unselectedIcon: Icons.view_list_outlined,
+                        label: 'my_ads'.tr,
+                        index: 2,
+                        currentIndex: widget.currentIndex,
+                        onTap: _onTabTap,
+                      ),
+                    ),
+                    Expanded(
+                      child: _NavItem(
+                        selectedIcon: Icons.person_rounded,
+                        unselectedIcon: Icons.person_outline_rounded,
+                        label: 'profile'.tr,
+                        index: 3,
+                        currentIndex: widget.currentIndex,
+                        onTap: _onTabTap,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
-        ],
+
+            // ── Floating sell button ───────────────────────────────────────────
+            Positioned(
+              top: 0,
+              child: GestureDetector(
+                onTap: _onTapSell,
+                child: AnimatedBuilder(
+                  animation: _sellScale,
+                  builder: (_, child) =>
+                      Transform.scale(scale: _sellScale.value, child: child),
+                  child: Container(
+                    height: 60,
+                    width: 60,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [AppColors.primary, AppColors.primaryDark],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.45),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.add_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -209,48 +215,48 @@ class _NavItem extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: () => onTap(index),
       child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeInOut,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? primary.withValues(alpha: 0.12)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                transitionBuilder: (child, anim) => ScaleTransition(
-                  scale: anim,
-                  child: FadeTransition(opacity: anim, child: child),
-                ),
-                child: Icon(
-                  isSelected ? selectedIcon : unselectedIcon,
-                  key: ValueKey(isSelected),
-                  size: 22,
-                  color: isSelected
-                      ? primary
-                      : theme.iconTheme.color?.withValues(alpha: 0.55),
-                ),
-              ),
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeInOut,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? primary.withValues(alpha: 0.12)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(14),
             ),
-            const SizedBox(height: 2),
-            AnimatedDefaultTextStyle(
+            child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+              transitionBuilder: (child, anim) => ScaleTransition(
+                scale: anim,
+                child: FadeTransition(opacity: anim, child: child),
+              ),
+              child: Icon(
+                isSelected ? selectedIcon : unselectedIcon,
+                key: ValueKey(isSelected),
+                size: 22,
                 color: isSelected
                     ? primary
-                    : theme.textTheme.bodySmall?.color?.withValues(alpha: 0.55),
+                    : theme.iconTheme.color?.withValues(alpha: 0.55),
               ),
-              child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 2),
+          AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 200),
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+              color: isSelected
+                  ? primary
+                  : theme.textTheme.bodySmall?.color?.withValues(alpha: 0.55),
+            ),
+            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -271,7 +277,11 @@ class _NavBarClipper extends CustomClipper<Path> {
       clockwise: false,
     );
     path.quadraticBezierTo(
-        center + notchRadius, 0, center + notchRadius + 12, 0);
+      center + notchRadius,
+      0,
+      center + notchRadius + 12,
+      0,
+    );
     path.lineTo(size.width, 0);
     path.lineTo(size.width, size.height);
     path.lineTo(0, size.height);

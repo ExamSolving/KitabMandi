@@ -28,9 +28,9 @@ class ChatView extends StatelessWidget {
           elevation: 0,
           backgroundColor: appBarBg,
           surfaceTintColor: Colors.transparent,
-          title: const Text(
-            'Chats',
-            style: TextStyle(
+          title: Text(
+            'chats'.tr,
+            style: const TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 19,
               color: Colors.white,
@@ -47,14 +47,14 @@ class ChatView extends StatelessWidget {
             labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
             unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13.5),
             dividerColor: Colors.transparent,
-            tabs: const [
+            tabs: [
               Tab(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.shopping_bag_outlined, size: 16),
-                    SizedBox(width: 7),
-                    Text('Buying'),
+                    const Icon(Icons.shopping_bag_outlined, size: 16),
+                    const SizedBox(width: 7),
+                    Text('buying'.tr),
                   ],
                 ),
               ),
@@ -62,9 +62,9 @@ class ChatView extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.storefront_outlined, size: 16),
-                    SizedBox(width: 7),
-                    Text('Selling'),
+                    const Icon(Icons.storefront_outlined, size: 16),
+                    const SizedBox(width: 7),
+                    Text('selling'.tr),
                   ],
                 ),
               ),
@@ -96,19 +96,19 @@ class BuyingProductsView extends StatelessWidget {
           return const _ChatListShimmer();
         }
         if (snapshot.hasError) {
-          return const _EmptyState(
+          return _EmptyState(
             icon: Icons.error_outline_rounded,
-            title: 'Something went wrong',
-            subtitle: 'Pull down to refresh',
+            title: 'something_went_wrong'.tr,
+            subtitle: 'pull_down_refresh'.tr,
           );
         }
 
         final docs = snapshot.data?.docs ?? [];
         if (docs.isEmpty) {
-          return const _EmptyState(
+          return _EmptyState(
             icon: Icons.shopping_bag_outlined,
-            title: 'No conversations yet',
-            subtitle: 'Browse listings and tap Chat to start',
+            title: 'no_conversations_yet'.tr,
+            subtitle: 'browse_listings_start_chat'.tr,
           );
         }
 
@@ -146,14 +146,14 @@ class BuyingProductsView extends StatelessWidget {
               builder: (context, snap) {
                 if (!snap.hasData) return const _ChatTileShimmer();
                 final user = snap.data!;
-                final name = user['name'] as String? ?? 'Seller';
+                final name = user['name'] as String? ?? 'seller'.tr;
                 final avatar = (user['photoUrl'] as String?) ?? '';
 
                 return _ConversationTile(
                   name: name,
                   avatar: avatar,
                   productTitle: chat['listingTitle'] as String? ?? '',
-                  lastMessage: chat['lastMessage'] as String? ?? 'Tap to chat',
+                  lastMessage: chat['lastMessage'] as String? ?? 'tap_to_chat'.tr,
                   time: chat['lastMessageTime'],
                   isMe: isMe,
                   isSeen: chat['isSeen'] as bool? ?? true,
@@ -189,18 +189,18 @@ class SellingProductsView extends StatelessWidget {
           return const _CardListShimmer();
         }
         if (snapshot.hasError) {
-          return const _EmptyState(
+          return _EmptyState(
             icon: Icons.error_outline_rounded,
-            title: 'Something went wrong',
+            title: 'something_went_wrong'.tr,
           );
         }
 
         final docs = snapshot.data?.docs ?? [];
         if (docs.isEmpty) {
-          return const _EmptyState(
+          return _EmptyState(
             icon: Icons.storefront_outlined,
-            title: 'No buyers yet',
-            subtitle: 'Post a listing to start receiving messages',
+            title: 'no_buyers_yet'.tr,
+            subtitle: 'post_listing_for_messages'.tr,
           );
         }
 
@@ -276,7 +276,7 @@ class _ConversationTile extends StatelessWidget {
       final now = DateTime.now();
       final diff = now.difference(d);
       if (diff.inDays == 0) return TimeOfDay.fromDateTime(d).format(ctx);
-      if (diff.inDays == 1) return 'Yesterday';
+      if (diff.inDays == 1) return 'yesterday'.tr;
       if (diff.inDays < 7) {
         const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         return days[d.weekday - 1];
@@ -512,7 +512,7 @@ class _ProductCard extends StatelessWidget {
         final m = d.minute.toString().padLeft(2, '0');
         return '$h:$m';
       }
-      if (diff.inDays == 1) return 'Yesterday';
+      if (diff.inDays == 1) return 'yesterday'.tr;
       return '${d.day}/${d.month}';
     } catch (_) {
       return '';
@@ -613,7 +613,7 @@ class _ProductCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            '$buyerCount ${buyerCount == 1 ? 'buyer' : 'buyers'} interested',
+                            (buyerCount == 1 ? 'buyer_interested_one' : 'buyer_interested_many').trArgs([buyerCount.toString()]),
                             style: const TextStyle(
                               color: AppColors.primary,
                               fontSize: 11,
@@ -679,17 +679,17 @@ class UsersListView extends StatelessWidget {
             return const _ChatListShimmer();
           }
           if (snapshot.hasError) {
-            return const _EmptyState(
+            return _EmptyState(
                 icon: Icons.error_outline_rounded,
-                title: 'Error loading chats');
+                title: 'error_loading_chats'.tr);
           }
 
           final users = snapshot.data?.docs ?? [];
           if (users.isEmpty) {
-            return const _EmptyState(
+            return _EmptyState(
               icon: Icons.chat_bubble_outline_rounded,
-              title: 'No conversations yet',
-              subtitle: 'Buyers will appear here when they message you',
+              title: 'no_conversations_yet'.tr,
+              subtitle: 'buyers_appear_message'.tr,
             );
           }
 

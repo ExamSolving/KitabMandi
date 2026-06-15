@@ -87,8 +87,7 @@ class HomeView extends StatelessWidget {
     final sw = MediaQuery.sizeOf(context).width;
     final isTablet = sw >= 600;
     final isDark = theme.brightness == Brightness.dark;
-
-    final bgColor = isDark ? const Color(0xFF090B13) : const Color(0xFFF5F6FA);
+    final bgColor = isDark ? const Color(0xFF0E1117) : const Color(0xFFF1F3F8);
     final appBarBg = isDark ? const Color(0xFF1A1D23) : Colors.white;
     // Responsive sizing — clamp keeps it sane on all screen sizes
     final bannerH = (sw * 0.50).clamp(160.0, 280.0);
@@ -1093,8 +1092,7 @@ class _LocationSheetState extends State<_LocationSheet>
                             )
                           : null,
                       border: InputBorder.none,
-                      contentPadding:
-                          const EdgeInsets.symmetric(vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
                 ),
@@ -1280,8 +1278,8 @@ class _CitiesView extends StatelessWidget {
     final cities = query.isEmpty
         ? all
         : all
-            .where((c) => c.toLowerCase().contains(query.toLowerCase()))
-            .toList();
+              .where((c) => c.toLowerCase().contains(query.toLowerCase()))
+              .toList();
 
     if (cities.isEmpty) {
       return Center(
@@ -1375,8 +1373,10 @@ class _SearchResults extends StatelessWidget {
       itemBuilder: (_, i) {
         final r = results[i];
         return ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 2,
+          ),
           leading: Container(
             width: 36,
             height: 36,
@@ -1392,10 +1392,7 @@ class _SearchResults extends StatelessWidget {
             primary: primary,
             onSurface: onSurface,
           ),
-          subtitle: Text(
-            r.state,
-            style: TextStyle(fontSize: 12, color: hint),
-          ),
+          subtitle: Text(r.state, style: TextStyle(fontSize: 12, color: hint)),
           onTap: () => onCityTap(r.city, r.state),
         );
       },
@@ -1660,18 +1657,12 @@ class _CityTile extends StatelessWidget {
         city,
         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
       ),
-      subtitle: Text(
-        state,
-        style: TextStyle(fontSize: 11.5, color: hint),
-      ),
+      subtitle: Text(state, style: TextStyle(fontSize: 11.5, color: hint)),
       trailing: loading
           ? SizedBox(
               width: 16,
               height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: primary,
-              ),
+              child: CircularProgressIndicator(strokeWidth: 2, color: primary),
             )
           : Icon(
               Icons.chevron_right_rounded,
@@ -1721,10 +1712,7 @@ class _HighlightText extends StatelessWidget {
           if (idx > 0) TextSpan(text: text.substring(0, idx)),
           TextSpan(
             text: text.substring(idx, idx + query.length),
-            style: TextStyle(
-              color: primary,
-              fontWeight: FontWeight.w700,
-            ),
+            style: TextStyle(color: primary, fontWeight: FontWeight.w700),
           ),
           if (idx + query.length < text.length)
             TextSpan(text: text.substring(idx + query.length)),
