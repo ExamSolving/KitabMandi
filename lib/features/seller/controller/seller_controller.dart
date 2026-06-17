@@ -8,7 +8,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:kitab_mandi/core/constants/app_color.dart';
 import 'package:kitab_mandi/core/services/location_service.dart';
 import 'package:kitab_mandi/core/utils/app_snackbar.dart';
+import 'package:kitab_mandi/features/auth/controller/auth_controller.dart';
 import 'package:kitab_mandi/features/auth/domain/repositories/i_auth_repository.dart';
+import 'package:kitab_mandi/features/seller/view/ad_posted_sheet.dart';
 import 'package:kitab_mandi/features/dashboard/controller/home_controller.dart';
 import 'package:kitab_mandi/features/dashboard/controller/my_ads_controller.dart';
 import 'package:kitab_mandi/features/dashboard/model/listing_model.dart';
@@ -484,6 +486,11 @@ class SellerController extends GetxController {
           'updatedAt': FieldValue.serverTimestamp(),
         });
       } else {
+        // Capture before creating so the count is still 0 for first-ever listing
+        final isFirstAd = Get.isRegistered<MyAdsController>()
+            ? Get.find<MyAdsController>().myAdsList.isEmpty
+            : false;
+
         await _listingRepo.createListing({
           ...data,
           'status': 'active',
@@ -492,6 +499,18 @@ class SellerController extends GetxController {
           'views': 0,
           'viewedBy': [],
         });
+        // Stamp the user doc so the dashboard can enforce the 24-hour limit
+        // synchronously from the already-loaded userData on the next sell tap.
+        await _authRepo.updateLastListingAt(user.uid);
+        await Get.find<AuthController>().fetchUserData();
+
+        Get.offAllNamed(AppRoutes.dashboard);
+
+        // Show celebration sheet after the dashboard route is fully rendered.
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => showAdPostedSheet(isFirstAd: isFirstAd),
+        );
+        return;
       }
 
       Get.offAllNamed(AppRoutes.dashboard);

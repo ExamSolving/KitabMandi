@@ -100,6 +100,13 @@ class AuthRemoteDataSource {
     return (doc.data()?['phone'] ?? '').toString().isNotEmpty;
   }
 
+  /// Stamps the user doc with the current server time so the daily-limit
+  /// check in the dashboard can be done synchronously from userData.
+  Future<void> updateLastListingAt(String uid) =>
+      _firestore.collection('users').doc(uid).update({
+        'lastListingAt': FieldValue.serverTimestamp(),
+      });
+
   /// Returns true if the phone number is already stored on any user document
   /// other than [excludeUid] (pass the current user's UID on profile edits).
   Future<bool> isPhoneTaken(String phone, {String? excludeUid}) async {

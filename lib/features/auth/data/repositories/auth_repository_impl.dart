@@ -93,6 +93,10 @@ class AuthRepositoryImpl implements IAuthRepository {
       _ds.isUserProfileComplete(uid);
 
   @override
+  Future<void> updateLastListingAt(String uid) =>
+      _ds.updateLastListingAt(uid);
+
+  @override
   Future<bool> isPhoneTaken(String phone, {String? excludeUid}) =>
       _ds.isPhoneTaken(phone, excludeUid: excludeUid);
 }

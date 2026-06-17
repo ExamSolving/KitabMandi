@@ -521,9 +521,12 @@ class _ImagesSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              Text(
-                'first_photo_cover'.tr,
-                style: TextStyle(fontSize: 11.5, color: theme.hintColor),
+              Expanded(
+                child: Text(
+                  'first_photo_cover'.tr,
+                  style: TextStyle(fontSize: 11.5, color: theme.hintColor),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
@@ -556,7 +559,7 @@ class _CounterBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        'photos_counter'.trArgs([current.toString(), max.toString()]),
+        '$current / $max ${'photos_label'.tr}',
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,

@@ -139,6 +139,7 @@
   "main_badge": "MAIN",
   "field_category": "Category",
   "photos_counter": "@0 / @1 photos",
+  "photos_label": "Photos",
 
   "listings": "Listings",
   "sold": "Sold",

@@ -55,6 +55,10 @@ abstract class IAuthRepository {
   /// Returns true when a Firestore user document exists AND has a phone number.
   Future<bool> isUserProfileComplete(String uid);
 
+  /// Stamps the user's Firestore doc with the time of their latest listing so
+  /// the dashboard can enforce the 24-hour limit without a network call.
+  Future<void> updateLastListingAt(String uid);
+
   /// Returns true if [phone] is already registered to a different account.
   /// Pass [excludeUid] (current user's UID) on profile-edit checks so the
   /// user can save without changing their own number.
