@@ -37,6 +37,15 @@ class AuthRemoteDataSource {
   Future<void> sendPasswordResetEmail(String email) =>
       _auth.sendPasswordResetEmail(email: email);
 
+  Future<void> sendEmailVerification() =>
+      _auth.currentUser!.sendEmailVerification();
+
+  Future<void> reloadUser() => _auth.currentUser!.reload();
+
+  bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
+
+  Future<void> deleteCurrentUser() => _auth.currentUser!.delete();
+
   Future<void> signOut() => _auth.signOut();
 
   Future<GoogleSignInAccount?> initiateGoogleSignIn() async {
@@ -89,5 +98,18 @@ class AuthRemoteDataSource {
     final doc = await _firestore.collection('users').doc(uid).get();
     if (!doc.exists) return false;
     return (doc.data()?['phone'] ?? '').toString().isNotEmpty;
+  }
+
+  /// Returns true if the phone number is already stored on any user document
+  /// other than [excludeUid] (pass the current user's UID on profile edits).
+  Future<bool> isPhoneTaken(String phone, {String? excludeUid}) async {
+    final snap = await _firestore
+        .collection('users')
+        .where('phone', isEqualTo: phone)
+        .limit(1)
+        .get();
+    if (snap.docs.isEmpty) return false;
+    if (excludeUid != null && snap.docs.first.id == excludeUid) return false;
+    return true;
   }
 }

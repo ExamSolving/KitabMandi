@@ -21,6 +21,11 @@ abstract class IAuthRepository {
 
   Future<void> sendPasswordResetEmail(String email);
 
+  Future<void> sendEmailVerification();
+  Future<void> reloadUser();
+  bool get isEmailVerified;
+  Future<void> deleteCurrentUser();
+
   // ── Google ────────────────────────────────────────────────────────────────
   Future<GoogleSignInAccount?> initiateGoogleSignIn();
 
@@ -49,4 +54,9 @@ abstract class IAuthRepository {
 
   /// Returns true when a Firestore user document exists AND has a phone number.
   Future<bool> isUserProfileComplete(String uid);
+
+  /// Returns true if [phone] is already registered to a different account.
+  /// Pass [excludeUid] (current user's UID) on profile-edit checks so the
+  /// user can save without changing their own number.
+  Future<bool> isPhoneTaken(String phone, {String? excludeUid});
 }

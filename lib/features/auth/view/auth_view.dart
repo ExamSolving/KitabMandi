@@ -15,8 +15,8 @@ class AuthView extends StatelessWidget {
 
   Color _card(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? const Color(0xFF1A1D23)
-          : Colors.white;
+      ? const Color(0xFF1A1D23)
+      : Colors.white;
 
   Widget _prefix(BuildContext context, IconData icon) {
     final theme = Theme.of(context);

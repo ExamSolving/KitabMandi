@@ -3,6 +3,7 @@ import 'package:kitab_mandi/features/auth/binding/auth_binding.dart';
 import 'package:kitab_mandi/features/profile_edit/controller/profile_edit_controller.dart';
 import 'package:kitab_mandi/features/profile_edit/view/profile_edit_view.dart';
 import 'package:kitab_mandi/features/auth/view/auth_view.dart';
+import 'package:kitab_mandi/features/auth/view/email_verification_view.dart';
 import 'package:kitab_mandi/features/auth/view/forgot_password_view.dart';
 import 'package:kitab_mandi/features/dashboard/binding/chat_binding.dart';
 import 'package:kitab_mandi/features/dashboard/binding/dashboard_binding.dart';
@@ -42,6 +43,10 @@ class AppPages {
       binding: AuthBinding(),
     ),
     GetPage(name: AppRoutes.forgotPassword, page: () => ForgotPasswordView()),
+    GetPage(
+      name: AppRoutes.emailVerification,
+      page: () => EmailVerificationView(email: Get.arguments as String? ?? ''),
+    ),
     // //  Dashboard
     GetPage(
       name: AppRoutes.dashboard,

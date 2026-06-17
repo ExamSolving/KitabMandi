@@ -3,7 +3,7 @@ description: "A new Flutter project."
 
 publish_to: "none"
 
-version: 1.0.0+2
+version: 1.0.1+4
 
 environment:
   sdk: ^3.10.8
@@ -35,7 +35,6 @@ dependencies:
   file_picker: ^11.0.2
   firebase_messaging: ^16.2.0
   flutter_local_notifications: ^18.0.0
-  package_info_plus: ^8.0.0
 
 dev_dependencies:
   flutter_test:

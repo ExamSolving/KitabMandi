@@ -147,6 +147,21 @@ class ProfileEditController extends GetxController {
       final user = _authRepo.currentUser;
       if (user == null) return;
 
+      final newPhone = phoneCtrl.text.trim();
+
+      // Check phone uniqueness, excluding the current user so they can save
+      // without changing their own number.
+      if (await _authRepo.isPhoneTaken(newPhone, excludeUid: user.uid)) {
+        Get.snackbar(
+          'Error',
+          'This phone number is already registered with another account.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return;
+      }
+
       final currentData = _authCtrl.userData.value ?? {};
       String photoUrl = currentData['photoUrl'] as String? ?? '';
 
@@ -158,7 +173,7 @@ class ProfileEditController extends GetxController {
       await _authRepo.saveUserProfile(
         uid: user.uid,
         name: nameCtrl.text.trim(),
-        phone: phoneCtrl.text.trim(),
+        phone: newPhone,
         email: user.email ?? '',
         photoUrl: photoUrl,
         isGoogleUser: currentData['provider'] == 'google',

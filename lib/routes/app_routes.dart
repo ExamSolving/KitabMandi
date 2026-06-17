@@ -4,6 +4,7 @@ class AppRoutes {
   static const wrapper = '/wrapper';
   static const auth = '/auth';
   static const forgotPassword = '/forgotPassword';
+  static const emailVerification = '/emailVerification';
   static const wishlist = '/wishlist';
   static const myAds = '/myAds';
   static const listingDetailsView = '/listingDetailsView';

@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:kitab_mandi/core/constants/app_color.dart';
 import 'package:kitab_mandi/core/controller/location_controller.dart';
 import 'package:kitab_mandi/features/auth/domain/repositories/i_auth_repository.dart';
+import 'package:kitab_mandi/routes/app_routes.dart';
 import 'package:kitab_mandi/widgets/app_button.dart';
 import '../../../core/utils/app_snackbar.dart';
 import '../../../core/utils/validators.dart';
@@ -21,6 +24,18 @@ class AuthController extends GetxController {
   final isGoogleUser = false.obs;
   // True until the first Firebase auth event resolves on app start
   final isCheckingAuth = true.obs;
+
+  // ── Email verification state ──────────────────────────────────────────────
+  final isCheckingVerification = false.obs;
+  final resendCooldown = 0.obs; // seconds remaining before resend is allowed
+  Timer? _pollTimer;
+  Timer? _cooldownTimer;
+
+  // Pending signup data held in memory between createAccount and profile save
+  String _pendingName = '';
+  String _pendingPhone = '';
+  String _pendingEmail = '';
+  String _pendingPassword = '';
 
   final formKey = GlobalKey<FormState>();
 
@@ -40,11 +55,32 @@ class AuthController extends GetxController {
     _listenAuthChanges();
   }
 
+  @override
+  void onClose() {
+    _pollTimer?.cancel();
+    _cooldownTimer?.cancel();
+    super.onClose();
+  }
+
   void _listenAuthChanges() {
     bool firstEvent = true;
     _authRepo.authStateChanges.listen((user) async {
       if (user != null) {
         await fetchUserData();
+        // Firebase persists auth locally even after the account is deleted from
+        // the console. If we have a Firebase user but no Firestore profile, and
+        // we're not actively creating one, it's a stale session — sign out so
+        // background services (FCM, location) can't re-create the document.
+        if (userData.value == null &&
+            !isGoogleUser.value &&
+            _pendingEmail.isEmpty) {
+          if (firstEvent) {
+            firstEvent = false;
+            isCheckingAuth.value = false;
+          }
+          await _authRepo.signOut();
+          return;
+        }
       } else {
         userData.value = null;
       }
@@ -134,9 +170,37 @@ class AuthController extends GetxController {
       final email = emailController.text.trim();
       final password = passwordController.text.trim();
 
-      if (!isGoogleUser.value) {
-        await _authRepo.createAccount(email: email, password: password);
+      // Reject duplicate phone numbers before touching Firebase Auth
+      if (await _authRepo.isPhoneTaken(phone)) {
+        AppSnackbar.error('error_phone_in_use'.tr);
+        return;
       }
+
+      // Google users are already verified — skip email verification step
+      if (isGoogleUser.value) {
+        final user = _authRepo.currentUser;
+        if (user == null) {
+          AppSnackbar.error('user_creation_failed'.tr);
+          return;
+        }
+        await _authRepo.saveUserProfile(
+          uid: user.uid,
+          name: name,
+          phone: phone,
+          email: user.email ?? email,
+          photoUrl: user.photoURL ?? '',
+          isGoogleUser: true,
+        );
+        await fetchUserData();
+        clearAllFields();
+        isLogin.value = true;
+        await locationController.initLocation(isNewUser: true);
+        isGoogleUser.value = false;
+        return;
+      }
+
+      // Email/password signup → create account, send verification, sign out
+      await _authRepo.createAccount(email: email, password: password);
 
       final user = _authRepo.currentUser;
       if (user == null) {
@@ -144,19 +208,20 @@ class AuthController extends GetxController {
         return;
       }
 
-      await _authRepo.saveUserProfile(
-        uid: user.uid,
-        name: name,
-        phone: phone,
-        email: user.email ?? email,
-        photoUrl: user.photoURL ?? '',
-        isGoogleUser: isGoogleUser.value,
-      );
-      await fetchUserData();
-      clearAllFields();
-      isLogin.value = true;
-      await locationController.initLocation(isNewUser: true);
-      isGoogleUser.value = false;
+      // Store pending data — needed to save profile after verification
+      _pendingName = name;
+      _pendingPhone = phone;
+      _pendingEmail = email;
+      _pendingPassword = password;
+
+      await _authRepo.sendEmailVerification();
+
+      // Sign out so the auth listener doesn't navigate to dashboard yet
+      await _authRepo.signOut();
+
+      // Don't clear form — fields are needed if user returns to change email
+      Get.toNamed(AppRoutes.emailVerification, arguments: email);
+      _startResendCooldown();
     } on FirebaseAuthException catch (e) {
       AppSnackbar.error(_handleAuthError(e));
     } catch (e) {
@@ -164,6 +229,145 @@ class AuthController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // ── Email verification polling ────────────────────────────────────────────
+
+  /// Called by EmailVerificationView on mount.
+  /// Checks immediately, then polls every 3 s as a background safety net.
+  void startVerificationPolling() {
+    _pollTimer?.cancel();
+    _checkVerified(); // instant first check — no need to wait 3 s
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
+      await _checkVerified();
+    });
+  }
+
+  void stopVerificationPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+  }
+
+  /// Triggered when the app returns to the foreground while the verification
+  /// screen is visible — gives near-instant detection after the user taps the
+  /// link in their email client and switches back to the app.
+  void checkVerifiedOnResume() => _checkVerified();
+
+  Future<void> _checkVerified() async {
+    if (isCheckingVerification.value) return;
+    try {
+      isCheckingVerification.value = true;
+      // Sign in temporarily to reload the user object from Firebase
+      await _authRepo.signInWithEmail(
+        email: _pendingEmail,
+        password: _pendingPassword,
+      );
+      await _authRepo.reloadUser();
+      if (_authRepo.isEmailVerified) {
+        stopVerificationPolling();
+        await _completeRegistration();
+      } else {
+        // Not verified yet — sign out and keep waiting
+        await _authRepo.signOut();
+      }
+    } catch (_) {
+      // Silently ignore transient network errors during polling
+    } finally {
+      isCheckingVerification.value = false;
+    }
+  }
+
+  Future<void> _completeRegistration() async {
+    try {
+      final user = _authRepo.currentUser;
+      if (user == null) return;
+      await _authRepo.saveUserProfile(
+        uid: user.uid,
+        name: _pendingName,
+        phone: _pendingPhone,
+        email: user.email ?? _pendingEmail,
+        photoUrl: user.photoURL ?? '',
+        isGoogleUser: false,
+      );
+      await fetchUserData();
+      _clearPendingData();
+      clearAllFields();
+      isLogin.value = true;
+      await locationController.initLocation(isNewUser: true);
+      // WrapperView shows DashboardView inline when userData is set, but it's
+      // hidden under /emailVerification. Clear the stack to surface it.
+      Get.offAllNamed(AppRoutes.wrapper);
+    } catch (e) {
+      AppSnackbar.error('signup_failed'.tr);
+    }
+  }
+
+  void _clearPendingData() {
+    _pendingName = '';
+    _pendingPhone = '';
+    _pendingEmail = '';
+    _pendingPassword = '';
+  }
+
+  Future<void> resendVerificationEmail() async {
+    if (resendCooldown.value > 0) return;
+    try {
+      isLoading.value = true;
+      // Sign in temporarily to send the verification email
+      await _authRepo.signInWithEmail(
+        email: _pendingEmail,
+        password: _pendingPassword,
+      );
+      await _authRepo.sendEmailVerification();
+      await _authRepo.signOut();
+      AppSnackbar.success('verify_email_resent'.tr);
+      _startResendCooldown();
+    } on FirebaseAuthException catch (e) {
+      AppSnackbar.error(_handleAuthError(e));
+    } catch (e) {
+      AppSnackbar.error('error_generic'.tr);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void _startResendCooldown([int seconds = 60]) {
+    resendCooldown.value = seconds;
+    _cooldownTimer?.cancel();
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (resendCooldown.value <= 0) {
+        t.cancel();
+      } else {
+        resendCooldown.value--;
+      }
+    });
+  }
+
+  /// Called when user presses "Wrong email? Change it"
+  Future<void> cancelVerification() async {
+    stopVerificationPolling();
+    _cooldownTimer?.cancel();
+    resendCooldown.value = 0;
+
+    // Delete the unverified account so the email can be reused
+    try {
+      await _authRepo.signInWithEmail(
+        email: _pendingEmail,
+        password: _pendingPassword,
+      );
+      await _authRepo.deleteCurrentUser();
+    } catch (_) {}
+
+    // Restore form with the data the user already entered so they only
+    // need to fix the email — don't make them retype everything.
+    nameController.text = _pendingName;
+    phoneController.text = _pendingPhone;
+    emailController.text = _pendingEmail;
+    passwordController.text = _pendingPassword;
+    isLogin.value = false; // stay on signup tab
+
+    _clearPendingData();
+    Get.back();
   }
 
   // ── Forgot password ───────────────────────────────────────────────────────
@@ -196,12 +400,26 @@ class AuthController extends GetxController {
   Future<void> login() async {
     try {
       isLoading.value = true;
-      await _authRepo.signInWithEmail(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+      final email = emailController.text.trim();
+      final password = passwordController.text.trim();
+
+      await _authRepo.signInWithEmail(email: email, password: password);
+      await _authRepo.reloadUser();
+
+      // Block login for unverified email accounts
+      if (!_authRepo.isEmailVerified) {
+        await _authRepo.signOut();
+        // Store credentials so the verification screen can poll/resend
+        _pendingEmail = email;
+        _pendingPassword = password;
+        AppSnackbar.error('verify_email_first'.tr);
+        Get.toNamed(AppRoutes.emailVerification, arguments: email);
+        _startResendCooldown();
+        return;
+      }
+
       // Explicitly fetch user data here rather than relying solely on the
-      // authStateChanges listener.  If the user already had a persisted
+      // authStateChanges listener. If the user already had a persisted
       // Firebase session the listener may not re-fire, leaving userData null.
       await fetchUserData();
       final uid = _authRepo.currentUser?.uid ?? '';

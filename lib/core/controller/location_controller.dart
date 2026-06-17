@@ -138,16 +138,19 @@ class LocationController extends GetxController {
 
   // Writes the user's current lat/long to their Firestore profile so that
   // Cloud Functions can query nearby users when a new listing is posted.
+  // Uses update() intentionally — if the document doesn't exist (deleted user),
+  // Firestore throws NOT_FOUND and we silently ignore it rather than re-creating
+  // a ghost document for a deleted account.
   Future<void> _syncLocationToFirestore(double lat, double long) async {
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) return;
-      await FirebaseFirestore.instance.collection('users').doc(uid).set(
-        {'location': {'lat': lat, 'long': long}},
-        SetOptions(merge: true),
-      );
-    } catch (e) {
-      debugPrint('[LocationController] Firestore sync error: $e');
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .update({'location': {'lat': lat, 'long': long}});
+    } catch (_) {
+      // NOT_FOUND = deleted user, network error, etc. — all safe to ignore here.
     }
   }
 

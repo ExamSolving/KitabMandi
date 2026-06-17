@@ -32,6 +32,18 @@ class AuthRepositoryImpl implements IAuthRepository {
       _ds.sendPasswordResetEmail(email);
 
   @override
+  Future<void> sendEmailVerification() => _ds.sendEmailVerification();
+
+  @override
+  Future<void> reloadUser() => _ds.reloadUser();
+
+  @override
+  bool get isEmailVerified => _ds.isEmailVerified;
+
+  @override
+  Future<void> deleteCurrentUser() => _ds.deleteCurrentUser();
+
+  @override
   Future<void> signOut() => _ds.signOut();
 
   @override
@@ -79,4 +91,8 @@ class AuthRepositoryImpl implements IAuthRepository {
   @override
   Future<bool> isUserProfileComplete(String uid) =>
       _ds.isUserProfileComplete(uid);
+
+  @override
+  Future<bool> isPhoneTaken(String phone, {String? excludeUid}) =>
+      _ds.isPhoneTaken(phone, excludeUid: excludeUid);
 }

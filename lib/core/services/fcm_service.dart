@@ -200,18 +200,20 @@ class FCMService {
       final token = await FirebaseMessaging.instance.getToken();
       if (token == null) return;
 
-      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+      // Use update() so we never create a ghost document for a deleted account.
+      // If the document doesn't exist Firestore throws NOT_FOUND — caught below.
+      await FirebaseFirestore.instance.collection('users').doc(uid).update({
         'fcmToken': token,
         'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
         'platform': defaultTargetPlatform.name,
-      }, SetOptions(merge: true));
+      });
 
       // Keep token fresh if Firebase rotates it
       FirebaseMessaging.instance.onTokenRefresh.listen((fresh) {
-        FirebaseFirestore.instance.collection('users').doc(uid).set({
+        FirebaseFirestore.instance.collection('users').doc(uid).update({
           'fcmToken': fresh,
           'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+        }).catchError((_) {});
       });
 
       debugPrint('[FCM] Token saved for $uid');
