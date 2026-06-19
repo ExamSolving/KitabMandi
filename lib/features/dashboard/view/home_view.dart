@@ -90,12 +90,12 @@ class HomeView extends StatelessWidget {
     final bgColor = isDark ? const Color(0xFF0E1117) : const Color(0xFFF1F3F8);
     final appBarBg = isDark ? const Color(0xFF1A1D23) : Colors.white;
     // Responsive sizing — clamp keeps it sane on all screen sizes
-    final bannerH = (sw * 0.50).clamp(160.0, 280.0);
-    final catSectionH = (sw * 0.31).clamp(102.0, 140.0);
-    final catIconW = (sw * 0.148).clamp(52.0, 74.0);
-    final popularSectionH = (sw * 0.82).clamp(280.0, 370.0);
-    final popularCardW = (sw * 0.52).clamp(172.0, 240.0);
-    final hPad = (sw * 0.048).clamp(14.0, 24.0);
+    final bannerH = (sw * 0.52).clamp(170.0, 290.0);
+    final catSectionH = (sw * 0.33).clamp(108.0, 148.0);
+    final catIconW = (sw * 0.152).clamp(54.0, 76.0);
+    final popularSectionH = (sw * 0.88).clamp(300.0, 390.0);
+    final popularCardW = (sw * 0.54).clamp(180.0, 250.0);
+    final hPad = (sw * 0.048).clamp(16.0, 24.0);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -218,7 +218,7 @@ class HomeView extends StatelessWidget {
 
           return ListView(
             physics: const BouncingScrollPhysics(),
-            padding: EdgeInsets.only(bottom: 24, top: 12),
+            padding: EdgeInsets.only(bottom: 32, top: 12),
             children: [
               // ── Banner ───────────────────────────────────────────────────
               CarouselSlider.builder(
@@ -227,98 +227,110 @@ class HomeView extends StatelessWidget {
                   height: bannerH,
                   autoPlay: true,
                   enlargeCenterPage: true,
-                  viewportFraction: isTablet ? 0.72 : 0.90,
+                  enlargeFactor: 0.06,
+                  viewportFraction: isTablet ? 0.74 : 0.92,
                   autoPlayCurve: Curves.easeInOutCubic,
                   autoPlayInterval: const Duration(seconds: 4),
                   onPageChanged: (i, _) => currentBanner.value = i,
                 ),
                 itemBuilder: (context2, index, realIdx) {
                   return Container(
-                    width: double.infinity,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(24),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: isDark
-                            ? [const Color(0xFF1B3A1C), const Color(0xFF0D2410)]
-                            : [
-                                const Color(0xFFE8F5E9),
-                                const Color(0xFFC8E6C9),
-                              ],
-                      ),
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(
+                              alpha: isDark ? 0.28 : 0.10),
+                          blurRadius: 22,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(22),
                       child: Stack(
+                        fit: StackFit.expand,
                         children: [
-                          // Left: text content
+                          // Full-bleed image
+                          AppCachedImageNetwork(
+                            imageUrl: bannerList[index]["url"]!,
+                            fit: BoxFit.cover,
+                          ),
+
+                          // Left-to-right dark overlay for text legibility
+                          Positioned.fill(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.centerRight,
+                                  end: Alignment.centerLeft,
+                                  stops: const [0.15, 0.78],
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.black.withValues(alpha: 0.72),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Bottom vignette
+                          Positioned.fill(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  stops: const [0.45, 1.0],
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.black.withValues(alpha: 0.42),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Text content — bottom left
                           Positioned(
-                            left: 20,
-                            top: 0,
-                            bottom: 0,
-                            width: sw * 0.40,
+                            left: 18,
+                            bottom: 18,
+                            right: sw * 0.32,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
+                                      horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withValues(
-                                      alpha: 0.15,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8),
+                                    color: AppColors.primary,
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
                                     'buy_sell_tagline'.tr,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      color: isDark
-                                          ? AppColors.darkPrimary
-                                          : AppColors.primary,
-                                      letterSpacing: 0.4,
+                                    style: const TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                      letterSpacing: 0.6,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 10),
+                                const SizedBox(height: 8),
                                 Text(
                                   bannerList[index]["title"]!,
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    fontSize: isTablet ? 22 : 17,
+                                    fontSize: isTablet ? 22 : 18,
                                     fontWeight: FontWeight.w800,
                                     height: 1.2,
                                     letterSpacing: -0.3,
-                                    color: isDark
-                                        ? Colors.white
-                                        : const Color(0xFF1A1A1A),
+                                    color: Colors.white,
                                   ),
                                 ),
                               ],
-                            ),
-                          ),
-
-                          // Right: image
-                          Positioned(
-                            right: 0,
-                            top: 0,
-                            bottom: 0,
-                            width: sw * 0.42,
-                            child: ClipRRect(
-                              borderRadius: const BorderRadius.only(
-                                topRight: Radius.circular(24),
-                                bottomRight: Radius.circular(24),
-                              ),
-                              child: AppCachedImageNetwork(
-                                imageUrl: bannerList[index]["url"]!,
-                                fit: BoxFit.cover,
-                              ),
                             ),
                           ),
                         ],
@@ -328,7 +340,7 @@ class HomeView extends StatelessWidget {
                 },
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
 
               // ── Banner dots ──────────────────────────────────────────────
               Obx(
@@ -339,18 +351,93 @@ class HomeView extends StatelessWidget {
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 280),
                       margin: const EdgeInsets.symmetric(horizontal: 3),
-                      height: 6,
-                      width: active ? 18 : 6,
+                      height: 5,
+                      width: active ? 20 : 5,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(50),
                         color: active
                             ? theme.colorScheme.primary
                             : isDark
-                            ? Colors.white.withValues(alpha: 0.2)
-                            : Colors.black12,
+                                ? Colors.white.withValues(alpha: 0.18)
+                                : Colors.black.withValues(alpha: 0.14),
                       ),
                     );
                   }),
+                ),
+              ),
+
+              SizedBox(height: hPad * 0.9),
+
+              // ── Quick stats strip ────────────────────────────────────────
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: hPad),
+                child: Container(
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF1A1D23)
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.06)
+                          : const Color(0xFFEEEFF3),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black
+                            .withValues(alpha: isDark ? 0.18 : 0.04),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Obx(() => Row(
+                    children: [
+                      Expanded(
+                        child: _StatPill(
+                          icon: Icons.menu_book_rounded,
+                          value: '${homeCtrl.allListings.length}+',
+                          label: 'Books',
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                      VerticalDivider(
+                        width: 1,
+                        thickness: 1,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.07)
+                            : Colors.black.withValues(alpha: 0.07),
+                        indent: 16,
+                        endIndent: 16,
+                      ),
+                      Expanded(
+                        child: _StatPill(
+                          icon: Icons.local_offer_rounded,
+                          value: 'FREE',
+                          label: 'Listing',
+                          color: const Color(0xFF10B981),
+                        ),
+                      ),
+                      VerticalDivider(
+                        width: 1,
+                        thickness: 1,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.07)
+                            : Colors.black.withValues(alpha: 0.07),
+                        indent: 16,
+                        endIndent: 16,
+                      ),
+                      Expanded(
+                        child: _StatPill(
+                          icon: Icons.handshake_rounded,
+                          value: '100%',
+                          label: 'Trusted',
+                          color: const Color(0xFF6366F1),
+                        ),
+                      ),
+                    ],
+                  )),
                 ),
               ),
 
@@ -416,56 +503,37 @@ class HomeView extends StatelessWidget {
                                 width: catIconW,
                                 height: catIconW,
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(
-                                    catIconW * 0.32,
-                                  ),
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: isDark
-                                        ? [
-                                            AppColors.darkPrimary.withValues(
-                                              alpha: 0.18,
-                                            ),
-                                            AppColors.darkPrimaryDark
-                                                .withValues(alpha: 0.28),
-                                          ]
-                                        : [
-                                            AppColors.primaryContainer
-                                                .withValues(alpha: 0.7),
-                                            AppColors.primaryContainer,
-                                          ],
-                                  ),
-                                  border: Border.all(
-                                    color: isDark
-                                        ? AppColors.darkPrimary.withValues(
-                                            alpha: 0.2,
-                                          )
-                                        : AppColors.primary.withValues(
-                                            alpha: 0.12,
-                                          ),
-                                    width: 1,
-                                  ),
+                                  shape: BoxShape.circle,
+                                  color: isDark
+                                      ? AppColors.darkPrimary
+                                            .withValues(alpha: 0.14)
+                                      : Colors.white,
                                   boxShadow: [
                                     BoxShadow(
                                       color: theme.colorScheme.primary
                                           .withValues(
-                                            alpha: isDark ? 0.12 : 0.08,
-                                          ),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
+                                              alpha: isDark ? 0.14 : 0.10),
+                                      blurRadius: 14,
+                                      offset: const Offset(0, 5),
                                     ),
+                                    if (!isDark)
+                                      BoxShadow(
+                                        color: Colors.black
+                                            .withValues(alpha: 0.05),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
                                   ],
                                 ),
                                 child: Icon(
                                   getIcon(cat['icon']),
-                                  size: catIconW * 0.42,
+                                  size: catIconW * 0.44,
                                   color: isDark
                                       ? AppColors.darkPrimary
                                       : AppColors.primary,
                                 ),
                               ),
-                              SizedBox(height: catSectionH * 0.07),
+                              SizedBox(height: catSectionH * 0.08),
                               // Category name
                               Text(
                                 catName,
@@ -473,10 +541,11 @@ class HomeView extends StatelessWidget {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: (sw * 0.028).clamp(10.0, 12.5),
+                                  fontSize: (sw * 0.028).clamp(10.0, 12.0),
                                   fontWeight: FontWeight.w600,
-                                  color: theme.textTheme.bodyMedium?.color,
-                                  height: 1.2,
+                                  color: theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.80),
+                                  height: 1.25,
                                 ),
                               ),
                               // Listing count badge — only when > 0
@@ -501,7 +570,7 @@ class HomeView extends StatelessWidget {
                 );
               }),
 
-              SizedBox(height: hPad),
+              SizedBox(height: hPad + 2),
 
               // ── Popular near you header ───────────────────────────────────
               _SectionHeader(
@@ -510,7 +579,7 @@ class HomeView extends StatelessWidget {
                 hPad: hPad,
               ),
 
-              SizedBox(height: hPad * 0.75),
+              SizedBox(height: hPad * 0.65),
 
               // ── Popular listings ─────────────────────────────────────────
               SizedBox(
@@ -614,20 +683,33 @@ class HomeView extends StatelessWidget {
     );
 
     return ListView(
-      padding: EdgeInsets.fromLTRB(hPad, 12, hPad, 24),
+      padding: EdgeInsets.fromLTRB(hPad, 12, hPad, 32),
       children: [
-        shimBox(double.infinity, 48, r: 14),
-        const SizedBox(height: 16),
-        shimBox(double.infinity, bannerH, r: 24),
-        const SizedBox(height: 20),
+        shimBox(double.infinity, bannerH, r: 22),
+        const SizedBox(height: 12),
+        // dots
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            shimBox(20, 5, r: 50),
+            const SizedBox(width: 6),
+            shimBox(5, 5, r: 50),
+            const SizedBox(width: 6),
+            shimBox(5, 5, r: 50),
+          ],
+        ),
+        SizedBox(height: hPad * 0.9),
+        // stats strip
+        shimBox(double.infinity, 72, r: 18),
+        SizedBox(height: hPad),
         Row(
           children: [
-            shimBox(sw * 0.3, 18, r: 6),
+            shimBox(sw * 0.35, 18, r: 6),
             const Spacer(),
             shimBox(50, 14, r: 6),
           ],
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: hPad * 0.65),
         SizedBox(
           height: catSectionH,
           child: ListView.separated(
@@ -636,26 +718,26 @@ class HomeView extends StatelessWidget {
             itemCount: 6,
             separatorBuilder: (_, _) => const SizedBox(width: 12),
             itemBuilder: (_, _) {
-              final iconW = (sw * 0.148).clamp(52.0, 74.0);
+              final iconW = (sw * 0.152).clamp(54.0, 76.0);
               return Column(
                 children: [
-                  shimBox(iconW, iconW, r: iconW * 0.32),
-                  const SizedBox(height: 8),
-                  shimBox(iconW - 8, 12, r: 4),
+                  shimBox(iconW, iconW, r: iconW / 2),
+                  const SizedBox(height: 9),
+                  shimBox(iconW - 12, 12, r: 4),
                 ],
               );
             },
           ),
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: hPad + 2),
         Row(
           children: [
-            shimBox(sw * 0.35, 18, r: 6),
+            shimBox(sw * 0.38, 18, r: 6),
             const Spacer(),
             shimBox(50, 14, r: 6),
           ],
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: hPad * 0.65),
         SizedBox(
           height: popularSectionH,
           child: ListView.separated(
@@ -664,10 +746,69 @@ class HomeView extends StatelessWidget {
             itemCount: 3,
             separatorBuilder: (_, _) => const SizedBox(width: 14),
             itemBuilder: (_, _) => SizedBox(
-              width: (sw * 0.52).clamp(172.0, 240.0),
+              width: (sw * 0.54).clamp(180.0, 250.0),
               child: const ListingGridCardShimmer(),
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Quick stat pill ───────────────────────────────────────────────────────────
+class _StatPill extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  final Color color;
+
+  const _StatPill({
+    required this.icon,
+    required this.value,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.10),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 16, color: color),
+        ),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: theme.colorScheme.onSurface,
+                height: 1,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                color: theme.hintColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -694,44 +835,58 @@ class _SectionHeader extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 3.5,
-            height: 18,
+            width: 4,
+            height: 20,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(4),
-              color: theme.colorScheme.primary,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  theme.colorScheme.primary,
+                  theme.colorScheme.primary.withValues(alpha: 0.55),
+                ],
+              ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               title,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                letterSpacing: -0.2,
-                color: theme.textTheme.bodyLarge?.color,
+                letterSpacing: -0.3,
+                color: theme.colorScheme.onSurface,
               ),
             ),
           ),
           GestureDetector(
             onTap: onSeeAll,
-            child: Row(
-              children: [
-                Text(
-                  'see_all'.tr,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    'see_all'.tr,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 3),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 10,
                     color: theme.colorScheme.primary,
                   ),
-                ),
-                const SizedBox(width: 2),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 11,
-                  color: theme.colorScheme.primary,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

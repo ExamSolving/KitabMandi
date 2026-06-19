@@ -8,342 +8,314 @@ import 'package:kitab_mandi/features/wishlist/controller/wishlist_controller.dar
 import 'package:kitab_mandi/features/dashboard/model/listing_model.dart';
 import 'package:kitab_mandi/widgets/app_cached_image_network.dart';
 
-class ListingGridCard extends StatefulWidget {
+class ListingGridCard extends StatelessWidget {
   final ListingModel listingModel;
-
   const ListingGridCard({super.key, required this.listingModel});
 
-  @override
-  State<ListingGridCard> createState() => _ListingGridCardState();
-}
+  static final _wishCtrl = Get.find<WishlistController>();
+  static final _homeCtrl = Get.find<HomeController>();
 
-class _ListingGridCardState extends State<ListingGridCard> {
-  bool isFav = false;
-  int currentImage = 0;
-  final wishlistController = Get.find<WishlistController>();
-  final homeCtrl = Get.find<HomeController>();
-
-  Color _surface(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return isDark ? const Color(0xFF1A1D23) : Colors.white;
+  String _fmtViews(int v) {
+    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
+    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
+    return '$v';
   }
 
-  String formatViews(int views) {
-    if (views >= 1000000) {
-      return "${(views / 1000000).toStringAsFixed(1)}M";
-    } else if (views >= 1000) {
-      return "${(views / 1000).toStringAsFixed(1)}K";
-    } else {
-      return views.toString();
-    }
+  String _location(Map<String, dynamic> loc) {
+    final sub = loc['subLocality'] as String? ?? '';
+    final l = loc['locality'] as String? ?? '';
+    final city = loc['city'] as String? ?? '';
+    if (sub.isNotEmpty && l.isNotEmpty) return '$sub, $l';
+    if (l.isNotEmpty) return l;
+    return city;
   }
 
-  String getDisplayLocation(Map<String, dynamic> location) {
-    final subLocality = location['subLocality'] ?? "";
-    final locality = location['locality'] ?? "";
-    final city = location['city'] ?? "";
-
-    if (subLocality.isNotEmpty && locality.isNotEmpty) {
-      return "$subLocality, $locality";
-    } else if (locality.isNotEmpty) {
-      return locality;
-    } else {
-      return city;
-    }
+  String _dist() {
+    final d = _homeCtrl.calculateDistance(
+      sellerLat: listingModel.lat,
+      sellerLong: listingModel.long,
+    );
+    return d < 1
+        ? '${(d * 1000).toStringAsFixed(0)} m away'
+        : '${d.toStringAsFixed(1)} km away';
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1A1D23) : Colors.white;
+    final primary = theme.colorScheme.primary;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: () {
-          Get.to(
-            () => ListingDetailsView(
-              listing: widget.listingModel,
-              docId: widget.listingModel.id,
+    return GestureDetector(
+      onTap: () => Get.to(
+        () => ListingDetailsView(listing: listingModel, docId: listingModel.id),
+        binding: ListingDetailsBinding(),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.07),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
             ),
-            binding: ListingDetailsBinding(),
-          );
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            color: _surface(context),
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(
-                  alpha: theme.brightness == Brightness.dark ? 0.25 : 0.08,
-                ),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start, //  IMPORTANT
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              /// ================= IMAGE =================
-              Stack(
-                children: [
-                  SizedBox(
-                    height: 140,
-                    child: PageView.builder(
-                      itemCount: widget.listingModel.images.length,
-                      onPageChanged: (i) {
-                        setState(() => currentImage = i);
-                      },
-                      itemBuilder: (_, i) {
-                        return Hero(
-                          tag: widget.listingModel.id,
-                          child: ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(18),
-                            ),
-                            child: AppCachedImageNetwork(
-                              imageUrl: widget.listingModel.images[i],
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-
-                  /// 🌫️ GRADIENT OVERLAY
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(18),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Image ──────────────────────────────────────────────────
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(20)),
+                  child: listingModel.images.isNotEmpty
+                      ? AppCachedImageNetwork(
+                          imageUrl: listingModel.images[0],
+                          height: 156,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(
+                          height: 156,
+                          color: primary.withValues(alpha: 0.08),
+                          child: Icon(Icons.menu_book_rounded,
+                              size: 44,
+                              color: primary.withValues(alpha: 0.3)),
                         ),
+                ),
+
+                // Bottom gradient
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: 70,
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(20)),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
                           colors: [
-                            Colors.black.withValues(alpha: 0.4),
                             Colors.transparent,
+                            Colors.black.withValues(alpha: 0.5),
                           ],
                         ),
                       ),
                     ),
                   ),
+                ),
 
-                  ///  BOOSTED
-                  if (widget.listingModel.isBoosted ?? false)
-                    Positioned(
-                      top: 10,
-                      left: 10,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Colors.orange, Colors.deepOrange],
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text(
-                          "BOOSTED",
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                // FEATURED badge
+                if (listingModel.isBoosted ?? false)
+                  Positioned(
+                    top: 9,
+                    left: 9,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                            colors: [Color(0xFFFF6B35), Color(0xFFE53935)]),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'FEATURED',
+                        style: TextStyle(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: 0.4,
                         ),
                       ),
-                    ),
-
-                  ///  FAVORITE
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: GestureDetector(
-                      onTap: () {
-                        wishlistController.toggleWishlist(widget.listingModel);
-                      },
-                      child: Obx(() {
-                        final isFav = wishlistController.isFavorite(
-                          widget.listingModel.id,
-                        );
-
-                        return AnimatedScale(
-                          scale: isFav ? 1.2 : 1.0,
-                          duration: const Duration(milliseconds: 200),
-                          child: Container(
-                            padding: const EdgeInsets.all(7),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.black.withValues(alpha: 0.4),
-                            ),
-                            child: Icon(
-                              isFav ? Icons.favorite : Icons.favorite_border,
-                              color: isFav ? Colors.red : Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                        );
-                      }),
                     ),
                   ),
 
-                  /// 👁 PREMIUM VIEWS BADGE
-                  Positioned(
-                    bottom: 10,
-                    left: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
+                // Heart button
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Obx(() {
+                    final fav = _wishCtrl.isFavorite(listingModel.id);
+                    return GestureDetector(
+                      onTap: () =>
+                          _wishCtrl.toggleWishlist(listingModel),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutBack,
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: fav
+                              ? Colors.red.withValues(alpha: 0.18)
+                              : Colors.black.withValues(alpha: 0.38),
+                        ),
+                        child: Icon(
+                          fav
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          color: fav ? Colors.red : Colors.white,
+                          size: 17,
+                        ),
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.visibility_rounded,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            formatViews(widget.listingModel.views),
-                            style: const TextStyle(
-                              fontSize: 12,
+                    );
+                  }),
+                ),
+
+                // Views pill — bottom left
+                Positioned(
+                  bottom: 9,
+                  left: 9,
+                  child: _ImagePill(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.visibility_rounded,
+                            size: 10, color: Colors.white70),
+                        const SizedBox(width: 3),
+                        Text(
+                          _fmtViews(listingModel.views),
+                          style: const TextStyle(
+                              fontSize: 10,
                               color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Time — bottom right
+                Positioned(
+                  bottom: 9,
+                  right: 9,
+                  child: _ImagePill(
+                    child: Text(
+                      TimeAgoUtil.timeAgo(listingModel.createdAt),
+                      style: const TextStyle(
+                          fontSize: 9.5,
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // ── Details ────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(11, 10, 11, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Price
+                  Text(
+                    '₹${listingModel.price}',
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w800,
+                      color: primary,
+                      letterSpacing: -0.4,
+                      height: 1,
+                    ),
+                  ),
+
+                  const SizedBox(height: 5),
+
+                  // Title (2 lines)
+                  Text(
+                    listingModel.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      height: 1.35,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+
+                  const SizedBox(height: 9),
+
+                  // Location row
+                  _MetaRow(
+                    icon: Icons.location_on_rounded,
+                    iconColor: theme.hintColor,
+                    child: Text(
+                      _location(listingModel.location),
+                      style: TextStyle(
+                          fontSize: 11, color: theme.hintColor),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  // Distance row
+                  _MetaRow(
+                    icon: Icons.near_me_rounded,
+                    iconColor: primary.withValues(alpha: 0.65),
+                    child: Text(
+                      _dist(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: primary.withValues(alpha: 0.85),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
                 ],
               ),
-
-              /// ================= DETAILS =================
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    /// 💰 PRICE
-                    Row(
-                      mainAxisAlignment: .spaceBetween,
-                      children: [
-                        Text(
-                          '₹ ${widget.listingModel.price}',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                        Text(
-                          TimeAgoUtil.timeAgo(widget.listingModel.createdAt),
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    ///  TITLE
-                    Text(
-                      widget.listingModel.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: theme.textTheme.bodyLarge?.color,
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    /// 👤 SELLER
-                    Row(
-                      children: [
-                        const Icon(Icons.person, size: 13, color: Colors.grey),
-                        const SizedBox(width: 5),
-                        Expanded(
-                          child: Text(
-                            widget.listingModel.seller["name"] ??
-                                "Unknown Seller",
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    /// 📍 LOCATION + DISTANCE
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on,
-                          size: 13,
-                          color: Colors.grey,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            getDisplayLocation(widget.listingModel.location),
-                            style: const TextStyle(
-                              fontSize: 11,
-
-                              color: Colors.grey,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(Icons.near_me, size: 13, color: Colors.grey),
-                        SizedBox(width: 5),
-
-                        Text(
-                          homeCtrl.calculateDistance(
-                                    sellerLat: widget.listingModel.lat,
-                                    sellerLong: widget.listingModel.long,
-                                  ) <
-                                  1
-                              ? "${(homeCtrl.calculateDistance(sellerLat: widget.listingModel.lat, sellerLong: widget.listingModel.long) * 1000).toStringAsFixed(0)} m away"
-                              : "${homeCtrl.calculateDistance(sellerLat: widget.listingModel.lat, sellerLong: widget.listingModel.long).toStringAsFixed(1)} km away",
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+// ── Tiny glass pill on image ──────────────────────────────────────────────────
+class _ImagePill extends StatelessWidget {
+  final Widget child;
+  const _ImagePill({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.52),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: child,
+    );
+  }
+}
+
+// ── Icon + text meta row ──────────────────────────────────────────────────────
+class _MetaRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final Widget child;
+  const _MetaRow(
+      {required this.icon, required this.iconColor, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 12, color: iconColor),
+        const SizedBox(width: 4),
+        Expanded(child: child),
+      ],
     );
   }
 }

@@ -77,55 +77,48 @@ class _ListingGridCardShimmerState extends State<ListingGridCardShimmer>
     return Container(
       decoration: BoxDecoration(
         color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// IMAGE SHIMMER
+          // Image
           shimmerBox(
-            height: 130,
+            height: 156,
             width: double.infinity,
-            radius: const BorderRadius.vertical(top: Radius.circular(16)),
+            radius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
 
-          /// DETAILS SHIMMER
+          // Details
           Padding(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.fromLTRB(11, 10, 11, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                shimmerBox(height: 14, width: 60),
-
-                const SizedBox(height: 8),
-
-                shimmerBox(height: 12, width: double.infinity),
-                const SizedBox(height: 4),
-                shimmerBox(height: 12, width: 120),
-
-                const SizedBox(height: 10),
-
-                /// SELLER
+                // Price
+                shimmerBox(height: 19, width: 70, radius: BorderRadius.circular(4)),
+                const SizedBox(height: 7),
+                // Title line 1
+                shimmerBox(height: 13, width: double.infinity),
+                const SizedBox(height: 5),
+                // Title line 2
+                shimmerBox(height: 13, width: 100),
+                const SizedBox(height: 11),
+                // Location
                 Row(
                   children: [
-                    shimmerBox(
-                      height: 20,
-                      width: 20,
-                      radius: BorderRadius.circular(20),
-                    ),
-                    const SizedBox(width: 6),
-                    shimmerBox(height: 10, width: 100),
+                    shimmerBox(height: 12, width: 12, radius: BorderRadius.circular(12)),
+                    const SizedBox(width: 4),
+                    shimmerBox(height: 11, width: 90),
                   ],
                 ),
-
-                const SizedBox(height: 10),
-
-                /// LOCATION + TIME
+                const SizedBox(height: 6),
+                // Distance
                 Row(
                   children: [
-                    shimmerBox(height: 10, width: 80),
-                    const SizedBox(width: 6),
-                    shimmerBox(height: 10, width: 40),
+                    shimmerBox(height: 12, width: 12, radius: BorderRadius.circular(12)),
+                    const SizedBox(width: 4),
+                    shimmerBox(height: 11, width: 70),
                   ],
                 ),
               ],
