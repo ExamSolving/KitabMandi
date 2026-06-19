@@ -17,4 +17,5 @@ class AppRoutes {
   static const addListing = '/sellerlisting';
   static const notifications = '/notifications';
   static const editProfile = '/editProfile';
+  static const subscription = '/subscription';
 }

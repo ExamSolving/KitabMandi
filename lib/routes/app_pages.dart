@@ -23,6 +23,7 @@ import 'package:kitab_mandi/features/dashboard/view/dashboard_view.dart';
 import 'package:kitab_mandi/features/seller/view/seller_listing_view.dart';
 import 'package:kitab_mandi/features/splash/binding/splash_binding.dart';
 import 'package:kitab_mandi/features/splash/view/splash_view.dart';
+import 'package:kitab_mandi/features/subscription/view/subscription_view.dart';
 import 'package:kitab_mandi/features/wishlist/view/wishlist_view.dart';
 import 'package:kitab_mandi/features/wrapper/wrapper_view.dart';
 import 'package:kitab_mandi/routes/app_routes.dart';
@@ -103,6 +104,10 @@ class AppPages {
       binding: BindingsBuilder(() {
         Get.lazyPut(() => ProfileEditController(Get.find()));
       }),
+    ),
+    GetPage(
+      name: AppRoutes.subscription,
+      page: () => const SubscriptionView(),
     ),
   ];
 }

@@ -1,6 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:kitab_mandi/core/constants/app_color.dart';
+import 'package:kitab_mandi/core/constants/razorpay_config.dart';
+import 'package:kitab_mandi/core/services/subscription_service.dart';
 import 'package:kitab_mandi/widgets/kitab_shimmer.dart';
 import 'package:kitab_mandi/core/controller/language_controller.dart';
 import 'package:kitab_mandi/core/controller/theme_controller.dart';
@@ -101,6 +106,10 @@ class ProfileView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ── Subscription ──────────────────────────────────────
+                  _SubscriptionCard(isDark: isDark, cardBg: cardBg),
+                  const SizedBox(height: 28),
+
                   // ── My Activity ──────────────────────────────────────
                   _SectionHead(label: 'my_activity'.tr.toUpperCase(), theme: theme),
                   const SizedBox(height: 10),
@@ -1179,6 +1188,113 @@ class _CardDivider extends StatelessWidget {
       color: isDark
           ? Colors.white.withValues(alpha: 0.05)
           : Colors.black.withValues(alpha: 0.05),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Subscription card — shows current plan and links to upgrade screen
+// ─────────────────────────────────────────────────────────────────────────────
+class _SubscriptionCard extends StatelessWidget {
+  final bool isDark;
+  final Color cardBg;
+
+  const _SubscriptionCard({required this.isDark, required this.cardBg});
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return const SizedBox.shrink();
+
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: SubscriptionService.getSubscription(uid),
+      builder: (context, snap) {
+        final sub = snap.data;
+        final isActive = SubscriptionService.isActive(sub);
+        final planKey = SubscriptionService.getPlan(sub);
+        final isFree = planKey == RazorpayConfig.planFree || !isActive;
+
+        DateTime? expiresAt;
+        if (sub != null && sub['expiresAt'] != null) {
+          expiresAt = (sub['expiresAt'] as Timestamp).toDate();
+        }
+
+        final accent = isFree ? AppColors.primaryLight : AppColors.primary;
+
+        return GestureDetector(
+          onTap: () => Get.toNamed(AppRoutes.subscription),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isFree
+                  ? cardBg
+                  : AppColors.primary.withValues(alpha: isDark ? 0.18 : 0.07),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isFree
+                    ? (isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.07))
+                    : AppColors.primary.withValues(alpha: 0.35),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: accent.withValues(alpha: 0.12),
+                  ),
+                  child: Icon(
+                    isFree
+                        ? Icons.workspace_premium_outlined
+                        : Icons.verified_rounded,
+                    color: accent,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isFree
+                            ? 'Upgrade to Plus'
+                            : SubscriptionService.planLabel(planKey),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        isFree
+                            ? 'Unlimited listings from ₹29/month'
+                            : expiresAt != null
+                                ? 'Active until ${expiresAt.day}/${expiresAt.month}/${expiresAt.year}'
+                                : 'Subscription active',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white54 : Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: isDark ? Colors.white38 : Colors.black38,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

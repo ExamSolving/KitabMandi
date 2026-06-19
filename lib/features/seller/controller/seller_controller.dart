@@ -10,6 +10,8 @@ import 'package:kitab_mandi/core/constants/app_color.dart';
 import 'package:kitab_mandi/core/services/location_service.dart';
 import 'package:kitab_mandi/core/storage/location_storage.dart';
 import 'package:kitab_mandi/core/utils/app_snackbar.dart';
+import 'package:kitab_mandi/core/constants/razorpay_config.dart';
+import 'package:kitab_mandi/core/services/subscription_service.dart';
 import 'package:kitab_mandi/features/auth/controller/auth_controller.dart';
 import 'package:kitab_mandi/features/auth/domain/repositories/i_auth_repository.dart';
 import 'package:kitab_mandi/features/seller/view/ad_posted_sheet.dart';
@@ -458,6 +460,97 @@ class SellerController extends GetxController {
     );
   }
 
+  void _showUpgradeDialog() {
+    final theme = Get.theme;
+    final isDark = theme.brightness == Brightness.dark;
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: isDark ? const Color(0xFF1C1F28) : Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                ),
+                child: const Icon(
+                  Icons.lock_outline_rounded,
+                  color: AppColors.primary,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Listing Limit Reached',
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Free accounts can have up to ${RazorpayConfig.freeListingLimit} active listings. Upgrade to Plus or Pro to post unlimited books.',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  height: 1.5,
+                  color: theme.hintColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: Get.back,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back();
+                        Get.toNamed(AppRoutes.subscription);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        'Upgrade',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // ── Validation ────────────────────────────────────────────────────────────
   bool validate() {
     if (images.isEmpty) return _err('Please upload at least 1 image');
@@ -495,6 +588,20 @@ class SellerController extends GetxController {
   // ── Upload ────────────────────────────────────────────────────────────────
   Future<void> uploadListing() async {
     if (!validate()) return;
+
+    // Free-tier gate — only for new listings, not edits.
+    if (!isEdit.value) {
+      final uid = _authRepo.currentUser?.uid;
+      if (uid != null) {
+        final listings = await _listingRepo.getMyListings(uid);
+        final activeCount = listings.where((l) => l.isSold != true).length;
+        final sub = await SubscriptionService.getSubscription(uid);
+        if (!SubscriptionService.canPost(sub, activeCount)) {
+          _showUpgradeDialog();
+          return;
+        }
+      }
+    }
 
     try {
       isUploading.value = true;

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import '../services/location_service.dart';
 import '../storage/location_storage.dart';
@@ -19,26 +20,35 @@ class LocationController extends GetxController {
   void onInit() {
     super.onInit();
     recentLocations.value = LocationStorage.getRecent();
-    initLocation(isNewUser: false);
+    // Only restore from cache on startup — never request permission here.
+    // Permission is requested after auth (initLocation call from AuthController)
+    // so the dialog appears in the right context with proper UI behind it.
+    final saved = LocationStorage.getLocationData();
+    final selected = LocationStorage.getSelected();
+    if (saved != null && selected.isNotEmpty) {
+      selectedLocations.value = selected;
+      latitude.value = (saved['latitude'] ?? 0.0).toDouble();
+      longitude.value = (saved['longitude'] ?? 0.0).toDouble();
+    }
   }
 
-  /// Load location from cache, or auto-detect if cache is empty
+  /// Called by AuthController after login/signup.
+  /// isNewUser: true  → skip cache, always re-detect (fresh install or new account).
+  /// isNewUser: false → restore cache; detect only if cache is empty.
   Future<void> initLocation({required bool isNewUser}) async {
     final saved = LocationStorage.getLocationData();
     final selected = LocationStorage.getSelected();
 
-    if (saved != null && selected.isNotEmpty) {
-      // Fast path — restore from Hive cache
+    if (!isNewUser && saved != null && selected.isNotEmpty) {
+      // Returning user with cached location — restore and sync to Firestore.
       selectedLocations.value = selected;
       latitude.value = (saved['latitude'] ?? 0.0).toDouble();
       longitude.value = (saved['longitude'] ?? 0.0).toDouble();
-      // Always push to Firestore so Cloud Functions can find this user in the
-      // 5-km query (Firestore is the source of truth for geo-queries, not Hive)
       _syncLocationToFirestore(latitude.value, longitude.value);
       return;
     }
 
-    // No cache (new install, cleared storage, or any user) — always auto-detect
+    // New user OR no cache — always auto-detect and request permission.
     await detectCurrentLocation();
   }
 
@@ -51,27 +61,69 @@ class LocationController extends GetxController {
         final display =
             location['formatted_address'] ??
             location['city'] ??
-            "Unknown Location";
+            'Unknown Location';
 
-        ///  Update selected
         selectedLocations.value = [display];
-
-        ///  Save
         LocationStorage.saveSelected([display]);
         LocationStorage.saveLocationData(location);
-
-        ///  Assign coordinates
         latitude.value = (location['latitude'] ?? 0.0).toDouble();
         longitude.value = (location['longitude'] ?? 0.0).toDouble();
-
-        // Persist to Firestore so Cloud Functions can find nearby users
         _syncLocationToFirestore(latitude.value, longitude.value);
+      } else {
+        // Detection returned null — check why and show actionable feedback.
+        await _handleLocationFailure();
       }
-    } catch (e) {
-      selectedLocations.value = ["Location Error"];
+    } catch (_) {
+      selectedLocations.value = [];
     } finally {
       isLoadingLocation.value = false;
     }
+  }
+
+  /// Shows a snackbar explaining WHY location failed and what to do about it.
+  Future<void> _handleLocationFailure() async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        Get.snackbar(
+          'GPS is Off',
+          'Turn on location services so we can detect your area.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.orange.shade800,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 6),
+          mainButton: TextButton(
+            onPressed: () => Geolocator.openLocationSettings(),
+            child: const Text(
+              'Enable',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            ),
+          ),
+        );
+        return;
+      }
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.deniedForever) {
+        Get.snackbar(
+          'Permission Denied',
+          'Allow location access in app settings to detect your area.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade700,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 7),
+          mainButton: TextButton(
+            onPressed: () => Geolocator.openAppSettings(),
+            child: const Text(
+              'Settings',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            ),
+          ),
+        );
+      }
+      // If permission == denied (not forever), the OS dialog was already shown
+      // by LocationService.handlePermission() and the user tapped "Deny".
+      // No extra snackbar needed — the user's choice should be respected.
+    } catch (_) {}
   }
 
   /// 📍 MANUAL LOCATION (CITY SELECT)

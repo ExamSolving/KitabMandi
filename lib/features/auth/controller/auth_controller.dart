@@ -503,6 +503,7 @@ class AuthController extends GetxController {
       }
     } catch (_) {}
     clearAllFields();
+    locationController.reset();
     // Clear the entire route stack — WrapperView will show AuthView because
     // userData is now null. Route disposal handles non-permanent controllers.
     Get.offAllNamed(AppRoutes.wrapper);
