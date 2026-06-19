@@ -96,6 +96,10 @@ class FCMService {
   Future<void> _onForeground(RemoteMessage message) async {
     debugPrint('[FCM] Foreground: ${message.notification?.title}');
     _pushToController(message);
+    try {
+      final ctrl = Get.find<NotificationController>();
+      if (!ctrl.notificationsEnabled.value) return;
+    } catch (_) {}
     await _showLocalNotification(message);
   }
 

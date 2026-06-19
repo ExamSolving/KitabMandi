@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kitab_mandi/core/constants/app_color.dart';
+import 'package:kitab_mandi/widgets/kitab_back_button.dart';
 import 'package:kitab_mandi/features/dashboard/model/listing_model.dart';
 import 'package:kitab_mandi/features/listing_details/binding/listing_details_binding.dart';
 import 'package:kitab_mandi/features/listing_details/view/listing_details_view.dart';
@@ -23,13 +24,12 @@ class NotificationView extends StatelessWidget {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
+        leading: const KitabBackButton(),
         title: Text(
           'notifications'.tr,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17, color: Colors.white),
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
         ),
         actions: [
           Obx(() {
@@ -42,7 +42,7 @@ class NotificationView extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white70,
+                  color: AppColors.primary,
                 ),
               ),
             );
@@ -50,7 +50,7 @@ class NotificationView extends StatelessWidget {
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Divider(height: 1, color: Colors.white24),
+          child: Divider(height: 1, color: Theme.of(context).dividerColor),
         ),
       ),
       body: Obx(() {

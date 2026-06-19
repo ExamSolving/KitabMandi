@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:kitab_mandi/core/constants/app_color.dart';
 import 'package:kitab_mandi/features/auth/controller/auth_controller.dart';
 import 'package:kitab_mandi/widgets/app_text_field.dart';
+import 'package:kitab_mandi/widgets/kitab_back_button.dart';
 
 class ForgotPasswordView extends StatelessWidget {
   ForgotPasswordView({super.key});
@@ -28,8 +28,7 @@ class ForgotPasswordView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('reset_password'.tr),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        leading: const KitabBackButton(),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),

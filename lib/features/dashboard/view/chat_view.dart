@@ -23,7 +23,9 @@ class ChatView extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: isDark ? const Color(0xFF0F1115) : const Color(0xFFF7F8FA),
+        backgroundColor: isDark
+            ? const Color(0xFF0F1115)
+            : const Color(0xFFF7F8FA),
         appBar: AppBar(
           elevation: 0,
           backgroundColor: appBarBg,
@@ -44,8 +46,14 @@ class ChatView extends StatelessWidget {
             indicatorWeight: 3,
             labelColor: labelColor,
             unselectedLabelColor: unselectedColor,
-            labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
-            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13.5),
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13.5,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 13.5,
+            ),
             dividerColor: Colors.transparent,
             tabs: [
               Tab(
@@ -126,8 +134,7 @@ class BuyingProductsView extends StatelessWidget {
             if (ta == null && tb == null) return 0;
             if (ta == null) return 1;
             if (tb == null) return -1;
-            return (tb as Timestamp)
-                .compareTo(ta as Timestamp);
+            return (tb as Timestamp).compareTo(ta as Timestamp);
           });
 
         return ListView.builder(
@@ -153,20 +160,24 @@ class BuyingProductsView extends StatelessWidget {
                   name: name,
                   avatar: avatar,
                   productTitle: chat['listingTitle'] as String? ?? '',
-                  lastMessage: chat['lastMessage'] as String? ?? 'tap_to_chat'.tr,
+                  lastMessage:
+                      chat['lastMessage'] as String? ?? 'tap_to_chat'.tr,
                   time: chat['lastMessageTime'],
                   isMe: isMe,
                   isSeen: chat['isSeen'] as bool? ?? true,
                   unreadCount: unread,
-                  onTap: () => Get.toNamed(AppRoutes.chatRoom, arguments: {
-                    'chatId': chat['chatId'],
-                    'listingTitle': chat['listingTitle'],
-                    'listingImage': chat['listingImage'],
-                    'userName': name,
-                    'otherUserId': sellerId,
-                    'listingId': chat['listingId'] ?? '',
-                    'sellerUid': chat['sellerId'] ?? '',
-                  }),
+                  onTap: () => Get.toNamed(
+                    AppRoutes.chatRoom,
+                    arguments: {
+                      'chatId': chat['chatId'],
+                      'listingTitle': chat['listingTitle'],
+                      'listingImage': chat['listingImage'],
+                      'userName': name,
+                      'otherUserId': sellerId,
+                      'listingId': chat['listingId'] ?? '',
+                      'sellerUid': chat['sellerId'] ?? '',
+                    },
+                  ),
                 );
               },
             );
@@ -235,10 +246,12 @@ class SellingProductsView extends StatelessWidget {
             return _ProductCard(
               item: item,
               buyerCount: buyerCount,
-              onTap: () => Get.to(() => UsersListView(
-                    listingId: item['listingId'] as String,
-                    title: item['listingTitle'] as String? ?? '',
-                  )),
+              onTap: () => Get.to(
+                () => UsersListView(
+                  listingId: item['listingId'] as String,
+                  title: item['listingTitle'] as String? ?? '',
+                ),
+              ),
             );
           },
         );
@@ -329,8 +342,11 @@ class _ConversationTile extends StatelessWidget {
                               height: 54,
                               fit: BoxFit.cover,
                             )
-                          : Icon(Icons.person_rounded,
-                              size: 28, color: AppColors.primaryLight),
+                          : Icon(
+                              Icons.person_rounded,
+                              size: 28,
+                              color: AppColors.primaryLight,
+                            ),
                     ),
                     if (hasUnread)
                       Positioned(
@@ -404,13 +420,17 @@ class _ConversationTile extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
-                                constraints:
-                                    const BoxConstraints(maxWidth: 200),
+                                constraints: const BoxConstraints(
+                                  maxWidth: 200,
+                                ),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 7, vertical: 2),
+                                  horizontal: 7,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color:
-                                      AppColors.primary.withValues(alpha: 0.1),
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -463,7 +483,9 @@ class _ConversationTile extends StatelessWidget {
                               margin: const EdgeInsets.only(left: 8),
                               constraints: const BoxConstraints(minWidth: 20),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2.5),
+                                horizontal: 6,
+                                vertical: 2.5,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.primary,
                                 borderRadius: BorderRadius.circular(10),
@@ -551,7 +573,7 @@ class _ProductCard extends StatelessWidget {
                   color: Colors.black.withValues(alpha: 0.06),
                   blurRadius: 12,
                   offset: const Offset(0, 3),
-                )
+                ),
               ],
       ),
       child: InkWell(
@@ -607,23 +629,25 @@ class _ProductCard extends StatelessWidget {
                       item['lastMessage'] as String? ?? '',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: theme.hintColor,
-                      ),
+                      style: TextStyle(fontSize: 12.5, color: theme.hintColor),
                     ),
                     const SizedBox(height: 7),
                     Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 9, vertical: 3),
+                            horizontal: 9,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            (buyerCount == 1 ? 'buyer_interested_one' : 'buyer_interested_many').trParams({'0': buyerCount.toString()}),
+                            (buyerCount == 1
+                                    ? 'buyer_interested_one'
+                                    : 'buyer_interested_many')
+                                .trParams({'0': buyerCount.toString()}),
                             style: const TextStyle(
                               color: AppColors.primary,
                               fontSize: 11,
@@ -632,8 +656,11 @@ class _ProductCard extends StatelessWidget {
                           ),
                         ),
                         const Spacer(),
-                        Icon(Icons.chevron_right_rounded,
-                            size: 20, color: theme.hintColor),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 20,
+                          color: theme.hintColor,
+                        ),
                       ],
                     ),
                   ],
@@ -665,8 +692,9 @@ class UsersListView extends StatelessWidget {
     const appBarBg = AppColors.primary;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F1115) : const Color(0xFFF7F8FA),
+      backgroundColor: isDark
+          ? const Color(0xFF0F1115)
+          : const Color(0xFFF7F8FA),
       appBar: AppBar(
         backgroundColor: appBarBg,
         elevation: 0,
@@ -690,8 +718,9 @@ class UsersListView extends StatelessWidget {
           }
           if (snapshot.hasError) {
             return _EmptyState(
-                icon: Icons.error_outline_rounded,
-                title: 'error_loading_chats'.tr);
+              icon: Icons.error_outline_rounded,
+              title: 'error_loading_chats'.tr,
+            );
           }
 
           final users = snapshot.data?.docs ?? [];
@@ -710,8 +739,9 @@ class UsersListView extends StatelessWidget {
               final chat = users[index].data() as Map<String, dynamic>;
               final currentId = controller.currentUserId!;
               final isBuyer = chat['buyerId'] == currentId;
-              final otherUserId =
-                  isBuyer ? chat['sellerId'] as String : chat['buyerId'] as String;
+              final otherUserId = isBuyer
+                  ? chat['sellerId'] as String
+                  : chat['buyerId'] as String;
               final isMe = chat['lastSenderId'] == currentId;
               final rawUnread = chat['unreadCount'] as int? ?? 0;
               final unread = isMe ? 0 : rawUnread;
@@ -733,15 +763,18 @@ class UsersListView extends StatelessWidget {
                     isMe: isMe,
                     isSeen: chat['isSeen'] as bool? ?? true,
                     unreadCount: unread,
-                    onTap: () => Get.toNamed(AppRoutes.chatRoom, arguments: {
-                      'chatId': chat['chatId'],
-                      'listingTitle': chat['listingTitle'],
-                      'listingImage': chat['listingImage'],
-                      'userName': name,
-                      'otherUserId': otherUserId,
-                      'listingId': chat['listingId'] ?? '',
-                      'sellerUid': chat['sellerId'] ?? '',
-                    }),
+                    onTap: () => Get.toNamed(
+                      AppRoutes.chatRoom,
+                      arguments: {
+                        'chatId': chat['chatId'],
+                        'listingTitle': chat['listingTitle'],
+                        'listingImage': chat['listingImage'],
+                        'userName': name,
+                        'otherUserId': otherUserId,
+                        'listingId': chat['listingId'] ?? '',
+                        'sellerUid': chat['sellerId'] ?? '',
+                      },
+                    ),
                   );
                 },
               );
@@ -797,27 +830,33 @@ class _ChatTileShimmer extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                          height: 13,
-                          width: 120,
-                          decoration: BoxDecoration(
-                              color: fill,
-                              borderRadius: BorderRadius.circular(6))),
+                        height: 13,
+                        width: 120,
+                        decoration: BoxDecoration(
+                          color: fill,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
                       const Spacer(),
                       Container(
-                          height: 11,
-                          width: 40,
-                          decoration: BoxDecoration(
-                              color: fill,
-                              borderRadius: BorderRadius.circular(6))),
+                        height: 11,
+                        width: 40,
+                        decoration: BoxDecoration(
+                          color: fill,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Container(
-                      height: 11,
-                      width: 200,
-                      decoration: BoxDecoration(
-                          color: fill,
-                          borderRadius: BorderRadius.circular(6))),
+                    height: 11,
+                    width: 200,
+                    decoration: BoxDecoration(
+                      color: fill,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -885,9 +924,11 @@ class _EmptyState extends StatelessWidget {
                     : AppColors.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon,
-                  size: 42,
-                  color: AppColors.primary.withValues(alpha: 0.7)),
+              child: Icon(
+                icon,
+                size: 42,
+                color: AppColors.primary.withValues(alpha: 0.7),
+              ),
             ),
             const SizedBox(height: 18),
             Text(
@@ -905,9 +946,10 @@ class _EmptyState extends StatelessWidget {
                 subtitle!,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    fontSize: 13,
-                    color: theme.hintColor,
-                    height: 1.5),
+                  fontSize: 13,
+                  color: theme.hintColor,
+                  height: 1.5,
+                ),
               ),
             ],
           ],

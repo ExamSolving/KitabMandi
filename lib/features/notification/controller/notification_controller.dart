@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:hive/hive.dart';
 
 import '../model/notification_model.dart';
 
@@ -14,6 +15,9 @@ class NotificationController extends GetxController {
 
   final notifications = <NotificationModel>[].obs;
   final isLoading = true.obs;
+  final notificationsEnabled = true.obs;
+
+  static const _kNotifEnabled = 'notif_enabled';
 
   StreamSubscription<QuerySnapshot>? _notifSub;
   StreamSubscription<User?>? _authSub;
@@ -25,6 +29,8 @@ class NotificationController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    notificationsEnabled.value =
+        Hive.box('settingsBox').get(_kNotifEnabled, defaultValue: true) as bool;
     // React to login / logout for the lifetime of the controller
     _authSub = _auth.authStateChanges().listen((user) {
       if (user != null) {
@@ -42,6 +48,31 @@ class NotificationController extends GetxController {
     _cancelStream();
     _authSub?.cancel();
     super.onClose();
+  }
+
+  // ── Notification toggle ───────────────────────────────────────────────────
+
+  /// Persists the preference and adds/removes the FCM token from Firestore so
+  /// the server stops (or resumes) sending push alerts.
+  /// The in-app notification page and badge are unaffected either way.
+  Future<void> setNotificationsEnabled(bool enabled) async {
+    notificationsEnabled.value = enabled;
+    Hive.box('settingsBox').put(_kNotifEnabled, enabled);
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+    try {
+      if (enabled) {
+        final token = await FirebaseMessaging.instance.getToken();
+        if (token != null) {
+          await _db.collection('users').doc(uid).update({'fcmToken': token});
+        }
+      } else {
+        await _db
+            .collection('users')
+            .doc(uid)
+            .update({'fcmToken': FieldValue.delete()});
+      }
+    } catch (_) {}
   }
 
   // ── Firestore stream ──────────────────────────────────────────────────────

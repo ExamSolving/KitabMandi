@@ -16,6 +16,7 @@ import 'package:kitab_mandi/features/about_app/terms_policies_view.dart';
 import 'package:kitab_mandi/features/auth/controller/auth_controller.dart';
 import 'package:kitab_mandi/features/dashboard/controller/profile_controller.dart';
 import 'package:kitab_mandi/routes/app_routes.dart';
+import 'package:kitab_mandi/features/notification/controller/notification_controller.dart';
 import 'package:kitab_mandi/widgets/notification_bell.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -44,6 +45,7 @@ class ProfileView extends StatelessWidget {
     final cardBg = isDark ? const Color(0xFF1C1F28) : Colors.white;
     final bgColor = isDark ? const Color(0xFF0E1117) : const Color(0xFFF1F3F8);
     final themeCtrl = Get.find<ThemeController>();
+    final notifCtrl = Get.find<NotificationController>();
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -111,7 +113,10 @@ class ProfileView extends StatelessWidget {
                   const SizedBox(height: 28),
 
                   // ── My Activity ──────────────────────────────────────
-                  _SectionHead(label: 'my_activity'.tr.toUpperCase(), theme: theme),
+                  _SectionHead(
+                    label: 'my_activity'.tr.toUpperCase(),
+                    theme: theme,
+                  ),
                   const SizedBox(height: 10),
                   Obx(
                     () => _ActivityRow(
@@ -123,11 +128,15 @@ class ProfileView extends StatelessWidget {
                   const SizedBox(height: 28),
 
                   // ── Preferences ───────────────────────────────────────
-                  _SectionHead(label: 'preferences'.tr.toUpperCase(), theme: theme),
+                  _SectionHead(
+                    label: 'preferences'.tr.toUpperCase(),
+                    theme: theme,
+                  ),
                   const SizedBox(height: 10),
                   _PrefsCard(
                     themeCtrl: themeCtrl,
                     langCtrl: langCtrl,
+                    notifCtrl: notifCtrl,
                     isDark: isDark,
                     theme: theme,
                     cardBg: cardBg,
@@ -289,6 +298,8 @@ class _ProfileHeroBg extends StatelessWidget {
                         ),
                       ),
                     ],
+                    const SizedBox(height: 12),
+                    _TierChip(userData: data),
                   ],
                 ),
               );
@@ -319,6 +330,71 @@ class _InitialsInCircle extends StatelessWidget {
             letterSpacing: 1,
           ),
         ),
+      ),
+    );
+  }
+}
+
+// Subscription tier chip shown in the hero
+class _TierChip extends StatelessWidget {
+  final Map<String, dynamic>? userData;
+  const _TierChip({required this.userData});
+
+  @override
+  Widget build(BuildContext context) {
+    final sub = userData?['subscription'] as Map<String, dynamic>?;
+    final plan = sub?['plan'] as String? ?? 'free';
+    final isActive =
+        sub != null &&
+        sub['status'] == 'active' &&
+        sub['expiresAt'] != null &&
+        (sub['expiresAt'] as Timestamp).toDate().isAfter(DateTime.now());
+
+    final bool isPro = isActive && plan.contains('pro');
+    final bool isPlus = isActive && plan.contains('plus');
+
+    final String label;
+    final Color chipColor;
+    final IconData chipIcon;
+
+    if (isPro) {
+      label = 'PRO';
+      chipColor = const Color(0xFFF57C00);
+      chipIcon = Icons.workspace_premium_rounded;
+    } else if (isPlus) {
+      label = 'PLUS';
+      chipColor = const Color(0xFF66BB6A);
+      chipIcon = Icons.verified_rounded;
+    } else {
+      label = 'FREE';
+      chipColor = Colors.white;
+      chipIcon = Icons.person_outline_rounded;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        color: chipColor.withValues(alpha: isPro || isPlus ? 0.18 : 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: chipColor.withValues(alpha: isPro || isPlus ? 0.55 : 0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(chipIcon, size: 13, color: chipColor),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              color: chipColor,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.9,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -693,6 +769,7 @@ class _ActivityCard extends StatelessWidget {
 class _PrefsCard extends StatelessWidget {
   final ThemeController themeCtrl;
   final LanguageController langCtrl;
+  final NotificationController notifCtrl;
   final bool isDark;
   final ThemeData theme;
   final Color cardBg;
@@ -700,6 +777,7 @@ class _PrefsCard extends StatelessWidget {
   const _PrefsCard({
     required this.themeCtrl,
     required this.langCtrl,
+    required this.notifCtrl,
     required this.isDark,
     required this.theme,
     required this.cardBg,
@@ -744,7 +822,9 @@ class _PrefsCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        isDark ? 'dark_theme_active'.tr : 'light_theme_active'.tr,
+                        isDark
+                            ? 'dark_theme_active'.tr
+                            : 'light_theme_active'.tr,
                         style: TextStyle(fontSize: 12, color: theme.hintColor),
                       ),
                     ],
@@ -761,6 +841,57 @@ class _PrefsCard extends StatelessWidget {
               ],
             ),
           ),
+          _CardDivider(isDark: isDark),
+          // Notifications
+          Obx(() {
+            final enabled = notifCtrl.notificationsEnabled.value;
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+              child: Row(
+                children: [
+                  _IconBox(
+                    icon: enabled
+                        ? Icons.notifications_rounded
+                        : Icons.notifications_off_rounded,
+                    color: const Color(0xFFF57C00),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Notifications',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          enabled
+                              ? 'Push alerts are on'
+                              : 'Push alerts are off',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: theme.hintColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: enabled,
+                    onChanged: (v) {
+                      HapticFeedback.lightImpact();
+                      notifCtrl.setNotificationsEnabled(v);
+                    },
+                    activeTrackColor: const Color(0xFFF57C00),
+                  ),
+                ],
+              ),
+            );
+          }),
           _CardDivider(isDark: isDark),
           // Language
           Padding(
@@ -1233,8 +1364,8 @@ class _SubscriptionCard extends StatelessWidget {
               border: Border.all(
                 color: isFree
                     ? (isDark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : Colors.black.withValues(alpha: 0.07))
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.black.withValues(alpha: 0.07))
                     : AppColors.primary.withValues(alpha: 0.35),
               ),
             ),
@@ -1275,8 +1406,8 @@ class _SubscriptionCard extends StatelessWidget {
                         isFree
                             ? 'Unlimited listings from ₹29/month'
                             : expiresAt != null
-                                ? 'Active until ${expiresAt.day}/${expiresAt.month}/${expiresAt.year}'
-                                : 'Subscription active',
+                            ? 'Active until ${expiresAt.day}/${expiresAt.month}/${expiresAt.year}'
+                            : 'Subscription active',
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? Colors.white54 : Colors.black54,

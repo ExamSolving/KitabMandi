@@ -110,8 +110,8 @@ class _CustomBottomNavState extends State<CustomBottomNav>
                     ),
                     Expanded(
                       child: _NavItem(
-                        selectedIcon: Icons.chat_bubble_rounded,
-                        unselectedIcon: Icons.chat_bubble_outline_rounded,
+                        selectedIcon: Icons.forum_rounded,
+                        unselectedIcon: Icons.forum_outlined,
                         label: 'chat'.tr,
                         index: 1,
                         currentIndex: widget.currentIndex,
@@ -121,8 +121,8 @@ class _CustomBottomNavState extends State<CustomBottomNav>
                     const SizedBox(width: 62),
                     Expanded(
                       child: _NavItem(
-                        selectedIcon: Icons.view_list_rounded,
-                        unselectedIcon: Icons.view_list_outlined,
+                        selectedIcon: Icons.storefront_rounded,
+                        unselectedIcon: Icons.storefront_outlined,
                         label: 'my_ads'.tr,
                         index: 2,
                         currentIndex: widget.currentIndex,
@@ -208,8 +208,12 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isSelected = currentIndex == index;
     final primary = theme.colorScheme.primary;
+    final inactiveColor = isDark
+        ? Colors.white.withValues(alpha: 0.42)
+        : Colors.black.withValues(alpha: 0.38);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -217,43 +221,81 @@ class _NavItem extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // ── Icon pill ──────────────────────────────────────────────────
           AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeInOut,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
               color: isSelected
-                  ? primary.withValues(alpha: 0.12)
+                  ? primary.withValues(alpha: isDark ? 0.18 : 0.11)
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: primary.withValues(alpha: isDark ? 0.28 : 0.14),
+                        blurRadius: 14,
+                        spreadRadius: -2,
+                        offset: const Offset(0, 3),
+                      ),
+                    ]
+                  : [],
             ),
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              transitionBuilder: (child, anim) => ScaleTransition(
-                scale: anim,
-                child: FadeTransition(opacity: anim, child: child),
-              ),
+              duration: const Duration(milliseconds: 220),
+              transitionBuilder: (child, anim) {
+                final curved = CurvedAnimation(
+                  parent: anim,
+                  curve: Curves.easeOutBack,
+                );
+                return ScaleTransition(
+                  scale: Tween<double>(begin: 0.65, end: 1.0).animate(curved),
+                  child: FadeTransition(opacity: anim, child: child),
+                );
+              },
               child: Icon(
                 isSelected ? selectedIcon : unselectedIcon,
                 key: ValueKey(isSelected),
-                size: 22,
-                color: isSelected
-                    ? primary
-                    : theme.iconTheme.color?.withValues(alpha: 0.55),
+                size: 23,
+                color: isSelected ? primary : inactiveColor,
               ),
             ),
           ),
+
+          // ── Label ─────────────────────────────────────────────────────
           const SizedBox(height: 2),
           AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 200),
+            duration: const Duration(milliseconds: 220),
             style: TextStyle(
               fontSize: 10.5,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
-              color: isSelected
-                  ? primary
-                  : theme.textTheme.bodySmall?.color?.withValues(alpha: 0.55),
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected ? primary : inactiveColor,
+              letterSpacing: isSelected ? 0.1 : 0,
             ),
             child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
+
+          // ── Active dot ────────────────────────────────────────────────
+          const SizedBox(height: 3),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            width: isSelected ? 5 : 0,
+            height: isSelected ? 5 : 0,
+            decoration: BoxDecoration(
+              color: primary,
+              shape: BoxShape.circle,
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: primary.withValues(alpha: 0.5),
+                        blurRadius: 4,
+                        spreadRadius: 0,
+                      ),
+                    ]
+                  : [],
+            ),
           ),
         ],
       ),

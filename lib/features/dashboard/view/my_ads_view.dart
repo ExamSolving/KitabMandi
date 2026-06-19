@@ -21,11 +21,9 @@ class MyAdsView extends StatelessWidget {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text('my_ads'.tr,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18, color: Colors.white)),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
         actions: const [NotificationBell(), SizedBox(width: 4)],
       ),
       body: Obx(() {
