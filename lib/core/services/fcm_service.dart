@@ -70,6 +70,12 @@ class FCMService {
     });
   }
 
+  /// Call this immediately after [saveUserProfile] for a new user.
+  /// The auth-state listener runs before the Firestore document is created,
+  /// so update() throws NOT_FOUND and the token is lost. Calling this once
+  /// the document exists guarantees the fields are written.
+  Future<void> refreshToken(String uid) => _saveToken(uid);
+
   /// Call this from the dashboard once it is fully rendered.
   /// Navigates to the right screen if the app was opened from a notification.
   void consumePendingNavigation() {

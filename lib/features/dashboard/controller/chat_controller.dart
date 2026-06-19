@@ -32,6 +32,8 @@ class ChatController extends GetxController {
           listing.images.isNotEmpty ? listing.images.first : '',
       'userName': listing.seller['name']?.toString() ?? '',
       'otherUserId': sellerId,
+      'listingId': listing.id,
+      'sellerUid': sellerId,
     });
 
     // Background setup

@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kitab_mandi/core/constants/app_color.dart';
 import 'package:kitab_mandi/core/services/fcm_service.dart';
+import 'package:kitab_mandi/core/services/sold_cleanup_service.dart';
 import 'package:kitab_mandi/core/services/update_service.dart';
 import 'package:kitab_mandi/features/auth/controller/auth_controller.dart';
 import 'package:kitab_mandi/features/dashboard/binding/chat_binding.dart';
@@ -54,6 +56,9 @@ class _DashboardViewState extends State<DashboardView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FCMService.instance.consumePendingNavigation();
       UpdateService.checkForUpdate();
+      // Background cleanup: hard-delete listings sold more than 7 days ago.
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) SoldCleanupService.run(uid);
     });
   }
 

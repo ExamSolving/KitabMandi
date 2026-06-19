@@ -19,14 +19,14 @@ class SellerListingView extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final sw = MediaQuery.sizeOf(context).width;
     final hPad = (sw * 0.048).clamp(14.0, 24.0);
-    final appBarBg = isDark ? const Color(0xFF1A1D23) : Colors.white;
     final bgColor = isDark ? const Color(0xFF090B13) : const Color(0xFFF5F6FA);
 
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: appBarBg,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         title: Obx(
           () => Column(
@@ -38,16 +38,17 @@ class SellerListingView extends StatelessWidget {
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
+                  color: Colors.white,
                 ),
               ),
               Text(
                 controller.isEdit.value
                     ? 'update_listing_subtitle'.tr
                     : 'fill_details_below'.tr,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w400,
-                  color: theme.hintColor,
+                  color: Colors.white70,
                 ),
               ),
             ],
@@ -56,7 +57,7 @@ class SellerListingView extends StatelessWidget {
         actions: const [NotificationBell(), SizedBox(width: 4)],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Divider(height: 1, color: theme.dividerColor),
+          child: Divider(height: 1, color: Colors.white24),
         ),
       ),
 

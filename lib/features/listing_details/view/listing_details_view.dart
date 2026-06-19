@@ -35,11 +35,6 @@ class _ListingDetailsViewState extends State<ListingDetailsView> {
     super.initState();
   }
 
-  Color _appBarbackground(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return isDark ? const Color(0xFF1A1D23) : const Color(0xFFFFFFFF);
-  }
-
   Color _bg(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
       ? const Color(0xFF0F1115)
@@ -63,7 +58,8 @@ class _ListingDetailsViewState extends State<ListingDetailsView> {
       backgroundColor: _bg(context),
       // ================= APP BAR =================
       appBar: AppBar(
-        backgroundColor: _appBarbackground(context),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         elevation: 0,
         title: Text('ad_details'.tr),
       ),
@@ -293,18 +289,21 @@ class _ListingDetailsViewState extends State<ListingDetailsView> {
 
             if (isOwner) {
               // ================= OWNER UI =================
+              final isSold = widget.listing.isSold == true;
               return Row(
                 children: [
-                  // ✏️ EDIT
+                  // ✏️ EDIT — disabled once the listing is marked sold
                   Expanded(
                     child: AppButton(
                       text: 'edit'.tr,
-                      onPressed: () {
-                        Get.toNamed(
-                          AppRoutes.addListing,
-                          arguments: {"listing": widget.listing},
-                        );
-                      },
+                      onPressed: isSold
+                          ? null
+                          : () {
+                              Get.toNamed(
+                                AppRoutes.addListing,
+                                arguments: {"listing": widget.listing},
+                              );
+                            },
                     ),
                   ),
 

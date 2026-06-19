@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kitab_mandi/core/constants/app_color.dart';
 import 'package:kitab_mandi/features/auth/controller/auth_controller.dart';
 import 'package:kitab_mandi/widgets/app_text_field.dart';
 
@@ -7,11 +8,6 @@ class ForgotPasswordView extends StatelessWidget {
   ForgotPasswordView({super.key});
 
   final controller = Get.find<AuthController>();
-
-  Color _background(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return isDark ? const Color(0xFF1A1D23) : const Color(0xFFFFFFFF);
-  }
 
   Widget _prefix(BuildContext context, IconData icon) {
     final theme = Theme.of(context);
@@ -32,7 +28,8 @@ class ForgotPasswordView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('reset_password'.tr),
-        backgroundColor: _background(context),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),

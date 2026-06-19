@@ -34,9 +34,6 @@ abstract class _D {
   static const pillBg = Colors.white;
   static const pillBgDark = Color(0xFF2A2F38);
 
-  // App bar
-  static const appBarBgDark = Color(0xFF1A1D23);
-
   // Radius
   static final myRadius = const BorderRadius.only(
     topLeft: Radius.circular(18),
@@ -79,12 +76,17 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   late final String _listingTitle;
   late final String _listingImage;
   late final String _otherUserId;
+  late final String _listingId;
+  late final String _sellerUid;
 
   bool _isSending = false;
   bool _isSendingImage = false;
   bool _markingBusy = false;
+  bool _isSold = false;
+  bool _isMarkingAsSold = false;
   XFile? _pending;
   Timer? _seenTimer;
+  StreamSubscription<DocumentSnapshot>? _listingSub;
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
   @override
@@ -96,8 +98,11 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     _listingTitle = args['listingTitle']?.toString() ?? '';
     _listingImage = args['listingImage']?.toString() ?? '';
     _otherUserId = args['otherUserId']?.toString() ?? '';
+    _listingId = args['listingId']?.toString() ?? '';
+    _sellerUid = args['sellerUid']?.toString() ?? '';
     _resetUnread();
     _setPresence(true);
+    _subscribeListingStatus();
     _focusNode.addListener(() {
       if (_focusNode.hasFocus) _scrollToBottom(animated: true);
     });
@@ -109,8 +114,52 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     _scrollCtrl.dispose();
     _focusNode.dispose();
     _seenTimer?.cancel();
+    _listingSub?.cancel();
     _setPresence(false);
     super.dispose();
+  }
+
+  // Streams the listing's isSold flag so the banner updates in real time.
+  void _subscribeListingStatus() {
+    if (_listingId.isEmpty) return;
+    _listingSub = _fs
+        .collection('listings')
+        .doc(_listingId)
+        .snapshots()
+        .listen((snap) {
+      if (!mounted) return;
+      final sold = (snap.data() ?? {})['isSold'] as bool? ?? false;
+      if (_isSold != sold) setState(() => _isSold = sold);
+    });
+  }
+
+  Future<void> _markAsSold() async {
+    if (_isSold || _isMarkingAsSold || _listingId.isEmpty) return;
+    HapticFeedback.mediumImpact();
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => _MarkSoldDialog(isDark: isDark),
+    );
+    if (confirm != true || !mounted) return;
+
+    setState(() => _isMarkingAsSold = true);
+    try {
+      await _fs.collection('listings').doc(_listingId).update({
+        'isSold': true,
+        'status': 'sold',
+        'soldAt': FieldValue.serverTimestamp(),
+      });
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed. Please try again.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isMarkingAsSold = false);
+    }
   }
 
   // ── Firebase helpers ───────────────────────────────────────────────────────
@@ -346,9 +395,13 @@ class _ChatRoomViewState extends State<ChatRoomView> {
               title: _listingTitle,
               image: _listingImage,
               isDark: isDark,
+              isSeller: _sellerUid.isNotEmpty && _sellerUid == _me?.uid,
+              isSold: _isSold,
+              isMarking: _isMarkingAsSold,
+              onMarkSold: _markAsSold,
             ),
           Expanded(child: _buildList(isDark)),
-          _buildInputBar(isDark),
+          if (_isSold) _SoldNotice(isDark: isDark) else _buildInputBar(isDark),
         ],
       ),
     );
@@ -356,7 +409,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
 
   // ── App bar ────────────────────────────────────────────────────────────────
   PreferredSizeWidget _buildAppBar(bool isDark) {
-    final bg = isDark ? _D.appBarBgDark : AppColors.primary;
+    const bg = AppColors.primary;
 
     return AppBar(
       elevation: 0,
@@ -798,11 +851,19 @@ class _ListingBanner extends StatelessWidget {
   final String title;
   final String image;
   final bool isDark;
+  final bool isSeller;
+  final bool isSold;
+  final bool isMarking;
+  final VoidCallback onMarkSold;
 
   const _ListingBanner({
     required this.title,
     required this.image,
     required this.isDark,
+    required this.isSeller,
+    required this.isSold,
+    required this.isMarking,
+    required this.onMarkSold,
   });
 
   @override
@@ -843,6 +904,86 @@ class _ListingBanner extends StatelessWidget {
               ),
             ),
           ),
+          // Mark as Sold — visible only to the seller
+          if (isSeller) ...[
+            const SizedBox(width: 8),
+            isSold
+                ? Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF57C00).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFFF57C00).withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.sell_rounded,
+                            size: 12, color: const Color(0xFFF57C00)),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Sold',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFFF57C00),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : GestureDetector(
+                    onTap: isMarking ? null : onMarkSold,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: isMarking
+                            ? AppColors.primary.withValues(alpha: 0.08)
+                            : AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.35),
+                        ),
+                      ),
+                      child: isMarking
+                          ? SizedBox(
+                              width: 52,
+                              height: 14,
+                              child: Center(
+                                child: SizedBox(
+                                  width: 12,
+                                  height: 12,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 1.5,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.check_circle_outline_rounded,
+                                    size: 12, color: AppColors.primary),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Mark Sold',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+          ],
         ],
       ),
     );
@@ -1575,6 +1716,145 @@ class _EmptyConvo extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mark as sold confirmation dialog
+// ─────────────────────────────────────────────────────────────────────────────
+class _MarkSoldDialog extends StatelessWidget {
+  final bool isDark;
+  const _MarkSoldDialog({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final cardBg = isDark ? const Color(0xFF1C1F28) : Colors.white;
+    final theme = Theme.of(context);
+
+    return Dialog(
+      backgroundColor: cardBg,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFF57C00).withValues(alpha: 0.1),
+              ),
+              child: const Icon(
+                Icons.sell_rounded,
+                color: Color(0xFFF57C00),
+                size: 26,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Mark as Sold?',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'This will mark your listing as sold. Buyers will see it as unavailable. This action cannot be undone.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      side: BorderSide(
+                        color: theme.hintColor.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                        color: theme.hintColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF57C00),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Mark Sold',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sold notice — replaces the input bar once the listing is marked sold
+// ─────────────────────────────────────────────────────────────────────────────
+class _SoldNotice extends StatelessWidget {
+  final bool isDark;
+  const _SoldNotice({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = isDark ? const Color(0xFF1A1D23) : const Color(0xFFF8F8F8);
+    final textColor = isDark ? Colors.white54 : Colors.black45;
+
+    return Container(
+      width: double.infinity,
+      color: bg,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.sell_rounded, size: 16, color: Color(0xFFF57C00)),
+            const SizedBox(width: 8),
+            Text(
+              'This listing has been sold',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: textColor,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

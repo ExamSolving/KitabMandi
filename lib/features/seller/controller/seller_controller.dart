@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:kitab_mandi/core/constants/app_color.dart';
 import 'package:kitab_mandi/core/services/location_service.dart';
+import 'package:kitab_mandi/core/storage/location_storage.dart';
 import 'package:kitab_mandi/core/utils/app_snackbar.dart';
 import 'package:kitab_mandi/features/auth/controller/auth_controller.dart';
 import 'package:kitab_mandi/features/auth/domain/repositories/i_auth_repository.dart';
@@ -120,7 +122,37 @@ class SellerController extends GetxController {
       isEdit.value = true;
       listingId = listingModel!.id;
       _prefillData();
+    } else {
+      // New listing — reuse the location already detected on the home screen.
+      // The user shouldn't need to re-detect what the app already knows.
+      _prefillFromCache();
     }
+  }
+
+  // Reads the location the app already detected (saved by LocationController)
+  // and pre-fills all location fields so the user can post without re-detecting.
+  void _prefillFromCache() {
+    try {
+      final cached = LocationStorage.getLocationData();
+      if (cached == null) return;
+      city.value = cached['city'] ?? '';
+      state.value = cached['state'] ?? '';
+      locality.value = cached['locality'] ?? '';
+      subLocality.value = cached['area'] ?? '';
+      postalCode.value = cached['pincode'] ?? '';
+      lat.value = (cached['latitude'] ?? 0.0).toDouble();
+      long.value = (cached['longitude'] ?? 0.0).toDouble();
+      fullAddress.value = [
+        cached['area'],
+        cached['locality'],
+        cached['city'],
+        cached['state'],
+        cached['pincode'] != null &&
+                cached['pincode'].toString().isNotEmpty
+            ? '- ${cached["pincode"]}'
+            : null,
+      ].where((e) => e != null && e.toString().trim().isNotEmpty).join(', ');
+    } catch (_) {}
   }
 
   Future<void> loadCategories() async {
@@ -195,7 +227,37 @@ class SellerController extends GetxController {
       }
 
       // 3. Fetch location details
-      final locationData = await LocationService.getCurrentLocationDetails();
+      Map<String, dynamic>? locationData =
+          await LocationService.getCurrentLocationDetails();
+
+      // If fresh GPS failed (timeout, indoor, etc.), try reverse-geocoding the
+      // cached coordinates as a fallback before giving up entirely.
+      if (locationData == null) {
+        final cached = LocationStorage.getLocationData();
+        if (cached != null) {
+          final cachedLat = (cached['latitude'] ?? 0.0).toDouble();
+          final cachedLng = (cached['longitude'] ?? 0.0).toDouble();
+          if (cachedLat != 0.0 || cachedLng != 0.0) {
+            try {
+              final placemarks =
+                  await placemarkFromCoordinates(cachedLat, cachedLng);
+              if (placemarks.isNotEmpty) {
+                final p = placemarks.first;
+                locationData = {
+                  'latitude': cachedLat,
+                  'longitude': cachedLng,
+                  'area': p.subLocality ?? '',
+                  'locality': p.locality ?? '',
+                  'city': p.locality ?? p.subAdministrativeArea ?? '',
+                  'state': p.administrativeArea ?? '',
+                  'pincode': p.postalCode ?? '',
+                };
+              }
+            } catch (_) {}
+          }
+        }
+      }
+
       if (locationData == null) {
         AppSnackbar.error('Could not detect location. Please try again.');
         return;
@@ -206,8 +268,8 @@ class SellerController extends GetxController {
       locality.value = locationData['locality'] ?? '';
       subLocality.value = locationData['area'] ?? '';
       postalCode.value = locationData['pincode'] ?? '';
-      lat.value = locationData['latitude'] as double;
-      long.value = locationData['longitude'] as double;
+      lat.value = (locationData['latitude'] as num).toDouble();
+      long.value = (locationData['longitude'] as num).toDouble();
       fullAddress.value = [
         locationData['area'],
         locationData['locality'],

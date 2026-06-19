@@ -8,6 +8,7 @@ import 'package:kitab_mandi/core/controller/location_controller.dart';
 import 'package:kitab_mandi/features/auth/domain/repositories/i_auth_repository.dart';
 import 'package:kitab_mandi/routes/app_routes.dart';
 import 'package:kitab_mandi/widgets/app_button.dart';
+import '../../../core/services/fcm_service.dart';
 import '../../../core/utils/app_snackbar.dart';
 import '../../../core/utils/validators.dart';
 
@@ -192,6 +193,10 @@ class AuthController extends GetxController {
           isGoogleUser: true,
         );
         await fetchUserData();
+        // Profile document now exists — safe to update() the FCM token fields.
+        // The auth-state listener fired before this point and update() threw
+        // NOT_FOUND because the document didn't exist yet.
+        await FCMService.instance.refreshToken(user.uid);
         clearAllFields();
         isLogin.value = true;
         await locationController.initLocation(isNewUser: true);
@@ -290,6 +295,7 @@ class AuthController extends GetxController {
         isGoogleUser: false,
       );
       await fetchUserData();
+      await FCMService.instance.refreshToken(user.uid);
       _clearPendingData();
       clearAllFields();
       isLogin.value = true;
@@ -384,7 +390,7 @@ class AuthController extends GetxController {
         return;
       }
       await _authRepo.sendPasswordResetEmail(email);
-      clearAllFields();
+      clearForgotFields();
       Get.back(result: true);
       AppSnackbar.success('reset_link_sent'.tr);
     } on FirebaseAuthException catch (e) {
@@ -446,6 +452,13 @@ class AuthController extends GetxController {
         return;
       }
       final googleAuth = await googleUser.authentication;
+
+      // Mark as Google sign-in BEFORE the credential call so the auth-state
+      // listener's stale-session guard doesn't fire on the new user who has
+      // no Firestore profile yet — without this flag, the listener would see
+      // userData==null and immediately sign them out.
+      isGoogleUser.value = true;
+
       await _authRepo.signInWithGoogleCredential(
         idToken: googleAuth.idToken,
         accessToken: googleAuth.accessToken,
@@ -455,19 +468,22 @@ class AuthController extends GetxController {
 
       final isComplete = await _authRepo.isUserProfileComplete(user.uid);
       if (isComplete) {
+        // Existing Google user — reset flag and go to dashboard
+        isGoogleUser.value = false;
         await locationController.initLocation(isNewUser: false);
         clearAllFields();
         return;
       }
-      // New Google user — show sign-up form with pre-filled data
-      isGoogleUser.value = true;
+      // New Google user — keep flag true and show complete-profile form
       isLogin.value = false;
       nameController.text = user.displayName ?? '';
       emailController.text = user.email ?? '';
       AppSnackbar.success('complete_profile'.tr);
     } on FirebaseAuthException catch (e) {
+      isGoogleUser.value = false;
       AppSnackbar.error(_handleAuthError(e));
     } catch (e) {
+      isGoogleUser.value = false;
       AppSnackbar.error('google_login_failed'.tr);
     } finally {
       isLoading.value = false;
@@ -478,14 +494,18 @@ class AuthController extends GetxController {
   Future<void> logout() async {
     try {
       await _authRepo.signOut();
+    } catch (e) {
+      debugPrint('Sign-out error: $e');
+    }
+    try {
       if (await _authRepo.isGoogleSignedIn()) {
         await _authRepo.googleSignOut();
       }
-      clearAllFields();
-      Get.deleteAll();
-    } catch (e) {
-      debugPrint('Logout Error: $e');
-    }
+    } catch (_) {}
+    clearAllFields();
+    // Clear the entire route stack — WrapperView will show AuthView because
+    // userData is now null. Route disposal handles non-permanent controllers.
+    Get.offAllNamed(AppRoutes.wrapper);
   }
 
   void showLogoutDialog(BuildContext context) {

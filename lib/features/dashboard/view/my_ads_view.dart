@@ -17,17 +17,15 @@ class MyAdsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final appBarBg = isDark ? const Color(0xFF1A1D23) : Colors.white;
-
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text('my_ads'.tr,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18, color: Colors.white)),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: appBarBg,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         actions: const [NotificationBell(), SizedBox(width: 4)],
       ),
       body: Obx(() {

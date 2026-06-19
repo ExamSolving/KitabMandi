@@ -20,17 +20,16 @@ class NotificationView extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF090B13) : const Color(0xFFF5F6FA);
-    final appBarBg = isDark ? const Color(0xFF1A1D23) : Colors.white;
-
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: appBarBg,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         title: Text(
           'notifications'.tr,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17, color: Colors.white),
         ),
         actions: [
           Obx(() {
@@ -43,7 +42,7 @@ class NotificationView extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.primary,
+                  color: Colors.white70,
                 ),
               ),
             );
@@ -51,7 +50,7 @@ class NotificationView extends StatelessWidget {
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Divider(height: 1, color: theme.dividerColor),
+          child: Divider(height: 1, color: Colors.white24),
         ),
       ),
       body: Obx(() {
@@ -371,10 +370,10 @@ class _NotifCard extends StatelessWidget {
   String _timeAgo() {
     final diff = DateTime.now().difference(notif.createdAt);
     if (diff.inMinutes < 1) return 'just_now'.tr;
-    if (diff.inMinutes < 60) return 'minutes_ago'.trArgs([diff.inMinutes.toString()]);
-    if (diff.inHours < 24) return 'hours_ago'.trArgs([diff.inHours.toString()]);
+    if (diff.inMinutes < 60) return 'minutes_ago'.trParams({'0': diff.inMinutes.toString()});
+    if (diff.inHours < 24) return 'hours_ago'.trParams({'0': diff.inHours.toString()});
     if (diff.inDays == 1) return 'yesterday_label'.tr;
-    return 'days_ago'.trArgs([diff.inDays.toString()]);
+    return 'days_ago'.trParams({'0': diff.inDays.toString()});
   }
 
   @override

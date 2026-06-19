@@ -562,7 +562,7 @@ class _ActivityRow extends StatelessWidget {
           child: _ActivityCard(
             icon: Icons.article_rounded,
             label: 'my_listings'.tr,
-            sublabel: 'count_active'.trArgs([listingCount.toString()]),
+            sublabel: 'count_active'.trParams({'0': listingCount.toString()}),
             color: const Color(0xFF2E7D32),
             isDark: isDark,
             cardBg: cardBg,

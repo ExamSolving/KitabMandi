@@ -15,7 +15,7 @@ class ChatView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final appBarBg = isDark ? const Color(0xFF1A1D23) : AppColors.primary;
+    const appBarBg = AppColors.primary;
     final indicatorColor = isDark ? AppColors.primaryLight : Colors.white;
     final labelColor = Colors.white;
     final unselectedColor = Colors.white.withValues(alpha: 0.6);
@@ -164,6 +164,8 @@ class BuyingProductsView extends StatelessWidget {
                     'listingImage': chat['listingImage'],
                     'userName': name,
                     'otherUserId': sellerId,
+                    'listingId': chat['listingId'] ?? '',
+                    'sellerUid': chat['sellerId'] ?? '',
                   }),
                 );
               },
@@ -269,13 +271,17 @@ class _ConversationTile extends StatelessWidget {
     required this.onTap,
   });
 
-  String _fmt(dynamic ts, BuildContext ctx) {
+  String _fmt(dynamic ts) {
     if (ts == null) return '';
     try {
       final d = (ts as Timestamp).toDate();
       final now = DateTime.now();
       final diff = now.difference(d);
-      if (diff.inDays == 0) return TimeOfDay.fromDateTime(d).format(ctx);
+      if (diff.inDays == 0) {
+        final h = d.hour % 12 == 0 ? 12 : d.hour % 12;
+        final m = d.minute.toString().padLeft(2, '0');
+        return '$h:$m ${d.hour < 12 ? 'AM' : 'PM'}';
+      }
       if (diff.inDays == 1) return 'yesterday'.tr;
       if (diff.inDays < 7) {
         const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -375,7 +381,7 @@ class _ConversationTile extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            _fmt(time, context),
+                            _fmt(time),
                             style: TextStyle(
                               fontSize: 11.5,
                               fontWeight: hasUnread
@@ -508,11 +514,15 @@ class _ProductCard extends StatelessWidget {
       final now = DateTime.now();
       final diff = now.difference(d);
       if (diff.inDays == 0) {
-        final h = d.hour.toString().padLeft(2, '0');
+        final h = d.hour % 12 == 0 ? 12 : d.hour % 12;
         final m = d.minute.toString().padLeft(2, '0');
-        return '$h:$m';
+        return '$h:$m ${d.hour < 12 ? 'AM' : 'PM'}';
       }
       if (diff.inDays == 1) return 'yesterday'.tr;
+      if (diff.inDays < 7) {
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        return days[d.weekday - 1];
+      }
       return '${d.day}/${d.month}';
     } catch (_) {
       return '';
@@ -613,7 +623,7 @@ class _ProductCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            (buyerCount == 1 ? 'buyer_interested_one' : 'buyer_interested_many').trArgs([buyerCount.toString()]),
+                            (buyerCount == 1 ? 'buyer_interested_one' : 'buyer_interested_many').trParams({'0': buyerCount.toString()}),
                             style: const TextStyle(
                               color: AppColors.primary,
                               fontSize: 11,
@@ -652,7 +662,7 @@ class UsersListView extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<ChatController>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final appBarBg = isDark ? const Color(0xFF1A1D23) : AppColors.primary;
+    const appBarBg = AppColors.primary;
 
     return Scaffold(
       backgroundColor:
@@ -729,6 +739,8 @@ class UsersListView extends StatelessWidget {
                       'listingImage': chat['listingImage'],
                       'userName': name,
                       'otherUserId': otherUserId,
+                      'listingId': chat['listingId'] ?? '',
+                      'sellerUid': chat['sellerId'] ?? '',
                     }),
                   );
                 },
