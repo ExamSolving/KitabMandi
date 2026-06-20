@@ -1,7 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kitab_mandi/core/constants/app_color.dart';
+import 'package:kitab_mandi/core/constants/razorpay_config.dart';
+import 'package:kitab_mandi/core/services/subscription_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' show User;
+import 'package:kitab_mandi/features/auth/controller/auth_controller.dart';
 import 'package:kitab_mandi/features/auth/domain/repositories/i_auth_repository.dart';
 import 'package:kitab_mandi/features/dashboard/controller/home_controller.dart';
 import 'package:kitab_mandi/features/dashboard/controller/my_ads_controller.dart';
@@ -156,6 +160,139 @@ class ListingDetailsController extends GetxController {
                         'remove'.tr,
                         style: const TextStyle(color: Colors.white),
                       ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Call seller (subscription-gated) ─────────────────────────────────────
+  /// Checks that the current user has an active Plus or Pro plan, then fetches
+  /// the seller's phone number from Firestore and opens the native dialer.
+  Future<void> callSeller(String sellerUid) async {
+    // 1. Subscription gate
+    try {
+      final userData = Get.find<AuthController>().userData.value;
+      final sub = userData?['subscription'] as Map<String, dynamic>?;
+      final isActive = SubscriptionService.isActive(sub);
+      final plan = SubscriptionService.getPlan(sub);
+      final isFree = !isActive || plan == RazorpayConfig.planFree;
+
+      if (isFree) {
+        _showCallUpgradeDialog();
+        return;
+      }
+    } catch (_) {
+      _showCallUpgradeDialog();
+      return;
+    }
+
+    // 2. Fetch phone number from users collection
+    if (sellerUid.isEmpty) {
+      Get.snackbar('Error', 'Seller information unavailable.',
+          snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(sellerUid)
+          .get();
+      final phone = (doc.data()?['phone'] as String?)?.trim() ?? '';
+
+      if (phone.isEmpty) {
+        Get.snackbar('Not Available',
+            'Seller has not provided a phone number.',
+            snackPosition: SnackPosition.BOTTOM);
+        return;
+      }
+
+      await makePhoneCall(phone);
+    } catch (_) {
+      Get.snackbar('Error', 'Could not reach seller. Try again.',
+          snackPosition: SnackPosition.BOTTOM);
+    }
+  }
+
+  void _showCallUpgradeDialog() {
+    final theme = Get.theme;
+    final isDark = theme.brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1C1F28) : Colors.white;
+
+    Get.dialog(
+      Dialog(
+        backgroundColor: cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                ),
+                child: const Icon(Icons.call_rounded,
+                    color: Color(0xFF10B981), size: 28),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Call Seller',
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Calling sellers directly is available on Plus and Pro plans. Upgrade to contact sellers by phone.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.hintColor,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 22),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: Get.back,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        side: BorderSide(
+                            color: theme.hintColor.withValues(alpha: 0.3)),
+                      ),
+                      child: Text('Cancel',
+                          style: TextStyle(color: theme.hintColor)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back();
+                        Get.toNamed(AppRoutes.subscription);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Upgrade',
+                          style: TextStyle(fontWeight: FontWeight.w700)),
                     ),
                   ),
                 ],

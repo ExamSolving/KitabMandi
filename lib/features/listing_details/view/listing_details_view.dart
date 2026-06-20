@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:kitab_mandi/core/constants/app_color.dart';
+import 'package:kitab_mandi/core/constants/razorpay_config.dart';
+import 'package:kitab_mandi/core/services/subscription_service.dart';
+import 'package:kitab_mandi/features/auth/controller/auth_controller.dart';
 import 'package:kitab_mandi/features/dashboard/controller/chat_controller.dart';
 import 'package:kitab_mandi/features/dashboard/model/listing_model.dart';
 import 'package:kitab_mandi/features/listing_details/controller/listing_details_controller.dart';
@@ -571,51 +574,104 @@ class _ListingDetailsViewState extends State<ListingDetailsView> {
                         ),
                       ],
                     )
-                  : Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () async =>
-                                chatController.startChat(widget.listing),
-                            icon: const Icon(
-                                Icons.chat_bubble_rounded,
-                                size: 17),
-                            label: Text('chat_seller'.tr),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 13),
-                              foregroundColor: AppColors.primary,
-                              side: BorderSide(
-                                  color: AppColors.primary
-                                      .withValues(alpha: 0.5)),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(12)),
+                  : Obx(() {
+                      final userData =
+                          Get.find<AuthController>().userData.value;
+                      final sub = userData?['subscription']
+                          as Map<String, dynamic>?;
+                      final isActive =
+                          SubscriptionService.isActive(sub);
+                      final plan = SubscriptionService.getPlan(sub);
+                      final canCall = isActive &&
+                          plan != RazorpayConfig.planFree;
+                      final sellerUid =
+                          widget.listing.seller['uid']?.toString() ??
+                              '';
+
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () async =>
+                                  chatController.startChat(
+                                      widget.listing),
+                              icon: const Icon(
+                                  Icons.chat_bubble_rounded,
+                                  size: 17),
+                              label: Text('chat_seller'.tr),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 13),
+                                foregroundColor: AppColors.primary,
+                                side: BorderSide(
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.5)),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(12)),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => controller.makePhoneCall(
-                                widget.listing.seller['phone']),
-                            icon: const Icon(Icons.call_rounded,
-                                size: 17),
-                            label: Text('call_seller'.tr),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF10B981),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 13),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(12)),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                ElevatedButton.icon(
+                                  onPressed: () =>
+                                      controller.callSeller(sellerUid),
+                                  icon: const Icon(Icons.call_rounded,
+                                      size: 17),
+                                  label: Text('call_seller'.tr),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: canCall
+                                        ? const Color(0xFF10B981)
+                                        : (isDark
+                                            ? const Color(0xFF2A2F38)
+                                            : Colors.grey.shade200),
+                                    foregroundColor: canCall
+                                        ? Colors.white
+                                        : (isDark
+                                            ? Colors.white38
+                                            : Colors.black38),
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 13),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                  ),
+                                ),
+                                if (!canCall)
+                                  Positioned(
+                                    top: -4,
+                                    right: -4,
+                                    child: Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: AppColors.primary,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.primary
+                                                .withValues(alpha: 0.4),
+                                            blurRadius: 6,
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                          Icons.lock_rounded,
+                                          size: 12,
+                                          color: Colors.white),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      );
+                    }),
             );
           },
         ),

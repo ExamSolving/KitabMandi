@@ -11,6 +11,10 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:kitab_mandi/core/constants/app_color.dart';
+import 'package:kitab_mandi/core/constants/razorpay_config.dart';
+import 'package:kitab_mandi/core/services/subscription_service.dart';
+import 'package:kitab_mandi/features/auth/controller/auth_controller.dart';
+import 'package:kitab_mandi/routes/app_routes.dart';
 import 'package:kitab_mandi/widgets/app_cached_image_network.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -51,8 +55,8 @@ abstract class _D {
 
 // Converts a DateTime to "h:mm AM/PM" — used by both presence text and bubbles.
 String _fmtAmPm(DateTime d) {
-  final h  = d.hour % 12 == 0 ? 12 : d.hour % 12;
-  final m  = d.minute.toString().padLeft(2, '0');
+  final h = d.hour % 12 == 0 ? 12 : d.hour % 12;
+  final m = d.minute.toString().padLeft(2, '0');
   final period = d.hour < 12 ? 'AM' : 'PM';
   return '$h:$m $period';
 }
@@ -84,6 +88,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   bool _markingBusy = false;
   bool _isSold = false;
   bool _isMarkingAsSold = false;
+  bool _canSendImages = false;
   XFile? _pending;
   Timer? _seenTimer;
   StreamSubscription<DocumentSnapshot>? _listingSub;
@@ -103,6 +108,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     _resetUnread();
     _setPresence(true);
     _subscribeListingStatus();
+    _initSubscriptionStatus();
     _focusNode.addListener(() {
       if (_focusNode.hasFocus) _scrollToBottom(animated: true);
     });
@@ -119,18 +125,28 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     super.dispose();
   }
 
+  void _initSubscriptionStatus() {
+    try {
+      final userData = Get.find<AuthController>().userData.value;
+      final sub = userData?['subscription'] as Map<String, dynamic>?;
+      final plan = SubscriptionService.getPlan(sub);
+      final isActive = SubscriptionService.isActive(sub);
+      _canSendImages = isActive && plan != RazorpayConfig.planFree;
+    } catch (_) {
+      _canSendImages = false;
+    }
+  }
+
   // Streams the listing's isSold flag so the banner updates in real time.
   void _subscribeListingStatus() {
     if (_listingId.isEmpty) return;
-    _listingSub = _fs
-        .collection('listings')
-        .doc(_listingId)
-        .snapshots()
-        .listen((snap) {
-      if (!mounted) return;
-      final sold = (snap.data() ?? {})['isSold'] as bool? ?? false;
-      if (_isSold != sold) setState(() => _isSold = sold);
-    });
+    _listingSub = _fs.collection('listings').doc(_listingId).snapshots().listen(
+      (snap) {
+        if (!mounted) return;
+        final sold = (snap.data() ?? {})['isSold'] as bool? ?? false;
+        if (_isSold != sold) setState(() => _isSold = sold);
+      },
+    );
   }
 
   Future<void> _markAsSold() async {
@@ -234,6 +250,10 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   void _showAttachSheet() {
     if (_isSendingImage) return;
     HapticFeedback.lightImpact();
+    if (!_canSendImages) {
+      _showImageUpgradePrompt();
+      return;
+    }
     final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
@@ -249,6 +269,15 @@ class _ChatRoomViewState extends State<ChatRoomView> {
           _pickFrom(ImageSource.gallery);
         },
       ),
+    );
+  }
+
+  void _showImageUpgradePrompt() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ImageUpgradeSheet(isDark: isDark),
     );
   }
 
@@ -409,11 +438,11 @@ class _ChatRoomViewState extends State<ChatRoomView> {
 
   // ── App bar ────────────────────────────────────────────────────────────────
   PreferredSizeWidget _buildAppBar(bool isDark) {
-    const bg = AppColors.primary;
+    final appBarBg = isDark ? const Color(0xFF1A1D23) : Colors.white;
 
     return AppBar(
       elevation: 0,
-      backgroundColor: bg,
+      backgroundColor: appBarBg,
       titleSpacing: 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       iconTheme: const IconThemeData(color: Colors.white),
@@ -435,7 +464,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
                   photo: photo,
                   online: online,
                   subtitle: _presenceText(online, lastSeen),
-                  appBarBg: bg,
+                  appBarBg: appBarBg,
                 );
               },
             ),
@@ -639,12 +668,39 @@ class _ChatRoomViewState extends State<ChatRoomView> {
                                   )
                                 : GestureDetector(
                                     onTap: hasPend ? null : _showAttachSheet,
-                                    child: Icon(
-                                      Icons.image_outlined,
-                                      size: 23,
-                                      color: hasPend
-                                          ? attach.withValues(alpha: 0.3)
-                                          : attach,
+                                    child: Stack(
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        Icon(
+                                          Icons.image_outlined,
+                                          size: 23,
+                                          color: hasPend
+                                              ? attach.withValues(alpha: 0.3)
+                                              : attach,
+                                        ),
+                                        if (!_canSendImages)
+                                          Positioned(
+                                            right: -4,
+                                            bottom: -4,
+                                            child: Container(
+                                              width: 13,
+                                              height: 13,
+                                              decoration: BoxDecoration(
+                                                color: isDark
+                                                    ? const Color(0xFF2A2F38)
+                                                    : Colors.white,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Icon(
+                                                Icons.lock_rounded,
+                                                size: 9,
+                                                color: isDark
+                                                    ? Colors.white38
+                                                    : Colors.black38,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                   ),
                           ),
@@ -910,7 +966,9 @@ class _ListingBanner extends StatelessWidget {
             isSold
                 ? Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5),
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF57C00).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
@@ -921,8 +979,11 @@ class _ListingBanner extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.sell_rounded,
-                            size: 12, color: const Color(0xFFF57C00)),
+                        Icon(
+                          Icons.sell_rounded,
+                          size: 12,
+                          color: const Color(0xFFF57C00),
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           'Sold',
@@ -940,7 +1001,9 @@ class _ListingBanner extends StatelessWidget {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 180),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: isMarking
                             ? AppColors.primary.withValues(alpha: 0.08)
@@ -968,8 +1031,11 @@ class _ListingBanner extends StatelessWidget {
                           : Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.check_circle_outline_rounded,
-                                    size: 12, color: AppColors.primary),
+                                Icon(
+                                  Icons.check_circle_outline_rounded,
+                                  size: 12,
+                                  color: AppColors.primary,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   'Mark Sold',
@@ -1687,33 +1753,49 @@ class _EmptyConvo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = isDark ? const Color(0xFF4ADE80) : AppColors.primary;
+    final subColor = isDark ? Colors.white38 : Colors.black38;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 80,
-            height: 80,
+            width: 88,
+            height: 88,
             decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.07)
-                  : Colors.white.withValues(alpha: 0.6),
               shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  accent.withValues(alpha: isDark ? 0.15 : 0.12),
+                  accent.withValues(alpha: 0.04),
+                ],
+              ),
+              border: Border.all(
+                color: accent.withValues(alpha: 0.2),
+                width: 1.5,
+              ),
             ),
             child: Icon(
-              Icons.waving_hand_rounded,
-              size: 38,
-              color: isDark ? Colors.white24 : Colors.brown.shade300,
+              Icons.chat_bubble_outline_rounded,
+              size: 36,
+              color: accent.withValues(alpha: 0.7),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           Text(
-            'Start the conversation!',
+            'No messages yet',
             style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: isDark ? Colors.white38 : Colors.brown.shade400,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: isDark ? Colors.white60 : Colors.black54,
+              letterSpacing: -0.2,
             ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Say hi to get the conversation started',
+            style: TextStyle(fontSize: 13, color: subColor),
           ),
         ],
       ),
@@ -1854,6 +1936,204 @@ class _SoldNotice extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Image upgrade prompt — shown when free-plan users tap the image button
+// ─────────────────────────────────────────────────────────────────────────────
+class _ImageUpgradeSheet extends StatelessWidget {
+  final bool isDark;
+  const _ImageUpgradeSheet({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = isDark ? const Color(0xFF1E222A) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subColor = isDark ? Colors.white54 : Colors.black54;
+    const accent = AppColors.primary;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Drag handle
+          Container(
+            margin: const EdgeInsets.only(top: 12, bottom: 4),
+            width: 38,
+            height: 4,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white24 : Colors.black12,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Content
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 14, 24, 22),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon badge
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        accent.withValues(alpha: 0.15),
+                        accent.withValues(alpha: 0.08),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    border: Border.all(
+                      color: accent.withValues(alpha: 0.3),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      const Icon(Icons.image_rounded, size: 28, color: accent),
+                      Positioned(
+                        right: 9,
+                        bottom: 9,
+                        child: Container(
+                          width: 18,
+                          height: 18,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: accent,
+                          ),
+                          child: const Icon(
+                            Icons.lock_rounded,
+                            size: 11,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                // Title
+                Text(
+                  'Photos & Images',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: textColor,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                // Body
+                Text(
+                  'Sending images is available on Plus and Pro plans. Upgrade to share photos with buyers and sellers.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, height: 1.5, color: subColor),
+                ),
+                const SizedBox(height: 10),
+                // Plan pills
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _UpgradePill(
+                      label: 'Plus — ₹79/mo',
+                      color: accent,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(width: 8),
+                    _UpgradePill(
+                      label: 'Pro — ₹149/mo',
+                      color: const Color(0xFFF57C00),
+                      isDark: isDark,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // CTA
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Get.toNamed(AppRoutes.subscription);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: accent,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: const Text(
+                      'View Plans',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Text(
+                    'Maybe later',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: subColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UpgradePill extends StatelessWidget {
+  final String label;
+  final Color color;
+  final bool isDark;
+
+  const _UpgradePill({
+    required this.label,
+    required this.color,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isDark ? 0.18 : 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: color,
         ),
       ),
     );
