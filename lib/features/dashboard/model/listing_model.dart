@@ -12,6 +12,7 @@ class ListingModel {
   final List<String> images;
 
   final bool? isBoosted;
+  final bool? isFeatured;
   final bool? isSold;
   double? distanceKm;
 
@@ -38,6 +39,7 @@ class ListingModel {
     this.createdAt,
     this.updatedAt,
     this.isBoosted,
+    this.isFeatured,
     this.isSold,
     this.distanceKm,
   });
@@ -83,6 +85,7 @@ class ListingModel {
           : null,
 
       isBoosted: map['isBoosted'] ?? false,
+      isFeatured: map['isFeatured'] ?? false,
       isSold: map['isSold'] ?? false,
       distanceKm: map['distanceKm'] != null
           ? (map['distanceKm'] as num).toDouble()
@@ -114,6 +117,7 @@ class ListingModel {
       "updatedAt": updatedAt,
 
       "isBoosted": isBoosted,
+      "isFeatured": isFeatured,
       "isSold": isSold,
     };
   }

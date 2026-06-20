@@ -247,7 +247,12 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                   color: Colors.grey,
                   listingFeature: '2 active listings',
                   resumeFeature: '1 AI resume (lifetime)',
-                  features: const ['Basic chat', 'Standard visibility'],
+                  coverLetterFeature: '1 cover letter (lifetime)',
+                  features: const [
+                    'Text-only chat with buyers/sellers',
+                    'Standard listing visibility',
+                    'Haiku AI model',
+                  ],
                   isCurrent:
                       _activePlanKey == RazorpayConfig.planFree ||
                       _activePlanKey == null,
@@ -265,7 +270,14 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                   color: AppColors.primary,
                   listingFeature: 'Unlimited listings',
                   resumeFeature: '10 AI resumes / month',
-                  features: const ['All chat features', 'Priority visibility'],
+                  coverLetterFeature: '3 cover letters (lifetime)',
+                  features: const [
+                    'Full chat — send images & files',
+                    'Chat with any buyer or seller',
+                    'Read receipts & typing indicators',
+                    'Priority listing visibility',
+                    'Sonnet AI model (smarter)',
+                  ],
                   isCurrent:
                       _activePlanKey ==
                       (_annual
@@ -296,10 +308,15 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                   period: _annual ? '/year  (~₹100/mo · save 33%)' : '/month',
                   color: const Color(0xFFF57C00),
                   listingFeature: 'Unlimited listings',
-                  resumeFeature: 'Unlimited AI resumes',
+                  resumeFeature: '50 AI resumes / month',
+                  coverLetterFeature: '20 cover letters (lifetime)',
                   features: const [
-                    '3 featured boosts/month',
-                    'Trusted Seller badge',
+                    'Full chat — send images & files',
+                    'Chat with any buyer or seller',
+                    'Read receipts & typing indicators',
+                    'Listings appear as Featured first',
+                    'Trusted Seller badge on profile',
+                    'Sonnet AI model (smarter)',
                   ],
                   isCurrent:
                       _activePlanKey ==
@@ -524,6 +541,7 @@ class _PlanCard extends StatelessWidget {
   final Color color;
   final String listingFeature;
   final String resumeFeature;
+  final String coverLetterFeature;
   final List<String> features;
   final bool isCurrent;
   final bool isPopular;
@@ -538,6 +556,7 @@ class _PlanCard extends StatelessWidget {
     required this.color,
     required this.listingFeature,
     required this.resumeFeature,
+    required this.coverLetterFeature,
     required this.features,
     required this.isCurrent,
     required this.isPopular,
@@ -670,6 +689,13 @@ class _PlanCard extends StatelessWidget {
               color: color,
               isDark: isDark,
             ),
+            const SizedBox(height: 6),
+            _FeaturePill(
+              icon: Icons.mail_outline_rounded,
+              label: coverLetterFeature,
+              color: color,
+              isDark: isDark,
+            ),
 
             if (features.isNotEmpty) ...[
               Padding(
@@ -689,11 +715,13 @@ class _PlanCard extends StatelessWidget {
                     children: [
                       Icon(Icons.check_circle_rounded, size: 16, color: color),
                       const SizedBox(width: 8),
-                      Text(
-                        f,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isDark ? Colors.white70 : Colors.black87,
+                      Expanded(
+                        child: Text(
+                          f,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
                         ),
                       ),
                     ],
@@ -787,7 +815,7 @@ class _FeaturePill extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Feature comparison strip — quick side-by-side for Listings vs AI Resumes
+// Feature comparison strip
 // ─────────────────────────────────────────────────────────────────────────────
 class _FeatureCompareStrip extends StatelessWidget {
   final bool isDark;
@@ -800,6 +828,7 @@ class _FeatureCompareStrip extends StatelessWidget {
         ? Colors.white.withValues(alpha: 0.08)
         : Colors.black.withValues(alpha: 0.06);
     final headerColor = isDark ? Colors.white38 : Colors.black38;
+    const proColor = Color(0xFFF57C00);
 
     return Container(
       decoration: BoxDecoration(
@@ -814,7 +843,7 @@ class _FeatureCompareStrip extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
             child: Row(
               children: [
-                const SizedBox(width: 110),
+                const SizedBox(width: 100),
                 _ColHeader('Free', headerColor),
                 _ColHeader('Plus', headerColor),
                 _ColHeader('Pro', headerColor),
@@ -831,17 +860,67 @@ class _FeatureCompareStrip extends StatelessWidget {
             isDark: isDark,
             freeColor: Colors.grey,
             paidColor: AppColors.primary,
+            proColor: proColor,
           ),
           Divider(height: 1, color: border),
           _CompareRow(
             icon: Icons.description_rounded,
             feature: 'AI Resumes',
-            free: '1 lifetime',
-            plus: '10/month',
-            pro: 'Unlimited',
+            free: '1 ever',
+            plus: '10/mo',
+            pro: '50/mo',
             isDark: isDark,
             freeColor: Colors.grey,
             paidColor: AppColors.primary,
+            proColor: proColor,
+          ),
+          Divider(height: 1, color: border),
+          _CompareRow(
+            icon: Icons.mail_outline_rounded,
+            feature: 'Cover Letters',
+            free: '1 ever',
+            plus: '3 ever',
+            pro: '20 ever',
+            isDark: isDark,
+            freeColor: Colors.grey,
+            paidColor: AppColors.primary,
+            proColor: proColor,
+          ),
+          Divider(height: 1, color: border),
+          _CompareRow(
+            icon: Icons.chat_bubble_outline_rounded,
+            feature: 'Chat',
+            free: 'Text only',
+            plus: 'Full',
+            pro: 'Full',
+            isDark: isDark,
+            freeColor: Colors.grey,
+            paidColor: AppColors.primary,
+            proColor: proColor,
+          ),
+          Divider(height: 1, color: border),
+          _CompareRow(
+            icon: Icons.auto_awesome_rounded,
+            feature: 'AI Model',
+            free: 'Haiku',
+            plus: 'Sonnet',
+            pro: 'Sonnet',
+            isDark: isDark,
+            freeColor: Colors.grey,
+            paidColor: AppColors.primary,
+            proColor: proColor,
+          ),
+          Divider(height: 1, color: border),
+          _CompareRow(
+            icon: Icons.workspace_premium_rounded,
+            feature: 'Featured',
+            free: '—',
+            plus: '—',
+            pro: 'Yes',
+            isDark: isDark,
+            freeColor: Colors.grey,
+            paidColor: AppColors.primary,
+            proColor: proColor,
           ),
         ],
       ),
@@ -880,6 +959,7 @@ class _CompareRow extends StatelessWidget {
   final bool isDark;
   final Color freeColor;
   final Color paidColor;
+  final Color proColor;
 
   const _CompareRow({
     required this.icon,
@@ -890,6 +970,7 @@ class _CompareRow extends StatelessWidget {
     required this.isDark,
     required this.freeColor,
     required this.paidColor,
+    required this.proColor,
   });
 
   @override
@@ -903,7 +984,7 @@ class _CompareRow extends StatelessWidget {
           Icon(icon, size: 14, color: isDark ? Colors.white38 : Colors.black38),
           const SizedBox(width: 6),
           SizedBox(
-            width: 74,
+            width: 80,
             child: Text(
               feature,
               style: TextStyle(
@@ -936,19 +1017,14 @@ class _CompareRow extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  pro,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFFF57C00),
-                  ),
-                ),
-              ],
+            child: Text(
+              pro,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: proColor,
+              ),
             ),
           ),
         ],

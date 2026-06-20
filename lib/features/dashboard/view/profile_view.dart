@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -1334,25 +1333,23 @@ class _SubscriptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return const SizedBox.shrink();
+    return Obx(() {
+      final userData = Get.find<AuthController>().userData.value;
+      final sub = userData?['subscription'] as Map<String, dynamic>?;
+      final isActive = SubscriptionService.isActive(sub);
+      final planKey = SubscriptionService.getPlan(sub);
+      final isFree = planKey == RazorpayConfig.planFree || !isActive;
 
-    return FutureBuilder<Map<String, dynamic>?>(
-      future: SubscriptionService.getSubscription(uid),
-      builder: (context, snap) {
-        final sub = snap.data;
-        final isActive = SubscriptionService.isActive(sub);
-        final planKey = SubscriptionService.getPlan(sub);
-        final isFree = planKey == RazorpayConfig.planFree || !isActive;
-
-        DateTime? expiresAt;
-        if (sub != null && sub['expiresAt'] != null) {
+      DateTime? expiresAt;
+      if (sub != null && sub['expiresAt'] != null) {
+        try {
           expiresAt = (sub['expiresAt'] as Timestamp).toDate();
-        }
+        } catch (_) {}
+      }
 
-        final accent = isFree ? AppColors.primaryLight : AppColors.primary;
+      final accent = isFree ? AppColors.primaryLight : AppColors.primary;
 
-        return GestureDetector(
+      return GestureDetector(
           onTap: () => Get.toNamed(AppRoutes.subscription),
           child: Container(
             padding: const EdgeInsets.all(16),
@@ -1425,7 +1422,6 @@ class _SubscriptionCard extends StatelessWidget {
             ),
           ),
         );
-      },
-    );
+    });
   }
 }

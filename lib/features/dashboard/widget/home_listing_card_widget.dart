@@ -113,8 +113,8 @@ class ListingGridCard extends StatelessWidget {
                   ),
                 ),
 
-                // FEATURED badge
-                if (listingModel.isBoosted ?? false)
+                // FEATURED badge — shown for boosted listings and Pro plan sellers
+                if ((listingModel.isBoosted ?? false) || (listingModel.isFeatured ?? false))
                   Positioned(
                     top: 9,
                     left: 9,

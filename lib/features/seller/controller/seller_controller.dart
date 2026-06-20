@@ -601,6 +601,7 @@ class SellerController extends GetxController {
     if (!validate()) return;
 
     // Free-tier gate — only for new listings, not edits.
+    bool isPro = false;
     if (!isEdit.value) {
       final uid = _authRepo.currentUser?.uid;
       if (uid != null) {
@@ -611,6 +612,10 @@ class SellerController extends GetxController {
           _showUpgradeDialog();
           return;
         }
+        final plan = SubscriptionService.getPlan(sub);
+        isPro = SubscriptionService.isActive(sub) &&
+            (plan == RazorpayConfig.planProMonthly ||
+                plan == RazorpayConfig.planProAnnual);
       }
     }
 
@@ -675,6 +680,7 @@ class SellerController extends GetxController {
           ...data,
           'status': 'active',
           'isSold': false,
+          'isFeatured': isPro,
           'createdAt': FieldValue.serverTimestamp(),
           'views': 0,
           'viewedBy': [],

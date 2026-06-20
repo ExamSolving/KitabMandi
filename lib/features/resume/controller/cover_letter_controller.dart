@@ -79,8 +79,8 @@ class CoverLetterController extends GetxController {
     final rawUsage =
         (userData['coverLetterUsage'] as Map<String, dynamic>?) ?? {};
     final used = (rawUsage['countLifetime'] as int?) ?? 0;
-    // Free=1, Plus=3, Pro=5
-    final max = isFreePlan ? 1 : (isPlus ? 3 : 5);
+    // Free=1, Plus=3, Pro=20
+    final max = isFreePlan ? 1 : (isPlus ? 3 : 20);
 
     clUsage.value = CoverLetterUsage(usedCount: used, maxCount: max);
   }
@@ -179,8 +179,8 @@ class CoverLetterController extends GetxController {
     }
     final isPlus = plan == RazorpayConfig.planPlusMonthly ||
         plan == RazorpayConfig.planPlusAnnual;
-    if (isPlus) return 'Plus plan allows 3 cover letters. Upgrade to Pro for 5.';
-    return 'Pro plan allows 5 cover letters. You have used all of them.';
+    if (isPlus) return 'Plus plan allows 3 cover letters. Upgrade to Pro for 20.';
+    return 'Pro plan allows 20 cover letters. You have used all of them.';
   }
 
   Future<void> delete(String id) async {

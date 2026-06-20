@@ -151,9 +151,13 @@ class ResumeController extends GetxController {
     bool unlimited;
 
     if (isPro) {
-      used = 0;
-      max = 0;
-      unlimited = true;
+      // Pro: 50 resumes per calendar month (counts actual docs, same as Plus)
+      final monthStart = DateTime(DateTime.now().year, DateTime.now().month, 1);
+      used = loadedResumes
+          .where((r) => !r.createdAt.isBefore(monthStart))
+          .length;
+      max = 50;
+      unlimited = false;
     } else if (isFreePlan) {
       used = (rawUsage['countLifetime'] as int?) ?? 0;
       max = 1;
@@ -250,10 +254,14 @@ class ResumeController extends GetxController {
 
   String _limitMessage() {
     final plan = SubscriptionService.getPlan(sub.value);
-    if (plan == RazorpayConfig.planFree) {
+    final isActive = SubscriptionService.isActive(sub.value);
+    if (!isActive || plan == RazorpayConfig.planFree) {
       return 'Free plan allows 1 resume lifetime. Upgrade to Plus for 10/month.';
     }
-    return 'Monthly resume limit reached. Upgrade to Pro for unlimited resumes.';
+    final isPro = plan == RazorpayConfig.planProMonthly ||
+        plan == RazorpayConfig.planProAnnual;
+    if (isPro) return 'Pro plan allows 50 resumes/month. Limit reached.';
+    return 'Plus plan allows 10 resumes/month. Upgrade to Pro for 50/month.';
   }
 
   Map<String, dynamic> _buildPayload() {

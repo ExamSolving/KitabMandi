@@ -445,19 +445,17 @@ export const generateResume = functions
     const isPro = plan === "pro_monthly" || plan === "pro_annual";
     const isPlus = plan === "plus_monthly" || plan === "plus_annual";
     const isFreePlan = !isPro && !isPlus;
-    const maxCount = isFreePlan ? 1 : (isPlus ? 10 : 9999);
+    const maxCount = isFreePlan ? 1 : (isPlus ? 10 : 50);
 
     // 3. Check usage
     const now = new Date();
     const usageRaw = (userData.resumeUsage || {}) as Record<string, unknown>;
 
     let currentCount: number;
-    if (isPro) {
-      currentCount = 0; // unlimited — skip limit check
-    } else if (isFreePlan) {
+    if (isFreePlan) {
       currentCount = (usageRaw.countLifetime as number) || 0;
     } else {
-      // Plus: count actual resume documents created this calendar month.
+      // Plus and Pro: count actual resume documents created this calendar month.
       // This naturally includes resumes generated while on the Free plan,
       // so upgrading mid-month shows the correct 1/10, 2/10, … count.
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -530,8 +528,7 @@ export const generateResume = functions
 
     // 6. Update usage counter
     // Free: increment lifetime counter (used for limit enforcement).
-    // Plus: no counter needed — we count actual resume documents.
-    // Pro: unlimited, nothing to track.
+    // Plus/Pro: no counter needed — we count actual resume documents.
     if (isFreePlan) {
       await db.collection("users").doc(uid).update({
         "resumeUsage.countLifetime": admin.firestore.FieldValue.increment(1),

@@ -145,7 +145,12 @@ class HomeController extends GetxController {
         });
       }
     } else {
+      // Default: featured (Pro plan) first → high views → nearest
       temp.sort((a, b) {
+        final aFeatured = (a.isFeatured ?? false) ? 0 : 1;
+        final bFeatured = (b.isFeatured ?? false) ? 0 : 1;
+        if (aFeatured != bFeatured) return aFeatured.compareTo(bFeatured);
+        if (a.views != b.views) return b.views.compareTo(a.views);
         final d1 = calculateDistance(sellerLat: a.lat, sellerLong: a.long);
         final d2 = calculateDistance(sellerLat: b.lat, sellerLong: b.long);
         return d1.compareTo(d2);
@@ -155,8 +160,14 @@ class HomeController extends GetxController {
     filteredListings.value = temp;
 
     // Keep popular-near-you in sync with the active location radius.
+    // Sort: featured (Pro plan) first → high views → normal
     final nearby = nearbyListings();
-    nearby.sort((a, b) => b.views.compareTo(a.views));
+    nearby.sort((a, b) {
+      final aFeatured = (a.isFeatured ?? false) ? 0 : 1;
+      final bFeatured = (b.isFeatured ?? false) ? 0 : 1;
+      if (aFeatured != bFeatured) return aFeatured.compareTo(bFeatured);
+      return b.views.compareTo(a.views);
+    });
     popularListingNearYou.value =
         nearby.length > 20 ? nearby.take(20).toList() : nearby;
   }
