@@ -6,6 +6,7 @@ import 'package:kitab_mandi/core/constants/app_color.dart';
 import 'package:kitab_mandi/core/constants/razorpay_config.dart';
 import 'package:kitab_mandi/core/services/subscription_service.dart';
 import 'package:kitab_mandi/features/auth/controller/auth_controller.dart';
+import 'package:kitab_mandi/widgets/kitab_back_button.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class SubscriptionView extends StatefulWidget {
@@ -43,7 +44,10 @@ class _SubscriptionViewState extends State<SubscriptionView> {
 
   Future<void> _loadSub() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) { setState(() => _loading = false); return; }
+    if (uid == null) {
+      setState(() => _loading = false);
+      return;
+    }
     final sub = await SubscriptionService.getSubscription(uid);
     if (!mounted) return;
     setState(() {
@@ -60,7 +64,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    _pendingPlan   = planKey;
+    _pendingPlan = planKey;
     _pendingAmount = amountPaise;
 
     final authCtrl = Get.find<AuthController>();
@@ -121,16 +125,16 @@ class _SubscriptionViewState extends State<SubscriptionView> {
       );
     } finally {
       if (mounted) setState(() => _paying = false);
-      _pendingPlan   = null;
+      _pendingPlan = null;
       _pendingAmount = null;
     }
   }
 
   void _onError(PaymentFailureResponse response) {
     if (mounted) setState(() => _paying = false);
-    final plan   = _pendingPlan;
+    final plan = _pendingPlan;
     final amount = _pendingAmount;
-    _pendingPlan   = null;
+    _pendingPlan = null;
     _pendingAmount = null;
     _showErrorSheet(
       title: 'Payment Failed',
@@ -186,16 +190,21 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1A1D23) : Colors.white,
         elevation: 0,
-        title: const Text(
+        leading: KitabBackButton(onTap: () => Get.back()),
+        title: Text(
           'Upgrade Plan',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17, color: Colors.white),
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white : const Color(0xFF1A1D23),
+          ),
         ),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
           : ListView(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
               children: [
@@ -226,11 +235,9 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                   color: Colors.grey,
                   listingFeature: '2 active listings',
                   resumeFeature: '1 AI resume (lifetime)',
-                  features: const [
-                    'Basic chat',
-                    'Standard visibility',
-                  ],
-                  isCurrent: _activePlanKey == RazorpayConfig.planFree ||
+                  features: const ['Basic chat', 'Standard visibility'],
+                  isCurrent:
+                      _activePlanKey == RazorpayConfig.planFree ||
                       _activePlanKey == null,
                   isDark: isDark,
                   isPopular: false,
@@ -246,19 +253,20 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                   color: AppColors.primary,
                   listingFeature: 'Unlimited listings',
                   resumeFeature: '10 AI resumes / month',
-                  features: const [
-                    'All chat features',
-                    'Priority visibility',
-                  ],
-                  isCurrent: _activePlanKey == (_annual
-                      ? RazorpayConfig.planPlusAnnual
-                      : RazorpayConfig.planPlusMonthly),
-                  isDark: isDark,
-                  isPopular: true,
-                  paying: _paying &&
-                      _pendingPlan == (_annual
+                  features: const ['All chat features', 'Priority visibility'],
+                  isCurrent:
+                      _activePlanKey ==
+                      (_annual
                           ? RazorpayConfig.planPlusAnnual
                           : RazorpayConfig.planPlusMonthly),
+                  isDark: isDark,
+                  isPopular: true,
+                  paying:
+                      _paying &&
+                      _pendingPlan ==
+                          (_annual
+                              ? RazorpayConfig.planPlusAnnual
+                              : RazorpayConfig.planPlusMonthly),
                   onTap: () => _pay(
                     _annual
                         ? RazorpayConfig.planPlusAnnual
@@ -281,15 +289,19 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                     '3 featured boosts/month',
                     'Trusted Seller badge',
                   ],
-                  isCurrent: _activePlanKey == (_annual
-                      ? RazorpayConfig.planProAnnual
-                      : RazorpayConfig.planProMonthly),
-                  isDark: isDark,
-                  isPopular: false,
-                  paying: _paying &&
-                      _pendingPlan == (_annual
+                  isCurrent:
+                      _activePlanKey ==
+                      (_annual
                           ? RazorpayConfig.planProAnnual
                           : RazorpayConfig.planProMonthly),
+                  isDark: isDark,
+                  isPopular: false,
+                  paying:
+                      _paying &&
+                      _pendingPlan ==
+                          (_annual
+                              ? RazorpayConfig.planProAnnual
+                              : RazorpayConfig.planProMonthly),
                   onTap: () => _pay(
                     _annual
                         ? RazorpayConfig.planProAnnual
@@ -330,13 +342,14 @@ class _CurrentPlanBanner extends StatelessWidget {
         : AppColors.primary.withValues(alpha: 0.1);
     final border = isFree
         ? (isDark
-            ? Colors.white.withValues(alpha: 0.08)
-            : Colors.black.withValues(alpha: 0.07))
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.black.withValues(alpha: 0.07))
         : AppColors.primary.withValues(alpha: 0.3);
 
     String subtitle;
     if (isFree) {
-      subtitle = 'Up to ${RazorpayConfig.freeListingLimit} listings & 1 AI resume lifetime. Upgrade for more.';
+      subtitle =
+          'Up to ${RazorpayConfig.freeListingLimit} listings & 1 AI resume lifetime. Upgrade for more.';
     } else if (expiresAt != null) {
       final d = expiresAt!;
       subtitle = 'Active until ${d.day}/${d.month}/${d.year}';
@@ -427,8 +440,18 @@ class _BillingToggle extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _Tab(label: 'Monthly', selected: !annual, onTap: () => onChanged(false), isDark: isDark),
-          _Tab(label: 'Annual  🎉 Save up to 33%', selected: annual, onTap: () => onChanged(true), isDark: isDark),
+          _Tab(
+            label: 'Monthly',
+            selected: !annual,
+            onTap: () => onChanged(false),
+            isDark: isDark,
+          ),
+          _Tab(
+            label: 'Annual  🎉 Save up to 33%',
+            selected: annual,
+            onTap: () => onChanged(true),
+            isDark: isDark,
+          ),
         ],
       ),
     );
@@ -517,8 +540,8 @@ class _PlanCard extends StatelessWidget {
     final borderColor = isCurrent
         ? color.withValues(alpha: 0.6)
         : (isDark
-            ? Colors.white.withValues(alpha: 0.07)
-            : Colors.black.withValues(alpha: 0.06));
+              ? Colors.white.withValues(alpha: 0.07)
+              : Colors.black.withValues(alpha: 0.06));
 
     return Container(
       decoration: BoxDecoration(
@@ -554,8 +577,10 @@ class _PlanCard extends StatelessWidget {
                 const Spacer(),
                 if (isPopular)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
@@ -571,8 +596,10 @@ class _PlanCard extends StatelessWidget {
                   ),
                 if (isCurrent)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
@@ -865,38 +892,50 @@ class _CompareRow extends StatelessWidget {
           const SizedBox(width: 6),
           SizedBox(
             width: 74,
-            child: Text(feature,
-                style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: textColor)),
+            child: Text(
+              feature,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: textColor,
+              ),
+            ),
           ),
           Expanded(
-            child: Text(free,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: freeColor)),
+            child: Text(
+              free,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: freeColor,
+              ),
+            ),
           ),
           Expanded(
-            child: Text(plus,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: paidColor)),
+            child: Text(
+              plus,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: paidColor,
+              ),
+            ),
           ),
           Expanded(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(pro,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFFF57C00))),
+                Text(
+                  pro,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFFF57C00),
+                  ),
+                ),
               ],
             ),
           ),
@@ -952,8 +991,9 @@ class _ErrorSheet extends StatelessWidget {
     final iconBg = isWarning
         ? const Color(0xFFF57C00).withValues(alpha: 0.12)
         : Colors.red.shade600.withValues(alpha: 0.12);
-    final iconData =
-        isWarning ? Icons.warning_amber_rounded : Icons.error_outline_rounded;
+    final iconData = isWarning
+        ? Icons.warning_amber_rounded
+        : Icons.error_outline_rounded;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 24),

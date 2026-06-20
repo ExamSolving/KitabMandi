@@ -5,6 +5,8 @@ import 'package:kitab_mandi/core/controller/location_controller.dart';
 import 'package:kitab_mandi/features/dashboard/controller/home_controller.dart';
 import 'package:kitab_mandi/features/dashboard/widget/home_filter_widget.dart';
 import 'package:kitab_mandi/features/dashboard/widget/home_searchbar_widget.dart';
+import 'package:kitab_mandi/widgets/kitab_back_button.dart';
+import 'package:kitab_mandi/widgets/notification_bell.dart';
 
 class LocationAppBar extends StatelessWidget implements PreferredSizeWidget {
   LocationAppBar({super.key});
@@ -12,42 +14,28 @@ class LocationAppBar extends StatelessWidget implements PreferredSizeWidget {
   final homeCtrl = Get.find<HomeController>();
   final filterCtrl = Get.find<FilterController>();
 
-  Color _appBarbackground(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return isDark ? const Color(0xFF1A1D23) : const Color(0xFFFFFFFF);
-  }
-
-  Color _border(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return isDark ? Colors.transparent : const Color(0xFFE5E7EB);
-  }
-
   @override
   Widget build(BuildContext context) {
-    // ThemeData theme = Theme.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AppBar(
       elevation: 0,
-      backgroundColor: _appBarbackground(context),
-      shape: Border(bottom: BorderSide(color: _border(context), width: 1)),
+      backgroundColor: isDark ? const Color(0xFF1A1D23) : Colors.white,
+      surfaceTintColor: Colors.transparent,
       titleSpacing: 12,
-      // 🔝 TOP ROW (Location)
-      leading: IconButton(
-        onPressed: () {
+      leading: KitabBackButton(
+        onTap: () {
           filterCtrl.reset();
           Get.back();
         },
-        icon: Icon(Icons.arrow_back),
       ),
-      title: Text("Listings"),
-
-      // actions: [
-      //   IconButton(
-      //     onPressed: () {},
-      //     icon: Icon(Icons.notifications_none, color: theme.iconTheme.color),
-      //   ),
-      // ],
-
-      // 🔥 THIS IS THE IMPORTANT PART (SEARCH BAR)
+      actions: const [NotificationBell(), SizedBox(width: 4)],
+      title: Text(
+        'Listings',
+        style: TextStyle(
+          fontWeight: FontWeight.w700,
+          color: isDark ? Colors.white : const Color(0xFF1A1D23),
+        ),
+      ),
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(60),
         child: Padding(
@@ -55,7 +43,6 @@ class LocationAppBar extends StatelessWidget implements PreferredSizeWidget {
           child: SearchBarWidget(
             controller: TextEditingController(),
             onChanged: (value) {
-              // handle search
               homeCtrl.onSearchChanged(value);
             },
             onFilterTap: () async {
@@ -93,11 +80,7 @@ class CityScreen extends StatelessWidget {
             title: Text(city),
             onTap: () {
               controller.updateLocation(city);
-
-              /// close city screen
               Get.back();
-
-              /// close bottom sheet
               Get.back();
             },
           );

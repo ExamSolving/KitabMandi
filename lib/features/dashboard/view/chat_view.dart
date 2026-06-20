@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:kitab_mandi/core/constants/app_color.dart';
 import 'package:kitab_mandi/features/dashboard/controller/chat_controller.dart';
 import 'package:kitab_mandi/routes/app_routes.dart';
+import 'package:kitab_mandi/widgets/kitab_back_button.dart';
 import 'package:kitab_mandi/widgets/notification_bell.dart';
 import 'package:kitab_mandi/widgets/app_cached_image_network.dart';
 import 'package:shimmer/shimmer.dart';
@@ -14,11 +15,13 @@ class ChatView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    const appBarBg = AppColors.primary;
-    final indicatorColor = isDark ? AppColors.primaryLight : Colors.white;
-    final labelColor = Colors.white;
-    final unselectedColor = Colors.white.withValues(alpha: 0.6);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final appBarBg = isDark ? const Color(0xFF1A1D23) : Colors.white;
+    final tabColor = isDark ? Colors.white : theme.colorScheme.primary;
+    final tabUnselected = isDark
+        ? Colors.white.withValues(alpha: 0.5)
+        : theme.colorScheme.primary.withValues(alpha: 0.45);
 
     return DefaultTabController(
       length: 2,
@@ -32,20 +35,20 @@ class ChatView extends StatelessWidget {
           surfaceTintColor: Colors.transparent,
           title: Text(
             'chats'.tr,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 19,
-              color: Colors.white,
+              color: isDark ? Colors.white : const Color(0xFF1A1D23),
               letterSpacing: -0.3,
             ),
           ),
           actions: const [NotificationBell(), SizedBox(width: 4)],
           bottom: TabBar(
             tabAlignment: TabAlignment.fill,
-            indicatorColor: indicatorColor,
+            indicatorColor: tabColor,
             indicatorWeight: 3,
-            labelColor: labelColor,
-            unselectedLabelColor: unselectedColor,
+            labelColor: tabColor,
+            unselectedLabelColor: tabUnselected,
             labelStyle: const TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 13.5,
@@ -689,24 +692,24 @@ class UsersListView extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<ChatController>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    const appBarBg = AppColors.primary;
 
     return Scaffold(
       backgroundColor: isDark
           ? const Color(0xFF0F1115)
           : const Color(0xFFF7F8FA),
       appBar: AppBar(
-        backgroundColor: appBarBg,
+        backgroundColor: isDark ? const Color(0xFF1A1D23) : Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        surfaceTintColor: Colors.transparent,
+        leading: const KitabBackButton(),
         title: Text(
           title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 16,
-            color: Colors.white,
+            color: isDark ? Colors.white : const Color(0xFF1A1D23),
           ),
         ),
       ),

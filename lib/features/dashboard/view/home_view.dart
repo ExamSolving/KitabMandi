@@ -88,7 +88,6 @@ class HomeView extends StatelessWidget {
     final isTablet = sw >= 600;
     final isDark = theme.brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF0E1117) : const Color(0xFFF1F3F8);
-    final appBarBg = isDark ? const Color(0xFF1A1D23) : Colors.white;
     // Responsive sizing — clamp keeps it sane on all screen sizes
     final bannerH = (sw * 0.52).clamp(170.0, 290.0);
     final catSectionH = (sw * 0.33).clamp(108.0, 148.0);
@@ -101,7 +100,8 @@ class HomeView extends StatelessWidget {
       backgroundColor: bgColor,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: appBarBg,
+        backgroundColor: isDark ? const Color(0xFF1A1D23) : Colors.white,
+        surfaceTintColor: Colors.transparent,
         titleSpacing: hPad,
         title: Row(
           children: [
@@ -2175,8 +2175,7 @@ class AllListingsScreen extends StatelessWidget {
                     mainAxisExtent: 300,
                   ),
                   itemCount: 6,
-                  itemBuilder: (_, _) =>
-                      _ListingShimmerCard(isDark: isDark, cardColor: cardColor),
+                  itemBuilder: (_, _) => const ListingGridCardShimmer(),
                 ),
               ),
             ],
@@ -2388,58 +2387,3 @@ class _LocationRadiusStrip extends StatelessWidget {
 }
 
 // ── Shimmer card ──────────────────────────────────────────────────────────────
-class _ListingShimmerCard extends StatelessWidget {
-  final bool isDark;
-  final Color cardColor;
-
-  const _ListingShimmerCard({required this.isDark, required this.cardColor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Shimmer.fromColors(
-      baseColor: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
-      highlightColor: isDark ? Colors.grey.shade700 : Colors.grey.shade100,
-      child: Container(
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 170,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    height: 14,
-                    width: double.infinity,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(height: 10),
-                  Container(height: 11, width: 100, color: Colors.white),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Container(height: 11, width: 60, color: Colors.white),
-                      const Spacer(),
-                      Container(height: 11, width: 44, color: Colors.white),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
