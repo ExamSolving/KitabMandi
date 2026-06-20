@@ -170,7 +170,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed. Please try again.')),
+          SnackBar(content: Text('chat_failed_please_try_again'.tr)),
         );
       }
     } finally {
@@ -341,7 +341,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       _msgCtrl.text = text;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to send. Try again.')),
+          SnackBar(content: Text('chat_failed_to_send'.tr)),
         );
       }
     } finally {
@@ -401,7 +401,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to send image. Try again.')),
+          SnackBar(content: Text('chat_failed_to_send_image'.tr)),
         );
       }
     } finally {
@@ -439,13 +439,14 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   // ── App bar ────────────────────────────────────────────────────────────────
   PreferredSizeWidget _buildAppBar(bool isDark) {
     final appBarBg = isDark ? const Color(0xFF1A1D23) : Colors.white;
+    final fgColor = isDark ? Colors.white : Colors.black87;
 
     return AppBar(
       elevation: 0,
       backgroundColor: appBarBg,
       titleSpacing: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light,
-      iconTheme: const IconThemeData(color: Colors.white),
+      systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      iconTheme: IconThemeData(color: fgColor),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
         onPressed: Get.back,
@@ -465,6 +466,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
                   online: online,
                   subtitle: _presenceText(online, lastSeen),
                   appBarBg: appBarBg,
+                  foregroundColor: fgColor,
                 );
               },
             ),
@@ -477,20 +479,21 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     online: false,
     subtitle: '',
     appBarBg: AppColors.primary,
+    foregroundColor: Colors.white,
   );
 
   String _presenceText(bool online, dynamic lastSeen) {
-    if (online) return 'online';
+    if (online) return 'chat_online'.tr;
     if (lastSeen == null) return '';
     try {
       final d = (lastSeen as Timestamp).toDate();
       final diff = DateTime.now().difference(d);
-      if (diff.inSeconds < 60) return 'last seen just now';
+      if (diff.inSeconds < 60) return 'chat_last_seen_just_now'.tr;
       if (diff.inMinutes < 60) return 'last seen ${diff.inMinutes}m ago';
       if (diff.inHours < 24) {
         return 'last seen today at ${_fmtAmPm(d)}';
       }
-      if (diff.inDays == 1) return 'last seen yesterday';
+      if (diff.inDays == 1) return 'chat_last_seen_yesterday'.tr;
       return 'last seen ${d.day}/${d.month}/${d.year}';
     } catch (_) {
       return '';
@@ -508,7 +511,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
           .snapshots(),
       builder: (_, snap) {
         if (snap.hasError) {
-          return const Center(child: Text('Something went wrong'));
+          return Center(child: Text('something_went_wrong'.tr));
         }
         if (!snap.hasData) return _RoomShimmer(isDark: isDark);
 
@@ -629,8 +632,8 @@ class _ChatRoomViewState extends State<ChatRoomView> {
                               ),
                               decoration: InputDecoration(
                                 hintText: hasPend
-                                    ? 'Add a caption…'
-                                    : 'Message',
+                                    ? 'chat_add_caption_hint'.tr
+                                    : 'message_hint'.tr,
                                 hintStyle: TextStyle(
                                   fontSize: 15.5,
                                   color: hint,
@@ -811,6 +814,7 @@ class _AppBarTitle extends StatelessWidget {
   final bool online;
   final String subtitle;
   final Color appBarBg;
+  final Color foregroundColor;
 
   const _AppBarTitle({
     required this.name,
@@ -818,6 +822,7 @@ class _AppBarTitle extends StatelessWidget {
     required this.online,
     required this.subtitle,
     required this.appBarBg,
+    this.foregroundColor = Colors.white,
   });
 
   @override
@@ -831,22 +836,22 @@ class _AppBarTitle extends StatelessWidget {
               height: 38,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.2),
+                color: foregroundColor.withValues(alpha: 0.15),
               ),
               clipBehavior: Clip.antiAlias,
               child: photo.isNotEmpty
                   ? Image.network(
                       photo,
                       fit: BoxFit.cover,
-                      errorBuilder: (ctx, err, stack) => const Icon(
+                      errorBuilder: (ctx, err, stack) => Icon(
                         Icons.person_rounded,
-                        color: Colors.white,
+                        color: foregroundColor,
                         size: 20,
                       ),
                     )
-                  : const Icon(
+                  : Icon(
                       Icons.person_rounded,
-                      color: Colors.white,
+                      color: foregroundColor,
                       size: 20,
                     ),
             ),
@@ -876,8 +881,8 @@ class _AppBarTitle extends StatelessWidget {
                 name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: foregroundColor,
                   fontWeight: FontWeight.w700,
                   fontSize: 15.5,
                 ),
@@ -889,7 +894,7 @@ class _AppBarTitle extends StatelessWidget {
                     fontSize: 11.5,
                     color: online
                         ? const Color(0xFF86EFAC)
-                        : Colors.white.withValues(alpha: 0.7),
+                        : foregroundColor.withValues(alpha: 0.6),
                   ),
                 ),
             ],
@@ -986,7 +991,7 @@ class _ListingBanner extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'Sold',
+                          'sold'.tr,
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -1038,7 +1043,7 @@ class _ListingBanner extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'Mark Sold',
+                                  'chat_mark_sold'.tr,
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
@@ -1588,7 +1593,7 @@ class _ImagePreviewStrip extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '1 photo',
+                  'chat_one_photo'.tr,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -1597,7 +1602,7 @@ class _ImagePreviewStrip extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  isSending ? 'Uploading…' : 'Add a caption below',
+                  isSending ? 'chat_uploading'.tr : 'chat_add_caption_below'.tr,
                   style: TextStyle(fontSize: 12, color: subColor),
                 ),
               ],
@@ -1673,14 +1678,14 @@ class _AttachSheet extends StatelessWidget {
               children: [
                 _SheetOption(
                   icon: Icons.camera_alt_rounded,
-                  label: 'Camera',
+                  label: 'camera'.tr,
                   color: AppColors.primary,
                   isDark: isDark,
                   onTap: onCamera,
                 ),
                 _SheetOption(
                   icon: Icons.photo_library_rounded,
-                  label: 'Gallery',
+                  label: 'gallery'.tr,
                   color: const Color(0xFF6C63FF),
                   isDark: isDark,
                   onTap: onGallery,
@@ -1784,7 +1789,7 @@ class _EmptyConvo extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'No messages yet',
+            'chat_no_messages_yet'.tr,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -1794,7 +1799,7 @@ class _EmptyConvo extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Say hi to get the conversation started',
+            'chat_say_hi_to_start'.tr,
             style: TextStyle(fontSize: 13, color: subColor),
           ),
         ],
@@ -1838,14 +1843,14 @@ class _MarkSoldDialog extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Mark as Sold?',
+              'chat_mark_as_sold_title'.tr,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'This will mark your listing as sold. Buyers will see it as unavailable. This action cannot be undone.',
+              'chat_mark_sold_body'.tr,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.hintColor,
@@ -1868,7 +1873,7 @@ class _MarkSoldDialog extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      'Cancel',
+                      'cancel'.tr,
                       style: TextStyle(
                         color: theme.hintColor,
                         fontWeight: FontWeight.w600,
@@ -1889,9 +1894,9 @@ class _MarkSoldDialog extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      'Mark Sold',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                    child: Text(
+                      'chat_mark_sold'.tr,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                   ),
                 ),
@@ -1928,7 +1933,7 @@ class _SoldNotice extends StatelessWidget {
             const Icon(Icons.sell_rounded, size: 16, color: Color(0xFFF57C00)),
             const SizedBox(width: 8),
             Text(
-              'This listing has been sold',
+              'chat_listing_sold'.tr,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
@@ -2027,7 +2032,7 @@ class _ImageUpgradeSheet extends StatelessWidget {
                 const SizedBox(height: 14),
                 // Title
                 Text(
-                  'Photos & Images',
+                  'chat_photos_images'.tr,
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
@@ -2038,7 +2043,7 @@ class _ImageUpgradeSheet extends StatelessWidget {
                 const SizedBox(height: 7),
                 // Body
                 Text(
-                  'Sending images is available on Plus and Pro plans. Upgrade to share photos with buyers and sellers.',
+                  'chat_upgrade_for_images'.tr,
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 13, height: 1.5, color: subColor),
                 ),
@@ -2048,13 +2053,13 @@ class _ImageUpgradeSheet extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     _UpgradePill(
-                      label: 'Plus — ₹79/mo',
+                      label: 'chat_plus_price'.tr,
                       color: accent,
                       isDark: isDark,
                     ),
                     const SizedBox(width: 8),
                     _UpgradePill(
-                      label: 'Pro — ₹149/mo',
+                      label: 'chat_pro_price'.tr,
                       color: const Color(0xFFF57C00),
                       isDark: isDark,
                     ),
@@ -2078,9 +2083,9 @@ class _ImageUpgradeSheet extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text(
-                      'View Plans',
-                      style: TextStyle(
+                    child: Text(
+                      'chat_view_plans'.tr,
+                      style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
                       ),
@@ -2091,7 +2096,7 @@ class _ImageUpgradeSheet extends StatelessWidget {
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Text(
-                    'Maybe later',
+                    'maybe_later'.tr,
                     style: TextStyle(
                       fontSize: 13,
                       color: subColor,

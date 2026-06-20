@@ -124,7 +124,7 @@ class _CustomBottomNavState extends State<CustomBottomNav>
                       child: _NavItem(
                         selectedIcon: FontAwesomeIcons.wandMagicSparkles,
                         unselectedIcon: FontAwesomeIcons.wandMagic,
-                        label: 'AI Resume',
+                        label: 'ai_resume_tab'.tr,
                         index: 2,
                         currentIndex: widget.currentIndex,
                         onTap: _onTabTap,

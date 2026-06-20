@@ -129,9 +129,8 @@ class _SubscriptionViewState extends State<SubscriptionView> {
       _showSuccessSheet(_pendingPlan!);
     } catch (_) {
       _showErrorSheet(
-        title: 'Subscription Not Saved',
-        message:
-            'Your payment went through but we couldn\'t activate your plan. Please contact support with your payment ID.',
+        title: 'sub_not_saved'.tr,
+        message: 'sub_not_saved_body'.tr,
         isWarning: true,
         onRetry: null,
       );
@@ -149,8 +148,8 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     _pendingPlan = null;
     _pendingAmount = null;
     _showErrorSheet(
-      title: 'Payment Failed',
-      message: response.message ?? 'Payment failed. Please try again.',
+      title: 'payment_failed'.tr,
+      message: response.message ?? 'payment_failed'.tr,
       isWarning: false,
       onRetry: (plan != null && amount != null)
           ? () {
@@ -206,7 +205,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
         elevation: 0,
         leading: KitabBackButton(onTap: () => Get.back()),
         title: Text(
-          'Upgrade Plan',
+          'upgrade_plan_title'.tr,
           style: TextStyle(
             fontWeight: FontWeight.w700,
             color: isDark ? Colors.white : const Color(0xFF1A1D23),
@@ -245,13 +244,13 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                   price: '₹0',
                   period: 'forever',
                   color: Colors.grey,
-                  listingFeature: '2 active listings',
-                  resumeFeature: '1 AI resume (lifetime)',
-                  coverLetterFeature: '1 cover letter (lifetime)',
-                  features: const [
-                    'Text-only chat with buyers/sellers',
-                    'Standard listing visibility',
-                    'Haiku AI model',
+                  listingFeature: 'sub_free_listings'.tr,
+                  resumeFeature: 'sub_free_ai_resume'.tr,
+                  coverLetterFeature: 'sub_free_cover_letter'.tr,
+                  features: [
+                    'sub_text_only_chat'.tr,
+                    'sub_standard_visibility'.tr,
+                    'sub_haiku_model'.tr,
                   ],
                   isCurrent:
                       _activePlanKey == RazorpayConfig.planFree ||
@@ -266,17 +265,17 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                 _PlanCard(
                   title: 'Plus',
                   price: _annual ? '₹699' : '₹79',
-                  period: _annual ? '/year  (~₹58/mo · save 26%)' : '/month',
+                  period: _annual ? 'sub_plus_year_period'.tr : 'sub_per_month'.tr,
                   color: AppColors.primary,
-                  listingFeature: 'Unlimited listings',
-                  resumeFeature: '10 AI resumes / month',
-                  coverLetterFeature: '3 cover letters (lifetime)',
-                  features: const [
-                    'Full chat — send images & files',
-                    'Chat with any buyer or seller',
-                    'Read receipts & typing indicators',
-                    'Priority listing visibility',
-                    'Sonnet AI model (smarter)',
+                  listingFeature: 'sub_unlimited_listings'.tr,
+                  resumeFeature: 'sub_10_ai_resumes'.tr,
+                  coverLetterFeature: 'sub_3_cover_letters'.tr,
+                  features: [
+                    'sub_full_chat'.tr,
+                    'sub_chat_any_buyer'.tr,
+                    'sub_read_receipts'.tr,
+                    'sub_priority_visibility'.tr,
+                    'sub_sonnet_model'.tr,
                   ],
                   isCurrent:
                       _activePlanKey ==
@@ -305,18 +304,18 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                 _PlanCard(
                   title: 'Pro',
                   price: _annual ? '₹1,199' : '₹149',
-                  period: _annual ? '/year  (~₹100/mo · save 33%)' : '/month',
+                  period: _annual ? 'sub_pro_year_period'.tr : 'sub_per_month'.tr,
                   color: const Color(0xFFF57C00),
-                  listingFeature: 'Unlimited listings',
-                  resumeFeature: '50 AI resumes / month',
-                  coverLetterFeature: '20 cover letters (lifetime)',
-                  features: const [
-                    'Full chat — send images & files',
-                    'Chat with any buyer or seller',
-                    'Read receipts & typing indicators',
-                    'Listings appear as Featured first',
-                    'Trusted Seller badge on profile',
-                    'Sonnet AI model (smarter)',
+                  listingFeature: 'sub_unlimited_listings'.tr,
+                  resumeFeature: 'sub_50_ai_resumes'.tr,
+                  coverLetterFeature: 'sub_20_cover_letters'.tr,
+                  features: [
+                    'sub_full_chat'.tr,
+                    'sub_chat_any_buyer'.tr,
+                    'sub_read_receipts'.tr,
+                    'sub_featured_first'.tr,
+                    'sub_trusted_seller_badge'.tr,
+                    'sub_sonnet_model'.tr,
                   ],
                   isCurrent:
                       _activePlanKey ==
@@ -383,7 +382,7 @@ class _CurrentPlanBanner extends StatelessWidget {
       final d = expiresAt!;
       subtitle = 'Active until ${d.day}/${d.month}/${d.year}';
     } else {
-      subtitle = 'Subscription active';
+      subtitle = 'sub_active'.tr;
     }
 
     return Container(
@@ -470,13 +469,13 @@ class _BillingToggle extends StatelessWidget {
       child: Row(
         children: [
           _Tab(
-            label: 'Monthly',
+            label: 'sub_monthly_tab'.tr,
             selected: !annual,
             onTap: () => onChanged(false),
             isDark: isDark,
           ),
           _Tab(
-            label: 'Annual  🎉 Save up to 33%',
+            label: 'sub_annual_tab'.tr,
             selected: annual,
             onTap: () => onChanged(true),
             isDark: isDark,
@@ -617,7 +616,7 @@ class _PlanCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      'Most Popular',
+                      'sub_most_popular'.tr,
                       style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
@@ -636,7 +635,7 @@ class _PlanCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      'Current',
+                      'sub_current_badge'.tr,
                       style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
@@ -755,7 +754,7 @@ class _PlanCard extends StatelessWidget {
                           ),
                         )
                       : Text(
-                          isCurrent ? 'Renew Plan' : 'Get $title',
+                          isCurrent ? 'sub_renew_plan'.tr : 'Get $title',
                           style: const TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
@@ -853,10 +852,10 @@ class _FeatureCompareStrip extends StatelessWidget {
           Divider(height: 1, color: border),
           _CompareRow(
             icon: Icons.storefront_rounded,
-            feature: 'Listings',
-            free: '2',
-            plus: 'Unlimited',
-            pro: 'Unlimited',
+            feature: 'sub_col_listings'.tr,
+            free: 'sub_val_2_listings'.tr,
+            plus: 'sub_val_unlimited'.tr,
+            pro: 'sub_val_unlimited'.tr,
             isDark: isDark,
             freeColor: Colors.grey,
             paidColor: AppColors.primary,
@@ -865,10 +864,10 @@ class _FeatureCompareStrip extends StatelessWidget {
           Divider(height: 1, color: border),
           _CompareRow(
             icon: Icons.description_rounded,
-            feature: 'AI Resumes',
-            free: '1 ever',
-            plus: '10/mo',
-            pro: '50/mo',
+            feature: 'sub_col_ai_resumes'.tr,
+            free: 'sub_val_1_ever'.tr,
+            plus: 'sub_val_10_mo'.tr,
+            pro: 'sub_val_50_mo'.tr,
             isDark: isDark,
             freeColor: Colors.grey,
             paidColor: AppColors.primary,
@@ -877,10 +876,10 @@ class _FeatureCompareStrip extends StatelessWidget {
           Divider(height: 1, color: border),
           _CompareRow(
             icon: Icons.mail_outline_rounded,
-            feature: 'Cover Letters',
-            free: '1 ever',
-            plus: '3 ever',
-            pro: '20 ever',
+            feature: 'sub_col_cover_letters'.tr,
+            free: 'sub_val_1_ever'.tr,
+            plus: 'sub_val_3_ever'.tr,
+            pro: 'sub_val_20_ever'.tr,
             isDark: isDark,
             freeColor: Colors.grey,
             paidColor: AppColors.primary,
@@ -889,10 +888,10 @@ class _FeatureCompareStrip extends StatelessWidget {
           Divider(height: 1, color: border),
           _CompareRow(
             icon: Icons.chat_bubble_outline_rounded,
-            feature: 'Chat',
-            free: 'Text only',
-            plus: 'Full',
-            pro: 'Full',
+            feature: 'sub_col_chat'.tr,
+            free: 'sub_val_text_only'.tr,
+            plus: 'sub_val_full'.tr,
+            pro: 'sub_val_full'.tr,
             isDark: isDark,
             freeColor: Colors.grey,
             paidColor: AppColors.primary,
@@ -901,8 +900,8 @@ class _FeatureCompareStrip extends StatelessWidget {
           Divider(height: 1, color: border),
           _CompareRow(
             icon: Icons.auto_awesome_rounded,
-            feature: 'AI Model',
-            free: 'Haiku',
+            feature: 'sub_col_ai_model'.tr,
+            free: 'sub_haiku_model'.tr,
             plus: 'Sonnet',
             pro: 'Sonnet',
             isDark: isDark,
@@ -913,10 +912,10 @@ class _FeatureCompareStrip extends StatelessWidget {
           Divider(height: 1, color: border),
           _CompareRow(
             icon: Icons.workspace_premium_rounded,
-            feature: 'Featured',
-            free: '—',
-            plus: '—',
-            pro: 'Yes',
+            feature: 'sub_col_featured'.tr,
+            free: 'sub_val_dash'.tr,
+            plus: 'sub_val_dash'.tr,
+            pro: 'sub_val_yes'.tr,
             isDark: isDark,
             freeColor: Colors.grey,
             paidColor: AppColors.primary,
@@ -1043,7 +1042,7 @@ class _DisclaimerText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'Subscriptions are non-refundable. Plans auto-expire after the billing period — there is no automatic renewal. All prices are inclusive of taxes.',
+      'sub_disclaimer'.tr,
       textAlign: TextAlign.center,
       style: TextStyle(
         fontSize: 11,
@@ -1133,9 +1132,9 @@ class _ErrorSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Try Again',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                child: Text(
+                  'try_again'.tr,
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
                 ),
               ),
             ),
@@ -1157,9 +1156,9 @@ class _ErrorSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+              child: Text(
+                'cancel'.tr,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
               ),
             ),
           ),
@@ -1205,7 +1204,7 @@ class _SuccessSheet extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Payment Successful!',
+            'payment_successful'.tr,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
@@ -1236,9 +1235,9 @@ class _SuccessSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Continue',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+              child: Text(
+                'continue_btn'.tr,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
               ),
             ),
           ),

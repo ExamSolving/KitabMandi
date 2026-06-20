@@ -189,7 +189,7 @@ class ResumeController extends GetxController {
       final sample = ResumePdfService.sampleResume();
       return await ResumePdfService.generateFrom(sample, templateId);
     } catch (e) {
-      Get.snackbar('Preview Error', e.toString(),
+      Get.snackbar('preview_error'.tr, e.toString(),
           snackPosition: SnackPosition.BOTTOM);
       return null;
     } finally {
@@ -202,7 +202,7 @@ class ResumeController extends GetxController {
   Future<void> generate() async {
     if (!(usage.value?.canGenerate ?? false)) {
       Get.snackbar(
-        'Limit Reached',
+        'limit_reached'.tr,
         _limitMessage(),
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 4),
@@ -240,13 +240,13 @@ class ResumeController extends GetxController {
     } on FirebaseFunctionsException catch (e) {
       final msg = e.message ?? 'Generation failed';
       if (msg.startsWith('limit_reached')) {
-        Get.snackbar('Limit Reached', _limitMessage(),
+        Get.snackbar('limit_reached'.tr, _limitMessage(),
             snackPosition: SnackPosition.BOTTOM);
       } else {
-        Get.snackbar('Error', msg, snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar('error'.tr, msg, snackPosition: SnackPosition.BOTTOM);
       }
     } catch (e) {
-      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('error'.tr, e.toString(), snackPosition: SnackPosition.BOTTOM);
     } finally {
       isGenerating.value = false;
     }

@@ -56,8 +56,8 @@ class _ResumePreviewViewState extends State<ResumePreviewView> {
     return Scaffold(
       appBar: AppBar(
         leading: const KitabBackButton(),
-        title: const Text('Resume Preview',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+        title: Text('resume_preview_title'.tr,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -78,13 +78,13 @@ class _ResumePreviewViewState extends State<ResumePreviewView> {
                             : AppColors.primary,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Icon(Icons.download_rounded,
+                          const Icon(Icons.download_rounded,
                               color: Colors.white, size: 16),
-                          SizedBox(width: 5),
-                          Text('Download',
-                              style: TextStyle(
+                          const SizedBox(width: 5),
+                          Text('download'.tr,
+                              style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.white)),
@@ -169,25 +169,25 @@ class _StatsRow extends StatelessWidget {
           _Stat(
             icon: Icons.key_rounded,
             value: '$kwCount',
-            label: 'Keywords',
+            label: 'keywords_stat'.tr,
           ),
           _vDivider(),
           _Stat(
             icon: Icons.work_rounded,
             value: '${d.experience.length}',
-            label: 'Experiences',
+            label: 'experiences_stat'.tr,
           ),
           _vDivider(),
           _Stat(
             icon: Icons.rocket_launch_rounded,
             value: '${d.projects.length}',
-            label: 'Projects',
+            label: 'projects_stat'.tr,
           ),
           _vDivider(),
           _Stat(
             icon: Icons.code_rounded,
             value: '${d.skills.technical.length}',
-            label: 'Skills',
+            label: 'skills_stat'.tr,
           ),
           _vDivider(),
           _AiModelStat(model: record.aiModel),
@@ -208,7 +208,7 @@ class _AiModelStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isSonnet = model?.contains('sonnet') ?? false;
-    final label = isSonnet ? 'Sonnet' : 'Haiku';
+    final label = isSonnet ? 'Sonnet' : 'Haiku'; // model names are brand names
     final color = isSonnet ? const Color(0xFFF59E0B) : AppColors.primary;
     final icon = isSonnet
         ? Icons.workspace_premium_rounded
@@ -221,7 +221,7 @@ class _AiModelStat extends StatelessWidget {
         Text(label,
             style: TextStyle(
                 fontSize: 14, fontWeight: FontWeight.w800, color: color)),
-        Text('AI Model',
+        Text('ai_model_stat'.tr,
             style: TextStyle(
                 fontSize: 9.5, color: Theme.of(context).hintColor)),
       ],
@@ -286,7 +286,7 @@ class _ATSBar extends StatelessWidget {
               const Icon(Icons.check_circle_rounded,
                   size: 14, color: AppColors.primary),
               const SizedBox(width: 5),
-              Text('ATS Keywords Matched (${keywords.length})',
+              Text('${'ats_keywords_matched'.tr} (${keywords.length})',
                   style: const TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,

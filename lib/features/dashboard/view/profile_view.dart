@@ -859,9 +859,9 @@ class _PrefsCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Notifications',
-                          style: TextStyle(
+                        Text(
+                          'notifications'.tr,
+                          style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
@@ -869,8 +869,8 @@ class _PrefsCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           enabled
-                              ? 'Push alerts are on'
-                              : 'Push alerts are off',
+                              ? 'push_alerts_on'.tr
+                              : 'push_alerts_off'.tr,
                           style: TextStyle(
                             fontSize: 12,
                             color: theme.hintColor,
@@ -1390,7 +1390,7 @@ class _SubscriptionCard extends StatelessWidget {
                     children: [
                       Text(
                         isFree
-                            ? 'Upgrade to Plus'
+                            ? 'upgrade_to_plus'.tr
                             : SubscriptionService.planLabel(planKey),
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
@@ -1401,10 +1401,10 @@ class _SubscriptionCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         isFree
-                            ? 'Unlimited listings from ₹29/month'
+                            ? 'unlimited_from_price'.tr
                             : expiresAt != null
                             ? 'Active until ${expiresAt.day}/${expiresAt.month}/${expiresAt.year}'
-                            : 'Subscription active',
+                            : 'subscription_active'.tr,
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? Colors.white54 : Colors.black54,

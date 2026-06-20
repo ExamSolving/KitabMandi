@@ -466,7 +466,7 @@ class _ListingDetailsViewState extends State<ListingDetailsView> {
                                 Text(
                                   sellerName.isNotEmpty
                                       ? sellerName
-                                      : 'Unknown',
+                                      : 'unknown_seller'.tr,
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w700,
@@ -475,7 +475,7 @@ class _ListingDetailsViewState extends State<ListingDetailsView> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Listed by seller',
+                                  'listed_by_seller'.tr,
                                   style: TextStyle(
                                       fontSize: 12, color: subText),
                                 ),
@@ -526,9 +526,9 @@ class _ListingDetailsViewState extends State<ListingDetailsView> {
                                 _canEdit(widget.listing.createdAt);
                             return Tooltip(
                               message: isSold
-                                  ? 'Listing is sold'
+                                  ? 'listing_is_sold_tooltip'.tr
                                   : !_canEdit(widget.listing.createdAt)
-                                      ? 'Editing locked after 3 hours'
+                                      ? 'editing_locked_tooltip'.tr
                                       : '',
                               child: OutlinedButton.icon(
                                 onPressed: editAllowed
@@ -548,7 +548,7 @@ class _ListingDetailsViewState extends State<ListingDetailsView> {
                                 label: Text(
                                   editAllowed
                                       ? 'edit'.tr
-                                      : 'Locked',
+                                      : 'locked'.tr,
                                 ),
                                 style: OutlinedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(

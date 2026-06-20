@@ -185,8 +185,8 @@ class HelpSupportController extends GetxController {
   Future<void> submitTicket() async {
     if (titleCtrl.text.isEmpty) {
       Get.snackbar(
-        'Error',
-        'Please enter a title for your ticket',
+        'error'.tr,
+        'ticket_enter_title'.tr,
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
       );
@@ -194,8 +194,8 @@ class HelpSupportController extends GetxController {
     }
     if (descCtrl.text.isEmpty) {
       Get.snackbar(
-        'Error',
-        'Please provide a description of your issue',
+        'error'.tr,
+        'ticket_enter_desc'.tr,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -225,15 +225,15 @@ class HelpSupportController extends GetxController {
 
       await fetchUserTickets();
       Get.snackbar(
-        'Success',
-        'Ticket submitted successfully',
+        'success'.tr,
+        'ticket_submitted_success'.tr,
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
       Get.offAndToNamed(AppRoutes.helpSupport);
     } catch (e) {
-      Get.snackbar('Error', 'Failed to submit ticket');
+      Get.snackbar('error'.tr, 'ticket_submit_failed'.tr);
     } finally {
       isLoading.value = false;
     }
@@ -261,7 +261,7 @@ class HelpSupportController extends GetxController {
       );
       await fetchUserTickets();
     } catch (e) {
-      Get.snackbar('Error', 'Failed to create ticket: $e');
+      Get.snackbar('error'.tr, '${'ticket_submit_failed'.tr}: $e');
     } finally {
       isLoading.value = false;
     }
@@ -275,7 +275,7 @@ class HelpSupportController extends GetxController {
       await _helpRepo.updateTicketStatus(ticketId, status);
       await fetchUserTickets();
     } catch (e) {
-      Get.snackbar('Error', 'Failed to update status');
+      Get.snackbar('error'.tr, 'error_generic'.tr);
     }
   }
 
@@ -284,7 +284,7 @@ class HelpSupportController extends GetxController {
       await _helpRepo.deleteTicket(ticketId);
       userTickets.removeWhere((t) => t['ticketId'] == ticketId);
     } catch (e) {
-      Get.snackbar('Error', 'Failed to delete ticket');
+      Get.snackbar('error'.tr, 'error_generic'.tr);
     }
   }
 

@@ -52,8 +52,8 @@ class ResumeView extends StatelessWidget {
                               end: Alignment.bottomRight,
                             ),
                             icon: Icons.description_rounded,
-                            title: 'AI Resume\nBuilder',
-                            subtitle: 'ATS-optimised in minutes',
+                            title: 'ai_resume_builder'.tr,
+                            subtitle: 'ats_optimised_minutes'.tr,
                             badgeLabel: _resumeBadge(ctrl),
                             onTap: () {
                               if (ctrl.usage.value?.canGenerate ?? false) {
@@ -63,8 +63,8 @@ class ResumeView extends StatelessWidget {
                               }
                             },
                             ctaLabel: (ctrl.usage.value?.canGenerate ?? false)
-                                ? 'Build Now'
-                                : 'Upgrade',
+                                ? 'build_now'.tr
+                                : 'upgrade'.tr,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -76,8 +76,8 @@ class ResumeView extends StatelessWidget {
                               end: Alignment.bottomRight,
                             ),
                             icon: Icons.mail_outline_rounded,
-                            title: 'AI Cover\nLetter',
-                            subtitle: 'Personalised in seconds',
+                            title: 'ai_cover_letter'.tr,
+                            subtitle: 'personalised_seconds'.tr,
                             badgeLabel: _clBadge(ctrl, clCtrl),
                             onTap: ctrl.resumes.isEmpty
                                 ? null
@@ -94,7 +94,7 @@ class ResumeView extends StatelessWidget {
             if (ctrl.resumes.isNotEmpty) ...[
               SliverToBoxAdapter(
                 child: _SectionHeader(
-                  title: 'My Resumes',
+                  title: 'my_resumes'.tr,
                   count: ctrl.resumes.length,
                   isDark: isDark,
                 ),
@@ -117,7 +117,7 @@ class ResumeView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _SectionHeader(
-                      title: 'My Cover Letters',
+                      title: 'my_cover_letters'.tr,
                       count: clCtrl.coverLetters.length,
                       isDark: isDark,
                     ),
@@ -145,25 +145,25 @@ class ResumeView extends StatelessWidget {
   String _resumeBadge(ResumeController ctrl) {
     final usage = ctrl.usage.value;
     if (usage == null) return '';
-    if (usage.isUnlimited) return 'Unlimited';
+    if (usage.isUnlimited) return 'unlimited_badge'.tr;
     return usage.canGenerate
         ? '${usage.maxCount - usage.usedCount} left'
-        : 'Limit reached';
+        : 'limit_reached'.tr;
   }
 
   String _clBadge(ResumeController ctrl, CoverLetterController clCtrl) {
-    if (ctrl.resumes.isEmpty) return 'Build resume first';
+    if (ctrl.resumes.isEmpty) return 'build_resume_first'.tr;
     final usage = clCtrl.clUsage.value;
     if (usage == null) return '';
-    if (!usage.canGenerate) return 'Limit reached';
+    if (!usage.canGenerate) return 'limit_reached'.tr;
     return '${usage.remaining} left';
   }
 
   String _clCta(ResumeController ctrl, CoverLetterController clCtrl) {
-    if (ctrl.resumes.isEmpty) return 'Create Now';
+    if (ctrl.resumes.isEmpty) return 'create_now'.tr;
     final usage = clCtrl.clUsage.value;
-    if (usage != null && !usage.canGenerate) return 'Upgrade';
-    return 'Create Now';
+    if (usage != null && !usage.canGenerate) return 'upgrade'.tr;
+    return 'create_now'.tr;
   }
 }
 
@@ -249,10 +249,10 @@ class _HeroHeader extends StatelessWidget {
                           color: Colors.white, size: 20),
                     ),
                     const SizedBox(width: 10),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'AI Career Tools',
-                        style: TextStyle(
+                        'ai_career_tools'.tr,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
@@ -301,7 +301,7 @@ class _HeroHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Build smarter · Land faster',
+                  'build_smarter_land_faster'.tr,
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.white.withValues(alpha: 0.7),
@@ -343,7 +343,7 @@ class _HeroHeader extends StatelessWidget {
                         icon: Icons.track_changes_rounded,
                         label: atsScore != null
                             ? 'ATS $atsScore%'
-                            : 'ATS Score',
+                            : 'ats_score'.tr,
                       ),
                     ],
                   );
@@ -557,9 +557,9 @@ Color _atsColor(int score) {
 }
 
 String _atsLabel(int score) {
-  if (score >= 80) return 'Excellent';
-  if (score >= 65) return 'Good';
-  return 'Fair';
+  if (score >= 80) return 'ats_excellent'.tr;
+  if (score >= 65) return 'ats_good'.tr;
+  return 'ats_fair'.tr;
 }
 
 // ── Resume card ───────────────────────────────────────────────────────────────
@@ -638,8 +638,8 @@ class _ResumeCard extends StatelessWidget {
                     children: [
                       _Tag(
                           label: record.templateId == 'modern'
-                              ? 'Modern'
-                              : 'Classic'),
+                              ? 'template_modern'.tr
+                              : 'template_classic'.tr),
                       const SizedBox(width: 6),
                       Text(_fmtDate(record.createdAt),
                           style: TextStyle(
@@ -851,14 +851,14 @@ class _EmptyState extends StatelessWidget {
               size: 38, color: AppColors.primary),
         ),
         const SizedBox(height: 16),
-        Text('No resumes yet',
+        Text('no_resumes_yet'.tr,
             style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
                 color: theme.colorScheme.onSurface)),
         const SizedBox(height: 6),
         Text(
-          'Build your first ATS-optimised resume\nwith AI in minutes',
+          'build_first_resume_subtitle'.tr,
           textAlign: TextAlign.center,
           style: TextStyle(
               fontSize: 13, color: theme.hintColor, height: 1.5),

@@ -312,8 +312,8 @@ class _AdPostedSheetState extends State<_AdPostedSheet>
                 children: [
                   Text(
                     widget.isFirstAd
-                        ? '🎉 Your First Ad is Live!'
-                        : '🚀 Your Ad is Live!',
+                        ? 'first_ad_live'.tr
+                        : 'ad_is_live'.tr,
                     style: TextStyle(
                       fontSize: 23,
                       fontWeight: FontWeight.w800,
@@ -325,8 +325,8 @@ class _AdPostedSheetState extends State<_AdPostedSheet>
                   const SizedBox(height: 10),
                   Text(
                     widget.isFirstAd
-                        ? 'Congratulations! Students near you can now find your listing and reach out to buy.'
-                        : 'Great job! Your listing is now visible to students in your area.',
+                        ? 'first_ad_subtitle'.tr
+                        : 'ad_live_subtitle'.tr,
                     style: TextStyle(
                       fontSize: 14.5,
                       color: subColor,
@@ -378,7 +378,7 @@ class _AdPostedSheetState extends State<_AdPostedSheet>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Achievement Unlocked!',
+                            'achievement_unlocked'.tr,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
@@ -387,8 +387,8 @@ class _AdPostedSheetState extends State<_AdPostedSheet>
                             ),
                           ),
                           const SizedBox(height: 2),
-                          const Text(
-                            'First Seller  🏆',
+                          Text(
+                            'first_seller'.tr,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
@@ -419,9 +419,9 @@ class _AdPostedSheetState extends State<_AdPostedSheet>
                       Get.toNamed(AppRoutes.myAds);
                     },
                     icon: const Icon(Icons.store_rounded, size: 19),
-                    label: const Text(
-                      'View My Ads',
-                      style: TextStyle(
+                    label: Text(
+                      'view_my_ads'.tr,
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
@@ -454,9 +454,9 @@ class _AdPostedSheetState extends State<_AdPostedSheet>
                         ),
                       ),
                     ),
-                    child: const Text(
-                      'Explore Home',
-                      style: TextStyle(
+                    child: Text(
+                      'explore_home'.tr,
+                      style: const TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w600,
                       ),

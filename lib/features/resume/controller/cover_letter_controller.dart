@@ -90,7 +90,7 @@ class CoverLetterController extends GetxController {
     final usage = clUsage.value;
     if (usage != null && !usage.canGenerate) {
       Get.snackbar(
-        'Limit Reached',
+        'limit_reached'.tr,
         _limitMessage(),
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 4),
@@ -103,13 +103,12 @@ class CoverLetterController extends GetxController {
     final company = companyCtrl.text.trim();
 
     if (resumeId.isEmpty) {
-      Get.snackbar('Select a resume', 'Please choose which resume to use',
+      Get.snackbar('select_a_resume'.tr, 'choose_which_resume'.tr,
           snackPosition: SnackPosition.BOTTOM);
       return;
     }
     if (jobTitle.isEmpty || company.isEmpty) {
-      Get.snackbar(
-          'Missing fields', 'Job title and company name are required',
+      Get.snackbar('missing_fields'.tr, 'job_company_required'.tr,
           snackPosition: SnackPosition.BOTTOM);
       return;
     }
@@ -157,12 +156,12 @@ class CoverLetterController extends GetxController {
         }
       }
     } on FirebaseFunctionsException catch (e) {
-      Get.snackbar('Error', e.message ?? 'Generation failed',
+      Get.snackbar('error'.tr, e.message ?? 'error_generic'.tr,
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.red,
           colorText: Colors.white);
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong. Please try again.',
+      Get.snackbar('error'.tr, 'error_retry'.tr,
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.red,
           colorText: Colors.white);

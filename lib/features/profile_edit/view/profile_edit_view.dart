@@ -42,9 +42,9 @@ class ProfileEditView extends StatelessWidget {
                   size: 20,
                 ),
               ),
-              title: const Text(
-                'Edit Profile',
-                style: TextStyle(
+              title: Text(
+                'edit_profile'.tr,
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
                   fontSize: 17,
@@ -68,9 +68,9 @@ class ProfileEditView extends StatelessWidget {
                           HapticFeedback.mediumImpact();
                           ctrl.saveProfile();
                         },
-                        child: const Text(
-                          'Save',
-                          style: TextStyle(
+                        child: Text(
+                          'save'.tr,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w800,
                             fontSize: 15,
@@ -92,7 +92,7 @@ class ProfileEditView extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // ── Personal info ──────────────────────────────
-                        _SectionLabel(label: 'Personal Information'),
+                        _SectionLabel(label: 'personal_information'.tr),
                         const SizedBox(height: 12),
                         _InfoCard(
                           isDark: isDark,
@@ -104,7 +104,7 @@ class ProfileEditView extends StatelessWidget {
                         const SizedBox(height: 24),
 
                         // ── Account info (read-only) ───────────────────
-                        _SectionLabel(label: 'Account'),
+                        _SectionLabel(label: 'account'.tr),
                         const SizedBox(height: 12),
                         _AccountCard(
                           isDark: isDark,
@@ -249,7 +249,7 @@ class _AvatarSection extends StatelessWidget {
                 ctrl.showPhotoOptions(context);
               },
               child: Text(
-                'Tap to change photo',
+                'tap_to_change_photo'.tr,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.85),
                   fontSize: 13,
@@ -361,7 +361,7 @@ class _InfoCard extends StatelessWidget {
           AppTextField(
             controller: ctrl.nameCtrl,
             label: 'Full Name',
-            hintText: 'Enter your full name',
+            hintText: 'enter_full_name_hint'.tr,
             keyboardType: TextInputType.name,
             textInputAction: TextInputAction.next,
             prefixIcon: const Icon(Icons.person_outline_rounded),
@@ -372,7 +372,7 @@ class _InfoCard extends StatelessWidget {
           AppTextField(
             controller: ctrl.phoneCtrl,
             label: 'Phone Number',
-            hintText: 'Enter your 10-digit phone number',
+            hintText: 'enter_phone_hint'.tr,
             keyboardType: TextInputType.phone,
             textInputAction: TextInputAction.done,
             prefixIcon: const Icon(Icons.phone_outlined),
@@ -434,7 +434,7 @@ class _AccountCard extends StatelessWidget {
             child: AppTextField(
               controller: ctrl.emailCtrl,
               label: 'Email Address',
-              hintText: 'Email',
+              hintText: 'email_field_hint'.tr,
               keyboardType: TextInputType.emailAddress,
               readOnly: true,
               prefixIcon: const Icon(Icons.email_outlined),
@@ -577,14 +577,14 @@ class _SaveButton extends StatelessWidget {
                   child: CircularProgressIndicator(
                       strokeWidth: 2.5, color: Colors.white),
                 )
-              : const Row(
+              : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.check_rounded, color: Colors.white, size: 20),
-                    SizedBox(width: 8),
+                    const Icon(Icons.check_rounded, color: Colors.white, size: 20),
+                    const SizedBox(width: 8),
                     Text(
-                      'Save Changes',
-                      style: TextStyle(
+                      'save_changes'.tr,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
@@ -696,7 +696,7 @@ class _DangerZone extends StatelessWidget {
 
               // Title
               Text(
-                'Delete Account?',
+                'delete_account_question'.tr,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -707,7 +707,7 @@ class _DangerZone extends StatelessWidget {
 
               // Body
               Text(
-                'All data associated with this account will be permanently deleted — listings, chats, resumes, and your profile. This cannot be undone.',
+                'delete_account_body'.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
@@ -735,7 +735,7 @@ class _DangerZone extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12)),
                       ),
                       child: Text(
-                        'Cancel',
+                        'cancel'.tr,
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
@@ -760,9 +760,9 @@ class _DangerZone extends StatelessWidget {
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text(
-                        'Yes, Delete',
-                        style: TextStyle(
+                      child: Text(
+                        'yes_delete'.tr,
+                        style: const TextStyle(
                             fontWeight: FontWeight.w700, fontSize: 14),
                       ),
                     ),

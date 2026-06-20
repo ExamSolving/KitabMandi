@@ -68,7 +68,7 @@ class ProfileEditController extends GetxController {
               ),
               const SizedBox(height: 18),
               Text(
-                'Change Profile Photo',
+                'change_profile_photo'.tr,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -77,7 +77,7 @@ class ProfileEditController extends GetxController {
               const SizedBox(height: 18),
               _PhotoOption(
                 icon: Icons.camera_alt_rounded,
-                label: 'Take a Photo',
+                label: 'take_photo'.tr,
                 color: const Color(0xFF1B5E20),
                 onTap: () {
                   Get.back();
@@ -87,7 +87,7 @@ class ProfileEditController extends GetxController {
               const SizedBox(height: 10),
               _PhotoOption(
                 icon: Icons.photo_library_rounded,
-                label: 'Choose from Gallery',
+                label: 'choose_from_gallery'.tr,
                 color: const Color(0xFF1976D2),
                 onTap: () {
                   Get.back();
@@ -99,7 +99,7 @@ class ProfileEditController extends GetxController {
                 const SizedBox(height: 10),
                 _PhotoOption(
                   icon: Icons.delete_outline_rounded,
-                  label: 'Remove Photo',
+                  label: 'remove_photo'.tr,
                   color: Colors.red,
                   onTap: () {
                     Get.back();
@@ -125,7 +125,7 @@ class ProfileEditController extends GetxController {
       );
       if (file != null) pickedImage.value = File(file.path);
     } catch (e) {
-      Get.snackbar('Error', 'Could not pick image');
+      Get.snackbar('error'.tr, 'could_not_pick_image'.tr);
     } finally {
       isPickingImage.value = false;
     }
@@ -187,14 +187,14 @@ class ProfileEditController extends GetxController {
 
       Get.back();
       Get.snackbar(
-        'Success',
-        'Profile updated successfully',
+        'success'.tr,
+        'profile_updated'.tr,
         backgroundColor: const Color(0xFF2E7D32),
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
       );
     } catch (e) {
-      Get.snackbar('Error', 'Failed to update profile. Please try again.');
+      Get.snackbar('error'.tr, 'profile_update_failed'.tr);
     } finally {
       isSaving.value = false;
     }
@@ -227,11 +227,11 @@ class ProfileEditController extends GetxController {
         child: AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          content: const Row(
+          content: Row(
             children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 20),
-              Text('Deleting account…'),
+              const CircularProgressIndicator(),
+              const SizedBox(width: 20),
+              Text('deleting_account_text'.tr),
             ],
           ),
         ),
@@ -317,23 +317,23 @@ class ProfileEditController extends GetxController {
           AlertDialog(
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16)),
-            title: const Text('Sign In Again',
-                style: TextStyle(fontWeight: FontWeight.w700)),
-            content: const Text(
-              'For security, please sign out and sign back in before deleting your account.',
-              style: TextStyle(fontSize: 13.5, height: 1.5),
+            title: Text('sign_in_again'.tr,
+                style: const TextStyle(fontWeight: FontWeight.w700)),
+            content: Text(
+              'sign_in_again_body'.tr,
+              style: const TextStyle(fontSize: 13.5, height: 1.5),
             ),
             actions: [
               TextButton(
                 onPressed: Get.back,
-                child: const Text('OK',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
+                child: Text('ok'.tr,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
               ),
             ],
           ),
         );
       } else {
-        Get.snackbar('Error', e.message ?? 'Failed to delete account.',
+        Get.snackbar('error'.tr, e.message ?? 'account_delete_failed'.tr,
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.red,
             colorText: Colors.white);
@@ -341,8 +341,8 @@ class ProfileEditController extends GetxController {
     } catch (_) {
       Get.close(1);
       Get.snackbar(
-        'Error',
-        'Failed to delete account. Please try again.',
+        'error'.tr,
+        'account_delete_failed'.tr,
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,

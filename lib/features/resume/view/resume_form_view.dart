@@ -10,13 +10,13 @@ import 'package:printing/printing.dart';
 class ResumeFormView extends StatelessWidget {
   const ResumeFormView({super.key});
 
-  static const _steps = [
-    'Personal',
-    'Education',
-    'Skills',
-    'Experience',
-    'Projects',
-    'Finalize',
+  static List<String> get _steps => [
+    'step_personal'.tr,
+    'step_education'.tr,
+    'step_skills'.tr,
+    'step_experience'.tr,
+    'step_projects'.tr,
+    'step_finalize'.tr,
   ];
 
   @override
@@ -126,8 +126,8 @@ class _BottomBar extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('Back',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  child: Text('back'.tr,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
                 ),
               ),
             if (step > 0) const SizedBox(width: 12),
@@ -159,7 +159,7 @@ class _BottomBar extends StatelessWidget {
                             child: CircularProgressIndicator(
                                 strokeWidth: 2, color: Colors.white))
                         : Text(
-                            isLast ? 'Generate Resume ✨' : 'Continue',
+                            isLast ? 'generate_resume'.tr : 'continue_btn'.tr,
                             style: const TextStyle(
                                 fontSize: 14, fontWeight: FontWeight.w700),
                           ),
@@ -182,8 +182,8 @@ class _Step1Personal extends StatelessWidget {
   Widget build(BuildContext context) {
     return _StepScaffold(
       icon: Icons.person_rounded,
-      title: 'Personal Information',
-      subtitle: 'Your contact details for the resume header',
+      title: 'personal_information'.tr,
+      subtitle: 'personal_info_subtitle'.tr,
       child: Column(
         children: [
           _Field(ctrl: ctrl.nameCtrl, label: 'Full Name *',
@@ -216,8 +216,8 @@ class _Step2Education extends StatelessWidget {
   Widget build(BuildContext context) {
     return _StepScaffold(
       icon: Icons.school_rounded,
-      title: 'Education',
-      subtitle: 'Your highest qualification',
+      title: 'education_label'.tr,
+      subtitle: 'education_subtitle'.tr,
       child: Column(
         children: [
           _Field(ctrl: ctrl.degreeCtrl, label: 'Degree / Course *',
@@ -246,8 +246,8 @@ class _Step3Skills extends StatelessWidget {
   Widget build(BuildContext context) {
     return _StepScaffold(
       icon: Icons.code_rounded,
-      title: 'Skills',
-      subtitle: 'Add your technical and soft skills',
+      title: 'skills_label'.tr,
+      subtitle: 'skills_subtitle'.tr,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -288,8 +288,8 @@ class _Step4Experience extends StatelessWidget {
   Widget build(BuildContext context) {
     return _StepScaffold(
       icon: Icons.work_rounded,
-      title: 'Work Experience',
-      subtitle: 'Internships, jobs, or freelance projects',
+      title: 'experience_label'.tr,
+      subtitle: 'experience_subtitle'.tr,
       child: Obx(() => Column(
             children: [
               ...List.generate(ctrl.experiences.length, (i) {
@@ -315,7 +315,7 @@ class _Step4Experience extends StatelessWidget {
               }),
               const SizedBox(height: 8),
               _AddButton(
-                label: '+ Add Another Experience',
+                label: 'add_another_experience'.tr,
                 onTap: ctrl.addExperience,
               ),
             ],
@@ -335,8 +335,8 @@ class _Step5Projects extends StatelessWidget {
   Widget build(BuildContext context) {
     return _StepScaffold(
       icon: Icons.rocket_launch_rounded,
-      title: 'Projects',
-      subtitle: 'Personal, academic, or open-source projects',
+      title: 'projects_label'.tr,
+      subtitle: 'projects_subtitle'.tr,
       child: Obx(() => Column(
             children: [
               ...List.generate(ctrl.projects.length, (i) {
@@ -362,7 +362,7 @@ class _Step5Projects extends StatelessWidget {
               }),
               const SizedBox(height: 8),
               _AddButton(
-                label: '+ Add Another Project',
+                label: 'add_another_project'.tr,
                 onTap: ctrl.addProject,
               ),
             ],
@@ -467,9 +467,9 @@ class _Step6Finalize extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
               child: Row(
                 children: [
-                  const Text(
-                    'Template Preview',
-                    style: TextStyle(
+                  Text(
+                    'template_preview'.tr,
+                    style: const TextStyle(
                         fontSize: 15, fontWeight: FontWeight.w700),
                   ),
                   const Spacer(),
@@ -504,8 +504,8 @@ class _Step6Finalize extends StatelessWidget {
 
     return _StepScaffold(
       icon: Icons.auto_awesome_rounded,
-      title: 'Finalize & Generate',
-      subtitle: 'Choose a template, then paste the job description',
+      title: 'finalize_generate'.tr,
+      subtitle: 'paste_jd_hint'.tr,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -513,7 +513,7 @@ class _Step6Finalize extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Resume Template',
+                'resume_template'.tr,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -537,8 +537,8 @@ class _Step6Finalize extends StatelessWidget {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       icon: const Icon(Icons.preview_rounded, size: 15),
-                      label: const Text('Preview',
-                          style: TextStyle(
+                      label: Text('preview'.tr,
+                          style: const TextStyle(
                               fontSize: 12, fontWeight: FontWeight.w600)),
                       onPressed: () => _showPreview(
                           context, ctrl.selectedTemplate.value),
@@ -581,8 +581,8 @@ class _Step6Finalize extends StatelessWidget {
           // Certifications
           _ChipInput(
             ctrl: ctrl.certCtrl,
-            label: 'Certifications (optional)',
-            hint: 'e.g. AWS Cloud Practitioner',
+            label: 'certifications_optional'.tr,
+            hint: 'certification_hint'.tr,
             chips: ctrl.certs,
             onAdd: ctrl.addCert,
             onRemove: ctrl.removeCert,
@@ -592,7 +592,7 @@ class _Step6Finalize extends StatelessWidget {
 
           // JD
           Text(
-            'Target Job Description (optional)',
+            'target_job_desc'.tr,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -601,7 +601,7 @@ class _Step6Finalize extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Paste the JD to boost ATS keyword matching',
+            'paste_jd_hint'.tr,
             style: TextStyle(fontSize: 11.5, color: theme.hintColor),
           ),
           const SizedBox(height: 8),
@@ -609,7 +609,7 @@ class _Step6Finalize extends StatelessWidget {
             controller: ctrl.jdCtrl,
             maxLines: 6,
             decoration: InputDecoration(
-              hintText: 'Paste job description here…',
+              hintText: 'paste_jd_placeholder'.tr,
               hintStyle: TextStyle(color: theme.hintColor, fontSize: 13),
               filled: true,
               fillColor: isDark
@@ -641,8 +641,7 @@ class _Step6Finalize extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Claude AI will generate a full ATS-optimized resume. '
-                    'Review and edit before sending.',
+                    'ai_generate_notice'.tr,
                     style: TextStyle(
                       fontSize: 11.5,
                       color: AppColors.primary.withValues(alpha: 0.85),

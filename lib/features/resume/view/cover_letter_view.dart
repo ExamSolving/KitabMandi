@@ -107,8 +107,8 @@ class _CoverLetterViewState extends State<CoverLetterView> {
                 const Icon(Icons.mail_outline_rounded, color: Colors.white, size: 15),
           ),
           const SizedBox(width: 10),
-          const Text('AI Cover Letter',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+          Text('ai_cover_letter_title'.tr,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
         ],
       ),
     );
@@ -148,7 +148,7 @@ class _CoverLetterViewState extends State<CoverLetterView> {
       return _SectionLabel(
         icon: Icons.description_rounded,
         iconColor: AppColors.primary,
-        label: 'Using resume:',
+        label: 'using_resume_label'.tr,
         value: resumes.first.data.contact.name,
       );
     }
@@ -156,7 +156,7 @@ class _CoverLetterViewState extends State<CoverLetterView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Select resume',
+        Text('select_resume_label'.tr,
             style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -376,8 +376,8 @@ class _CoverLetterViewState extends State<CoverLetterView> {
                               color: Colors.white, strokeWidth: 2),
                         ),
                         const SizedBox(width: 12),
-                        const Text('Generating…',
-                            style: TextStyle(
+                        Text('generating_label'.tr,
+                            style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white)),
@@ -387,7 +387,7 @@ class _CoverLetterViewState extends State<CoverLetterView> {
                             Icon(Icons.lock_rounded,
                                 color: Colors.grey.shade500, size: 18),
                             const SizedBox(width: 8),
-                            Text('Generate Cover Letter',
+                            Text('generate_cover_letter'.tr,
                                 style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
@@ -397,8 +397,8 @@ class _CoverLetterViewState extends State<CoverLetterView> {
                             const Icon(Icons.auto_awesome_rounded,
                                 color: Colors.white, size: 18),
                             const SizedBox(width: 8),
-                            const Text('Generate Cover Letter',
-                                style: TextStyle(
+                            Text('generate_cover_letter'.tr,
+                                style: const TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
                                     color: Colors.white)),
@@ -472,7 +472,7 @@ class _CoverLetterViewState extends State<CoverLetterView> {
                     Row(
                       children: [
                         Flexible(
-                          child: Text('Cover Letter Ready',
+                          child: Text('cover_letter_ready'.tr,
                               style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
@@ -511,14 +511,14 @@ class _CoverLetterViewState extends State<CoverLetterView> {
                         color: const Color(0xFF1565C0)
                             .withValues(alpha: 0.3)),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.copy_rounded,
+                      const Icon(Icons.copy_rounded,
                           size: 14, color: Color(0xFF1565C0)),
-                      SizedBox(width: 5),
-                      Text('Copy',
-                          style: TextStyle(
+                      const SizedBox(width: 5),
+                      Text('copy'.tr,
+                          style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFF1565C0))),

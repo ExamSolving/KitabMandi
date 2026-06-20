@@ -182,7 +182,7 @@ class _DashboardViewState extends State<DashboardView> {
 
             // Title
             Text(
-              'Free Plan Limit Reached',
+              'free_plan_limit_reached'.tr,
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
@@ -193,7 +193,7 @@ class _DashboardViewState extends State<DashboardView> {
 
             // Subtitle
             Text(
-              'Free accounts can post 1 listing every 30 days.\nUpgrade to post unlimited books anytime.',
+              'free_plan_body'.tr,
               style: TextStyle(fontSize: 14, color: subColor, height: 1.5),
               textAlign: TextAlign.center,
             ),
@@ -255,8 +255,8 @@ class _DashboardViewState extends State<DashboardView> {
                           size: 18, color: AppColors.primary),
                       const SizedBox(width: 8),
                       Text(
-                        'Upgrade Premium & get',
-                        style: TextStyle(
+                        'upgrade_premium_get'.tr,
+                        style: const TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w800,
                           color: AppColors.primary,
@@ -265,24 +265,24 @@ class _DashboardViewState extends State<DashboardView> {
                     ],
                   ),
                   const SizedBox(height: 14),
-                  const _PremiumPerk(
+                  _PremiumPerk(
                     icon: Icons.all_inclusive_rounded,
-                    text: 'Unlimited listings — no waiting',
+                    text: 'perk_unlimited_listings'.tr,
                   ),
                   const SizedBox(height: 8),
-                  const _PremiumPerk(
+                  _PremiumPerk(
                     icon: Icons.description_rounded,
-                    text: 'AI Resume Builder (Plus & Pro)',
+                    text: 'perk_ai_resume'.tr,
                   ),
                   const SizedBox(height: 8),
-                  const _PremiumPerk(
+                  _PremiumPerk(
                     icon: Icons.trending_up_rounded,
-                    text: 'Priority placement in search',
+                    text: 'perk_priority_placement'.tr,
                   ),
                   const SizedBox(height: 8),
-                  const _PremiumPerk(
+                  _PremiumPerk(
                     icon: Icons.verified_rounded,
-                    text: 'Trusted Seller badge',
+                    text: 'perk_trusted_seller'.tr,
                   ),
                 ],
               ),
@@ -298,9 +298,9 @@ class _DashboardViewState extends State<DashboardView> {
                   Get.toNamed(AppRoutes.subscription);
                 },
                 icon: const Icon(Icons.rocket_launch_rounded, size: 18),
-                label: const Text(
-                  'Upgrade Premium',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                label: Text(
+                  'upgrade_premium'.tr,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
@@ -324,9 +324,9 @@ class _DashboardViewState extends State<DashboardView> {
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   foregroundColor: subColor,
                 ),
-                child: const Text(
-                  'Maybe Later',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                child: Text(
+                  'maybe_later_btn'.tr,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                 ),
               ),
             ),

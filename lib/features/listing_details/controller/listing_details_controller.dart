@@ -194,7 +194,7 @@ class ListingDetailsController extends GetxController {
 
     // 2. Fetch phone number from users collection
     if (sellerUid.isEmpty) {
-      Get.snackbar('Error', 'Seller information unavailable.',
+      Get.snackbar('error'.tr, 'seller_info_unavailable'.tr,
           snackPosition: SnackPosition.BOTTOM);
       return;
     }
@@ -207,15 +207,15 @@ class ListingDetailsController extends GetxController {
       final phone = (doc.data()?['phone'] as String?)?.trim() ?? '';
 
       if (phone.isEmpty) {
-        Get.snackbar('Not Available',
-            'Seller has not provided a phone number.',
+        Get.snackbar('not_available'.tr,
+            'seller_not_provided_phone'.tr,
             snackPosition: SnackPosition.BOTTOM);
         return;
       }
 
       await makePhoneCall(phone);
     } catch (_) {
-      Get.snackbar('Error', 'Could not reach seller. Try again.',
+      Get.snackbar('error'.tr, 'could_not_reach_seller'.tr,
           snackPosition: SnackPosition.BOTTOM);
     }
   }
@@ -246,13 +246,13 @@ class ListingDetailsController extends GetxController {
               ),
               const SizedBox(height: 16),
               Text(
-                'Call Seller',
+                'call_seller'.tr,
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 8),
               Text(
-                'Calling sellers directly is available on Plus and Pro plans. Upgrade to contact sellers by phone.',
+                'call_seller_upgrade_body'.tr,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.hintColor,
@@ -272,7 +272,7 @@ class ListingDetailsController extends GetxController {
                         side: BorderSide(
                             color: theme.hintColor.withValues(alpha: 0.3)),
                       ),
-                      child: Text('Cancel',
+                      child: Text('cancel'.tr,
                           style: TextStyle(color: theme.hintColor)),
                     ),
                   ),
@@ -291,8 +291,8 @@ class ListingDetailsController extends GetxController {
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('Upgrade',
-                          style: TextStyle(fontWeight: FontWeight.w700)),
+                      child: Text('upgrade'.tr,
+                          style: const TextStyle(fontWeight: FontWeight.w700)),
                     ),
                   ),
                 ],

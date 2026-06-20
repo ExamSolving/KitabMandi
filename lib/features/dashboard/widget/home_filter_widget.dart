@@ -95,10 +95,10 @@ class FilterScreen extends StatelessWidget {
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Filters',
+              Text(
+                'filters_title'.tr,
                 style:
-                    TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
               ),
               if (count > 0) ...[
                 const SizedBox(width: 8),
@@ -133,7 +133,7 @@ class FilterScreen extends StatelessWidget {
                     }
                   : null,
               child: Text(
-                'Reset',
+                'reset'.tr,
                 style: TextStyle(
                   color: hasAny
                       ? theme.colorScheme.primary
@@ -164,7 +164,7 @@ class FilterScreen extends StatelessWidget {
                     // ── Distance ─────────────────────────────────────
                     _SectionHeader(
                       icon: Icons.near_me_rounded,
-                      title: 'Distance',
+                      title: 'filter_distance'.tr,
                       theme: theme,
                     ),
                     const SizedBox(height: 14),
@@ -182,7 +182,7 @@ class FilterScreen extends StatelessWidget {
                     // ── Category ─────────────────────────────────────
                     _SectionHeader(
                       icon: Icons.grid_view_rounded,
-                      title: 'Category',
+                      title: 'category'.tr,
                       theme: theme,
                     ),
                     const SizedBox(height: 14),
@@ -199,7 +199,7 @@ class FilterScreen extends StatelessWidget {
                     // ── Price Range ───────────────────────────────────
                     _SectionHeader(
                       icon: Icons.payments_outlined,
-                      title: 'Price Range',
+                      title: 'filter_price_range'.tr,
                       theme: theme,
                     ),
                     const SizedBox(height: 16),
@@ -216,7 +216,7 @@ class FilterScreen extends StatelessWidget {
                     // ── Condition ─────────────────────────────────────
                     _SectionHeader(
                       icon: Icons.verified_rounded,
-                      title: 'Condition',
+                      title: 'condition'.tr,
                       theme: theme,
                     ),
                     const SizedBox(height: 14),
@@ -234,7 +234,7 @@ class FilterScreen extends StatelessWidget {
                     // ── Sort By ───────────────────────────────────────
                     _SectionHeader(
                       icon: Icons.swap_vert_rounded,
-                      title: 'Sort By',
+                      title: 'filter_sort_by'.tr,
                       theme: theme,
                     ),
                     const SizedBox(height: 14),
@@ -586,7 +586,7 @@ class _PriceSection extends StatelessWidget {
             children: [
               Expanded(
                 child: _PriceBox(
-                  label: 'Min Price',
+                  label: 'filter_min_price'.tr,
                   value: '₹${min.toInt()}',
                   isDark: isDark,
                   theme: theme,
@@ -609,7 +609,7 @@ class _PriceSection extends StatelessWidget {
               ),
               Expanded(
                 child: _PriceBox(
-                  label: 'Max Price',
+                  label: 'filter_max_price'.tr,
                   value: '₹${max.toInt()}',
                   isDark: isDark,
                   theme: theme,
@@ -1154,9 +1154,9 @@ class _ApplyBar extends StatelessWidget {
                   const Icon(Icons.tune_rounded,
                       color: Colors.white, size: 20),
                   const SizedBox(width: 8),
-                  const Text(
-                    'Apply Filters',
-                    style: TextStyle(
+                  Text(
+                    'apply_filters'.tr,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
