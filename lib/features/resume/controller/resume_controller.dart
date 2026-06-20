@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:kitab_mandi/core/constants/razorpay_config.dart';
 import 'package:kitab_mandi/core/services/subscription_service.dart';
 import 'package:kitab_mandi/features/resume/model/resume_model.dart';
+import 'package:kitab_mandi/features/resume/service/resume_pdf_service.dart';
 
 class ResumeController extends GetxController {
   static ResumeController get to => Get.find();
@@ -57,6 +59,9 @@ class ResumeController extends GetxController {
 
   // Last generated result (to open preview immediately)
   final lastGenerated = Rxn<ResumeRecord>();
+
+  // Template preview state
+  final isPreviewLoading = false.obs;
 
   // ── Validation errors — key → error message ────────────────────────────────
   final fieldErrors = <String, String>{}.obs;
@@ -157,6 +162,22 @@ class ResumeController extends GetxController {
       maxCount: max,
       isUnlimited: unlimited,
     );
+  }
+
+  // ── Preview ───────────────────────────────────────────────────────────────
+
+  Future<Uint8List?> generatePreview(String templateId) async {
+    isPreviewLoading.value = true;
+    try {
+      final sample = ResumePdfService.sampleResume();
+      return await ResumePdfService.generateFrom(sample, templateId);
+    } catch (e) {
+      Get.snackbar('Preview Error', e.toString(),
+          snackPosition: SnackPosition.BOTTOM);
+      return null;
+    } finally {
+      isPreviewLoading.value = false;
+    }
   }
 
   // ── Generate ──────────────────────────────────────────────────────────────

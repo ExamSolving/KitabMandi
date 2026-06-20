@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kitab_mandi/core/constants/app_color.dart';
 import 'package:kitab_mandi/features/resume/controller/resume_controller.dart';
+import 'package:kitab_mandi/features/resume/model/resume_template.dart';
 import 'package:kitab_mandi/widgets/kitab_back_button.dart';
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 
 class ResumeFormView extends StatelessWidget {
   const ResumeFormView({super.key});
@@ -375,6 +378,126 @@ class _Step6Finalize extends StatelessWidget {
   final bool isDark;
   const _Step6Finalize({required this.ctrl, required this.isDark});
 
+  void _showUpgradeSheet(BuildContext context, ResumeTemplate t) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 36),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: t.tierColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.lock_rounded, color: t.tierColor, size: 26),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              '${t.name} Template',
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'This template is available on the ${t.tierLabel} plan',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Get.back();
+                  Get.toNamed('/subscription');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: t.tierColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Upgrade to ${t.tierLabel}',
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showPreview(BuildContext context, String templateId) async {
+    final bytes = await ctrl.generatePreview(templateId);
+    if (bytes == null) return;
+    if (!context.mounted) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.88,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+              child: Row(
+                children: [
+                  const Text(
+                    'Template Preview',
+                    style: TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w700),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Get.back(),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: PdfPreview(
+                build: (_) => bytes,
+                canDebug: false,
+                canChangePageFormat: false,
+                canChangeOrientation: false,
+                allowPrinting: false,
+                allowSharing: false,
+                initialPageFormat: PdfPageFormat.a4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -382,40 +505,77 @@ class _Step6Finalize extends StatelessWidget {
     return _StepScaffold(
       icon: Icons.auto_awesome_rounded,
       title: 'Finalize & Generate',
-      subtitle: 'Paste the job description for best ATS matching',
+      subtitle: 'Choose a template, then paste the job description',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Template picker
-          Text('Resume Template',
-              style: TextStyle(
+          // ── Template gallery ─────────────────────────────────────────────
+          Row(
+            children: [
+              Text(
+                'Resume Template',
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface)),
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              const Spacer(),
+              Obx(() => ctrl.isPreviewLoading.value
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: AppColors.primary),
+                    )
+                  : TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      icon: const Icon(Icons.preview_rounded, size: 15),
+                      label: const Text('Preview',
+                          style: TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.w600)),
+                      onPressed: () => _showPreview(
+                          context, ctrl.selectedTemplate.value),
+                    )),
+            ],
+          ),
           const SizedBox(height: 10),
-          Obx(() => Row(
-                children: [
-                  _TemplateTile(
-                    id: 'classic',
-                    label: 'Classic',
-                    icon: Icons.article_outlined,
-                    desc: 'Clean & minimal',
-                    selected: ctrl.selectedTemplate.value == 'classic',
-                    onTap: () => ctrl.selectedTemplate.value = 'classic',
+
+          // Horizontal scrollable gallery
+          SizedBox(
+            height: 172,
+            child: Obx(() {
+              // Read observables at top of Obx scope so GetX tracks them
+              final selectedId = ctrl.selectedTemplate.value;
+              final sub = ctrl.sub.value;
+              return ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(right: 4),
+                itemCount: ResumeTemplate.all.length,
+                separatorBuilder: (_, i) => const SizedBox(width: 10),
+                itemBuilder: (ctx, i) {
+                  final t = ResumeTemplate.all[i];
+                  final unlocked = t.isUnlocked(sub);
+                  final selected = selectedId == t.id;
+                  return _TemplateGalleryCard(
+                    template: t,
+                    unlocked: unlocked,
+                    selected: selected,
                     isDark: isDark,
-                  ),
-                  const SizedBox(width: 10),
-                  _TemplateTile(
-                    id: 'modern',
-                    label: 'Modern',
-                    icon: Icons.dashboard_customize_rounded,
-                    desc: 'Green header bar',
-                    selected: ctrl.selectedTemplate.value == 'modern',
-                    onTap: () => ctrl.selectedTemplate.value = 'modern',
-                    isDark: isDark,
-                  ),
-                ],
-              )),
+                    onTap: () => unlocked
+                        ? ctrl.selectedTemplate.value = t.id
+                        : _showUpgradeSheet(ctx, t),
+                  );
+                },
+              );
+            }),
+          ),
           const SizedBox(height: 20),
 
           // Certifications
@@ -431,14 +591,19 @@ class _Step6Finalize extends StatelessWidget {
           const SizedBox(height: 20),
 
           // JD
-          Text('Target Job Description (optional)',
-              style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface)),
+          Text(
+            'Target Job Description (optional)',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
           const SizedBox(height: 6),
-          Text('Paste the JD to boost ATS keyword matching',
-              style: TextStyle(fontSize: 11.5, color: theme.hintColor)),
+          Text(
+            'Paste the JD to boost ATS keyword matching',
+            style: TextStyle(fontSize: 11.5, color: theme.hintColor),
+          ),
           const SizedBox(height: 8),
           TextField(
             controller: ctrl.jdCtrl,
@@ -456,14 +621,13 @@ class _Step6Finalize extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                    color: AppColors.primary, width: 1.5),
+                borderSide:
+                    const BorderSide(color: AppColors.primary, width: 1.5),
               ),
             ),
           ),
 
           const SizedBox(height: 16),
-          // AI disclaimer
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -480,9 +644,10 @@ class _Step6Finalize extends StatelessWidget {
                     'Claude AI will generate a full ATS-optimized resume. '
                     'Review and edit before sending.',
                     style: TextStyle(
-                        fontSize: 11.5,
-                        color: AppColors.primary.withValues(alpha: 0.85),
-                        height: 1.4),
+                      fontSize: 11.5,
+                      color: AppColors.primary.withValues(alpha: 0.85),
+                      height: 1.4,
+                    ),
                   ),
                 ),
               ],
@@ -902,67 +1067,411 @@ class _AddButton extends StatelessWidget {
   }
 }
 
-class _TemplateTile extends StatelessWidget {
-  final String id;
-  final String label;
-  final IconData icon;
-  final String desc;
-  final bool selected;
-  final VoidCallback onTap;
-  final bool isDark;
+// ─── Template gallery card ────────────────────────────────────────────────────
 
-  const _TemplateTile({
-    required this.id,
-    required this.label,
-    required this.icon,
-    required this.desc,
+class _TemplateGalleryCard extends StatelessWidget {
+  final ResumeTemplate template;
+  final bool unlocked;
+  final bool selected;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _TemplateGalleryCard({
+    required this.template,
+    required this.unlocked,
     required this.selected,
-    required this.onTap,
     required this.isDark,
+    required this.onTap,
   });
+
+  Widget _line({double? width, required double h, required Color color}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 2),
+      width: width,
+      height: h,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(1),
+      ),
+    );
+  }
+
+  Widget _buildPreview() {
+    final c = template.primary;
+    final bg = template.accent;
+    switch (template.layout) {
+      case 'band':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 28,
+              color: c,
+              padding: const EdgeInsets.fromLTRB(7, 5, 7, 5),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _line(width: 52, h: 4, color: Colors.white.withValues(alpha: 0.9)),
+                  const SizedBox(height: 3),
+                  _line(width: 70, h: 2, color: Colors.white.withValues(alpha: 0.5)),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(7),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _line(width: 38, h: 3, color: c.withValues(alpha: 0.8)),
+                    const SizedBox(height: 1),
+                    Container(height: 0.8, color: c.withValues(alpha: 0.5)),
+                    const SizedBox(height: 3),
+                    _line(width: double.infinity, h: 2, color: Colors.grey.shade300),
+                    _line(width: 55, h: 2, color: Colors.grey.shade300),
+                    const SizedBox(height: 5),
+                    _line(width: 34, h: 3, color: c.withValues(alpha: 0.8)),
+                    const SizedBox(height: 1),
+                    Container(height: 0.8, color: c.withValues(alpha: 0.5)),
+                    const SizedBox(height: 3),
+                    _line(width: double.infinity, h: 2, color: Colors.grey.shade300),
+                    _line(width: 44, h: 2, color: Colors.grey.shade300),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+
+      case 'sidebar':
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              width: 32,
+              color: c,
+              padding: const EdgeInsets.fromLTRB(5, 6, 5, 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _line(width: 22, h: 4, color: Colors.white.withValues(alpha: 0.9)),
+                  const SizedBox(height: 7),
+                  _line(width: 18, h: 2, color: Colors.white.withValues(alpha: 0.6)),
+                  _line(width: 20, h: 2, color: Colors.white.withValues(alpha: 0.6)),
+                  _line(width: 14, h: 2, color: Colors.white.withValues(alpha: 0.6)),
+                  const SizedBox(height: 6),
+                  _line(width: 17, h: 2, color: Colors.white.withValues(alpha: 0.6)),
+                  _line(width: 19, h: 2, color: Colors.white.withValues(alpha: 0.6)),
+                  _line(width: 13, h: 2, color: Colors.white.withValues(alpha: 0.6)),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _line(width: 48, h: 3, color: c.withValues(alpha: 0.7)),
+                    const SizedBox(height: 1),
+                    Container(height: 0.8, color: c.withValues(alpha: 0.4)),
+                    const SizedBox(height: 3),
+                    _line(width: double.infinity, h: 2, color: Colors.grey.shade300),
+                    _line(width: 42, h: 2, color: Colors.grey.shade300),
+                    const SizedBox(height: 5),
+                    _line(width: 38, h: 3, color: c.withValues(alpha: 0.7)),
+                    const SizedBox(height: 1),
+                    Container(height: 0.8, color: c.withValues(alpha: 0.4)),
+                    const SizedBox(height: 3),
+                    _line(width: double.infinity, h: 2, color: Colors.grey.shade300),
+                    _line(width: 32, h: 2, color: Colors.grey.shade300),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+
+      case 'timeline':
+        return Padding(
+          padding: const EdgeInsets.all(7),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _line(width: 55, h: 5, color: const Color(0xFF1A1D23).withValues(alpha: 0.8)),
+              const SizedBox(height: 1),
+              _line(width: 24, h: 3, color: c.withValues(alpha: 0.8)),
+              const SizedBox(height: 5),
+              _line(width: 38, h: 3, color: c.withValues(alpha: 0.8)),
+              const SizedBox(height: 1),
+              Container(height: 0.8, color: c.withValues(alpha: 0.5)),
+              const SizedBox(height: 5),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(children: [
+                    Container(width: 8, height: 8,
+                        decoration: BoxDecoration(color: c, shape: BoxShape.circle)),
+                    Container(width: 1.5, height: 18, color: bg),
+                    Container(width: 8, height: 8,
+                        decoration: BoxDecoration(color: c, shape: BoxShape.circle)),
+                  ]),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _line(width: double.infinity, h: 3,
+                            color: const Color(0xFF1A1D23).withValues(alpha: 0.6)),
+                        _line(width: 52, h: 2, color: Colors.grey.shade300),
+                        _line(width: 38, h: 2, color: Colors.grey.shade300),
+                        const SizedBox(height: 9),
+                        _line(width: double.infinity, h: 3,
+                            color: const Color(0xFF1A1D23).withValues(alpha: 0.6)),
+                        _line(width: 42, h: 2, color: Colors.grey.shade300),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+
+      case 'twocol':
+        return Column(
+          children: [
+            Container(
+              height: 20,
+              color: c,
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.only(left: 7),
+              child: _line(width: 55, h: 4,
+                  color: Colors.white.withValues(alpha: 0.9)),
+            ),
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    width: 38,
+                    color: bg,
+                    padding: const EdgeInsets.all(5),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _line(width: 28, h: 2.5, color: c.withValues(alpha: 0.8)),
+                        Container(height: 0.5, color: c.withValues(alpha: 0.5)),
+                        const SizedBox(height: 3),
+                        _line(width: 26, h: 1.5, color: Colors.grey.shade400),
+                        _line(width: 20, h: 1.5, color: Colors.grey.shade400),
+                        _line(width: 24, h: 1.5, color: Colors.grey.shade400),
+                      ],
+                    ),
+                  ),
+                  Container(width: 0.5, color: Colors.grey.shade300),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(5),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _line(width: 32, h: 2.5, color: c.withValues(alpha: 0.8)),
+                          Container(height: 0.5, color: c.withValues(alpha: 0.5)),
+                          const SizedBox(height: 3),
+                          _line(width: double.infinity, h: 1.5, color: Colors.grey.shade400),
+                          _line(width: 42, h: 1.5, color: Colors.grey.shade400),
+                          _line(width: 32, h: 1.5, color: Colors.grey.shade400),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+
+      default: // single
+        return Padding(
+          padding: const EdgeInsets.all(7),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _line(width: 60, h: 5,
+                  color: const Color(0xFF1A1D23).withValues(alpha: 0.8)),
+              const SizedBox(height: 2),
+              _line(width: 78, h: 2, color: Colors.grey.shade300),
+              const SizedBox(height: 3),
+              Container(height: 1.5, color: c),
+              const SizedBox(height: 5),
+              _line(width: 38, h: 3, color: c.withValues(alpha: 0.8)),
+              const SizedBox(height: 1),
+              Container(height: 0.8, color: c.withValues(alpha: 0.4)),
+              const SizedBox(height: 3),
+              _line(width: double.infinity, h: 2, color: Colors.grey.shade300),
+              _line(width: 60, h: 2, color: Colors.grey.shade300),
+              const SizedBox(height: 5),
+              _line(width: 34, h: 3, color: c.withValues(alpha: 0.8)),
+              const SizedBox(height: 1),
+              Container(height: 0.8, color: c.withValues(alpha: 0.4)),
+              const SizedBox(height: 3),
+              _line(width: double.infinity, h: 2, color: Colors.grey.shade300),
+              _line(width: 48, h: 2, color: Colors.grey.shade300),
+            ],
+          ),
+        );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
+    final cardBg = isDark ? const Color(0xFF252830) : Colors.white;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 118,
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
             color: selected
-                ? AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.08)
+                ? AppColors.primary
                 : (isDark
-                    ? Colors.white.withValues(alpha: 0.04)
-                    : Colors.black.withValues(alpha: 0.025)),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: selected
-                  ? AppColors.primary
-                  : (isDark ? Colors.white12 : Colors.black12),
-              width: selected ? 1.5 : 1,
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.08)),
+            width: selected ? 2 : 1,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.18),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Mini preview area
+                ClipRRect(
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(11)),
+                  child: Container(
+                    height: 106,
+                    width: double.infinity,
+                    color: const Color(0xFFF8F9FA),
+                    child: _buildPreview(),
+                  ),
+                ),
+                // Footer: name + tier badge
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          template.name,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: selected
+                                ? AppColors.primary
+                                : Theme.of(context).colorScheme.onSurface,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 3),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: template.tierColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            template.tierLabel,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: template.tierColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-          child: Column(
-            children: [
-              Icon(icon,
-                  size: 28,
-                  color: selected ? AppColors.primary : Colors.grey),
-              const SizedBox(height: 6),
-              Text(label,
-                  style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: selected
-                          ? AppColors.primary
-                          : Theme.of(context).colorScheme.onSurface)),
-              const SizedBox(height: 2),
-              Text(desc,
-                  style: TextStyle(
-                      fontSize: 10.5,
-                      color: Theme.of(context).hintColor)),
-            ],
-          ),
+
+            // Lock overlay
+            if (!unlocked)
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.38),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.lock_rounded,
+                            color: Colors.white.withValues(alpha: 0.9),
+                            size: 22,
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 7, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: template.tierColor,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              template.tierLabel,
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+            // Selected checkmark
+            if (selected)
+              Positioned(
+                top: 6,
+                right: 6,
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check_rounded,
+                      color: Colors.white, size: 13),
+                ),
+              ),
+          ],
         ),
       ),
     );
