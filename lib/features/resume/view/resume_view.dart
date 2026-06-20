@@ -33,57 +33,60 @@ class ResumeView extends StatelessWidget {
         return CustomScrollView(
           slivers: [
             // ── Hero ──────────────────────────────────────────────────────────
-            SliverToBoxAdapter(child: _HeroHeader(ctrl: ctrl, isDark: isDark)),
+            SliverToBoxAdapter(
+              child: _HeroHeader(ctrl: ctrl, clCtrl: clCtrl, isDark: isDark),
+            ),
 
             // ── Feature cards ─────────────────────────────────────────────────
+            // Own Obx so clUsage / usage badges update independently.
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _FeatureCard(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                child: Obx(() => Row(
+                      children: [
+                        Expanded(
+                          child: _FeatureCard(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            icon: Icons.description_rounded,
+                            title: 'AI Resume\nBuilder',
+                            subtitle: 'ATS-optimised in minutes',
+                            badgeLabel: _resumeBadge(ctrl),
+                            onTap: () {
+                              if (ctrl.usage.value?.canGenerate ?? false) {
+                                Get.toNamed(AppRoutes.resumeForm);
+                              } else {
+                                Get.toNamed(AppRoutes.subscription);
+                              }
+                            },
+                            ctaLabel: (ctrl.usage.value?.canGenerate ?? false)
+                                ? 'Build Now'
+                                : 'Upgrade',
+                          ),
                         ),
-                        icon: Icons.description_rounded,
-                        title: 'AI Resume\nBuilder',
-                        subtitle: 'ATS-optimised in minutes',
-                        badgeLabel: _resumeBadge(ctrl),
-                        onTap: () {
-                          if (ctrl.usage.value?.canGenerate ?? false) {
-                            Get.toNamed(AppRoutes.resumeForm);
-                          } else {
-                            Get.toNamed(AppRoutes.subscription);
-                          }
-                        },
-                        ctaLabel: (ctrl.usage.value?.canGenerate ?? false)
-                            ? 'Build Now'
-                            : 'Upgrade',
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _FeatureCard(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _FeatureCard(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            icon: Icons.mail_outline_rounded,
+                            title: 'AI Cover\nLetter',
+                            subtitle: 'Personalised in seconds',
+                            badgeLabel: _clBadge(ctrl, clCtrl),
+                            onTap: ctrl.resumes.isEmpty
+                                ? null
+                                : () => Get.toNamed(AppRoutes.coverLetter),
+                            ctaLabel: _clCta(ctrl, clCtrl),
+                          ),
                         ),
-                        icon: Icons.mail_outline_rounded,
-                        title: 'AI Cover\nLetter',
-                        subtitle: 'Personalised in seconds',
-                        badgeLabel: ctrl.resumes.isEmpty ? 'Build resume first' : null,
-                        onTap: ctrl.resumes.isEmpty
-                            ? null
-                            : () => Get.toNamed(AppRoutes.coverLetter),
-                        ctaLabel: 'Create Now',
-                      ),
-                    ),
-                  ],
-                ),
+                      ],
+                    )),
               ),
             ),
 
@@ -147,15 +150,35 @@ class ResumeView extends StatelessWidget {
         ? '${usage.maxCount - usage.usedCount} left'
         : 'Limit reached';
   }
+
+  String _clBadge(ResumeController ctrl, CoverLetterController clCtrl) {
+    if (ctrl.resumes.isEmpty) return 'Build resume first';
+    final usage = clCtrl.clUsage.value;
+    if (usage == null) return '';
+    if (!usage.canGenerate) return 'Limit reached';
+    return '${usage.remaining} left';
+  }
+
+  String _clCta(ResumeController ctrl, CoverLetterController clCtrl) {
+    if (ctrl.resumes.isEmpty) return 'Create Now';
+    final usage = clCtrl.clUsage.value;
+    if (usage != null && !usage.canGenerate) return 'Upgrade';
+    return 'Create Now';
+  }
 }
 
 // ── Hero header ───────────────────────────────────────────────────────────────
 
 class _HeroHeader extends StatelessWidget {
   final ResumeController ctrl;
+  final CoverLetterController clCtrl;
   final bool isDark;
 
-  const _HeroHeader({required this.ctrl, required this.isDark});
+  const _HeroHeader({
+    required this.ctrl,
+    required this.clCtrl,
+    required this.isDark,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -286,36 +309,45 @@ class _HeroHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 14),
-                // Stats row
-                Row(
-                  children: [
-                    _HeroStat(
-                      icon: Icons.description_rounded,
-                      label:
-                          '${ctrl.resumes.length} Resume${ctrl.resumes.length != 1 ? 's' : ''}',
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                        width: 1,
-                        height: 14,
-                        color: Colors.white.withValues(alpha: 0.2)),
-                    const SizedBox(width: 6),
-                    _HeroStat(
-                      icon: Icons.mail_rounded,
-                      label: 'Cover Letters',
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                        width: 1,
-                        height: 14,
-                        color: Colors.white.withValues(alpha: 0.2)),
-                    const SizedBox(width: 6),
-                    _HeroStat(
-                      icon: Icons.track_changes_rounded,
-                      label: 'ATS Score',
-                    ),
-                  ],
-                ),
+                // Stats row — Obx so cover-letter count and ATS score
+                // update the moment data loads or a new item is generated.
+                Obx(() {
+                  final rCount = ctrl.resumes.length;
+                  final clCount = clCtrl.coverLetters.length;
+                  final atsScore = rCount > 0
+                      ? _computeAts(ctrl.resumes.first.data)
+                      : null;
+                  final sep = Container(
+                      width: 1,
+                      height: 14,
+                      color: Colors.white.withValues(alpha: 0.2));
+                  return Row(
+                    children: [
+                      _HeroStat(
+                        icon: Icons.description_rounded,
+                        label:
+                            '$rCount Resume${rCount != 1 ? 's' : ''}',
+                      ),
+                      const SizedBox(width: 6),
+                      sep,
+                      const SizedBox(width: 6),
+                      _HeroStat(
+                        icon: Icons.mail_rounded,
+                        label:
+                            '$clCount Cover Letter${clCount != 1 ? 's' : ''}',
+                      ),
+                      const SizedBox(width: 6),
+                      sep,
+                      const SizedBox(width: 6),
+                      _HeroStat(
+                        icon: Icons.track_changes_rounded,
+                        label: atsScore != null
+                            ? 'ATS $atsScore%'
+                            : 'ATS Score',
+                      ),
+                    ],
+                  );
+                }),
               ],
             ),
           ),

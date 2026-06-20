@@ -3,6 +3,8 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kitab_mandi/core/constants/razorpay_config.dart';
+import 'package:kitab_mandi/core/services/subscription_service.dart';
 import 'package:kitab_mandi/features/resume/model/cover_letter_model.dart';
 
 class CoverLetterController extends GetxController {
@@ -16,11 +18,21 @@ class CoverLetterController extends GetxController {
   final coverLetters = <CoverLetterRecord>[].obs;
   final generatedLetter = Rxn<CoverLetterRecord>();
 
+  // Subscription + usage
+  final sub = Rxn<Map<String, dynamic>>();
+  final clUsage = Rxn<CoverLetterUsage>();
+
   // Form fields
   final jobTitleCtrl = TextEditingController();
   final companyCtrl = TextEditingController();
   final jdCtrl = TextEditingController();
   final selectedResumeId = ''.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    loadCoverLetters();
+  }
 
   @override
   void onClose() {
@@ -35,6 +47,12 @@ class CoverLetterController extends GetxController {
       isLoading.value = true;
       final uid = _auth.currentUser?.uid;
       if (uid == null) return;
+
+      final userDoc = await _fs.collection('users').doc(uid).get();
+      final userData = userDoc.data() ?? {};
+      sub.value = userData['subscription'] as Map<String, dynamic>?;
+      _computeUsage(userData);
+
       final snap = await _fs
           .collection('users')
           .doc(uid)
@@ -50,7 +68,36 @@ class CoverLetterController extends GetxController {
     }
   }
 
+  void _computeUsage(Map<String, dynamic> userData) {
+    final plan = SubscriptionService.getPlan(sub.value);
+    final isActive = SubscriptionService.isActive(sub.value);
+    final isFreePlan = !isActive || plan == RazorpayConfig.planFree;
+    final isPlus = isActive &&
+        (plan == RazorpayConfig.planPlusMonthly ||
+            plan == RazorpayConfig.planPlusAnnual);
+
+    final rawUsage =
+        (userData['coverLetterUsage'] as Map<String, dynamic>?) ?? {};
+    final used = (rawUsage['countLifetime'] as int?) ?? 0;
+    // Free=1, Plus=3, Pro=5
+    final max = isFreePlan ? 1 : (isPlus ? 3 : 5);
+
+    clUsage.value = CoverLetterUsage(usedCount: used, maxCount: max);
+  }
+
   Future<void> generate() async {
+    // Client-side limit guard
+    final usage = clUsage.value;
+    if (usage != null && !usage.canGenerate) {
+      Get.snackbar(
+        'Limit Reached',
+        _limitMessage(),
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 4),
+      );
+      return;
+    }
+
     final resumeId = selectedResumeId.value;
     final jobTitle = jobTitleCtrl.text.trim();
     final company = companyCtrl.text.trim();
@@ -89,10 +136,26 @@ class CoverLetterController extends GetxController {
         companyName: company,
         letterText: data['letterText'] as String,
         createdAt: DateTime.now(),
+        aiModel: data['aiModel'] as String?,
       );
 
       generatedLetter.value = record;
       coverLetters.insert(0, record);
+
+      // Increment usage counter in Firestore and update local state
+      final uid = _auth.currentUser?.uid;
+      if (uid != null) {
+        await _fs.collection('users').doc(uid).update({
+          'coverLetterUsage.countLifetime': FieldValue.increment(1),
+        });
+        final current = clUsage.value;
+        if (current != null) {
+          clUsage.value = CoverLetterUsage(
+            usedCount: current.usedCount + 1,
+            maxCount: current.maxCount,
+          );
+        }
+      }
     } on FirebaseFunctionsException catch (e) {
       Get.snackbar('Error', e.message ?? 'Generation failed',
           snackPosition: SnackPosition.BOTTOM,
@@ -106,6 +169,18 @@ class CoverLetterController extends GetxController {
     } finally {
       isGenerating.value = false;
     }
+  }
+
+  String _limitMessage() {
+    final plan = SubscriptionService.getPlan(sub.value);
+    final isActive = SubscriptionService.isActive(sub.value);
+    if (!isActive || plan == RazorpayConfig.planFree) {
+      return 'Free plan allows 1 cover letter. Upgrade to Plus for 3.';
+    }
+    final isPlus = plan == RazorpayConfig.planPlusMonthly ||
+        plan == RazorpayConfig.planPlusAnnual;
+    if (isPlus) return 'Plus plan allows 3 cover letters. Upgrade to Pro for 5.';
+    return 'Pro plan allows 5 cover letters. You have used all of them.';
   }
 
   Future<void> delete(String id) async {

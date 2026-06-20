@@ -356,6 +356,20 @@ JSON Schema:
   "keywords_matched": string[]
 }`;
 
+// Select Claude model based on subscription plan.
+// Free → Haiku (fast, low-cost); Plus/Pro → Sonnet (higher quality).
+function selectModel(plan: string): string {
+  switch (plan) {
+    case "plus_monthly":
+    case "plus_annual":
+    case "pro_monthly":
+    case "pro_annual":
+      return "claude-sonnet-4-6";
+    default:
+      return "claude-haiku-4-5-20251001";
+  }
+}
+
 interface ResumeInput {
   personalInfo: {
     name: string; email: string; phone: string; location: string;
@@ -428,25 +442,32 @@ export const generateResume = functions
     const plan = (sub.plan as string) || "free";
 
     // Subscription limits
-    const monthLimits: Record<string, number> = {
-      free: 0, // tracked by countLifetime, not monthly
-      plus_monthly: 10, plus_annual: 10,
-      pro_monthly: 9999, pro_annual: 9999,
-    };
-    const isFreePlan = plan === "free";
-    const maxCount = isFreePlan ? 1 : (monthLimits[plan] ?? 1);
+    const isPro = plan === "pro_monthly" || plan === "pro_annual";
+    const isPlus = plan === "plus_monthly" || plan === "plus_annual";
+    const isFreePlan = !isPro && !isPlus;
+    const maxCount = isFreePlan ? 1 : (isPlus ? 10 : 9999);
 
     // 3. Check usage
     const now = new Date();
-    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     const usageRaw = (userData.resumeUsage || {}) as Record<string, unknown>;
 
     let currentCount: number;
-    if (isFreePlan) {
+    if (isPro) {
+      currentCount = 0; // unlimited — skip limit check
+    } else if (isFreePlan) {
       currentCount = (usageRaw.countLifetime as number) || 0;
     } else {
-      currentCount =
-        usageRaw.monthKey === monthKey ? ((usageRaw.count as number) || 0) : 0;
+      // Plus: count actual resume documents created this calendar month.
+      // This naturally includes resumes generated while on the Free plan,
+      // so upgrading mid-month shows the correct 1/10, 2/10, … count.
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const snap = await db
+        .collection("users")
+        .doc(uid)
+        .collection("resumes")
+        .where("createdAt", ">=", admin.firestore.Timestamp.fromDate(monthStart))
+        .get();
+      currentCount = snap.size;
     }
 
     if (currentCount >= maxCount) {
@@ -456,34 +477,43 @@ export const generateResume = functions
       );
     }
 
-    // 4. Call Claude
-    const apiKey = anthropicKey.value();
+    // 4. Call Claude — model tier depends on plan
+    const apiKey = anthropicKey.value()?.trim();
     if (!apiKey) {
       throw new functions.https.HttpsError("internal", "Anthropic API key not configured");
     }
 
-    const anthropic = new Anthropic({ apiKey });
-    const message = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 4096,
-      system: RESUME_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: buildResumePrompt(data) }],
-    });
-
-    const rawText = message.content[0].type === "text" ? message.content[0].text : "";
-
-    // Strip markdown code fences if present
-    const cleanJson = rawText
-      .replace(/^```(?:json)?\s*/m, "")
-      .replace(/\s*```\s*$/m, "")
-      .trim();
-
+    const model = selectModel(plan);
     let generatedData: Record<string, unknown>;
     try {
-      generatedData = JSON.parse(cleanJson);
-    } catch {
-      functions.logger.error("[generateResume] JSON parse failed:", rawText);
-      throw new functions.https.HttpsError("internal", "Failed to parse AI response");
+      const anthropic = new Anthropic({ apiKey });
+      const message = await anthropic.messages.create({
+        model,
+        max_tokens: 4096,
+        system: RESUME_SYSTEM_PROMPT,
+        messages: [{ role: "user", content: buildResumePrompt(data) }],
+      });
+
+      const rawText = message.content[0].type === "text" ? message.content[0].text : "";
+      const cleanJson = rawText
+        .replace(/^```(?:json)?\s*/m, "")
+        .replace(/\s*```\s*$/m, "")
+        .trim();
+
+      try {
+        generatedData = JSON.parse(cleanJson);
+      } catch {
+        functions.logger.error("[generateResume] JSON parse failed:", rawText);
+        throw new functions.https.HttpsError("internal", "Failed to parse AI response");
+      }
+    } catch (err: unknown) {
+      if (err instanceof functions.https.HttpsError) throw err;
+      const e = err as { status?: number; message?: string };
+      functions.logger.error("[generateResume] Anthropic error:", e.message);
+      if (e.status === 401) {
+        throw new functions.https.HttpsError("internal", "Invalid Anthropic API key — please reset ANTHROPIC_KEY secret");
+      }
+      throw new functions.https.HttpsError("internal", `AI call failed: ${e.message ?? "unknown error"}`);
     }
 
     // 5. Save resume to Firestore
@@ -494,22 +524,22 @@ export const generateResume = functions
       templateId: data.templateId || "classic",
       inputData: data,
       generatedData,
+      aiModel: model,
       status: "completed",
     });
 
     // 6. Update usage counter
+    // Free: increment lifetime counter (used for limit enforcement).
+    // Plus: no counter needed — we count actual resume documents.
+    // Pro: unlimited, nothing to track.
     if (isFreePlan) {
       await db.collection("users").doc(uid).update({
         "resumeUsage.countLifetime": admin.firestore.FieldValue.increment(1),
       });
-    } else {
-      await db.collection("users").doc(uid).update({
-        resumeUsage: { count: currentCount + 1, monthKey },
-      });
     }
 
-    functions.logger.info(`[generateResume] uid=${uid} plan=${plan} count=${currentCount + 1}`);
-    return { resumeId: resumeRef.id, generatedData };
+    functions.logger.info(`[generateResume] uid=${uid} plan=${plan} model=${model} count=${currentCount + 1}`);
+    return { resumeId: resumeRef.id, generatedData, aiModel: model };
   }
 );
 
@@ -554,6 +584,11 @@ export const generateCoverLetter = functions
       );
     }
 
+    // Load user subscription to pick the right model
+    const userDoc = await db.collection("users").doc(uid).get();
+    const userPlan = ((userDoc.data()?.subscription as Record<string, unknown>)?.plan as string) || "free";
+    const model = selectModel(userPlan);
+
     // Load the resume the user selected
     const resumeDoc = await db
       .collection("users")
@@ -583,21 +618,29 @@ ${jobDescription ? `\nJob description to tailor towards:\n${jobDescription.slice
 
 Return only the three body paragraphs. No headers, no sign-off.`;
 
-    const apiKey = anthropicKey.value();
+    const apiKey = anthropicKey.value()?.trim();
     if (!apiKey) {
       throw new functions.https.HttpsError("internal", "Anthropic API key not configured");
     }
 
-    const anthropic = new Anthropic({ apiKey });
-    const message = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
-      system: COVER_LETTER_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userPrompt }],
-    });
-
-    const letterText =
-      message.content[0].type === "text" ? message.content[0].text.trim() : "";
+    let letterText: string;
+    try {
+      const anthropic = new Anthropic({ apiKey });
+      const message = await anthropic.messages.create({
+        model,
+        max_tokens: 1024,
+        system: COVER_LETTER_SYSTEM_PROMPT,
+        messages: [{ role: "user", content: userPrompt }],
+      });
+      letterText = message.content[0].type === "text" ? message.content[0].text.trim() : "";
+    } catch (err: unknown) {
+      const e = err as { status?: number; message?: string };
+      functions.logger.error("[generateCoverLetter] Anthropic error:", e.message);
+      if (e.status === 401) {
+        throw new functions.https.HttpsError("internal", "Invalid Anthropic API key — please reset ANTHROPIC_KEY secret");
+      }
+      throw new functions.https.HttpsError("internal", `AI call failed: ${e.message ?? "unknown error"}`);
+    }
 
     // Persist
     const clRef = db
@@ -611,10 +654,11 @@ Return only the three body paragraphs. No headers, no sign-off.`;
       jobTitle,
       companyName,
       letterText,
+      aiModel: model,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    functions.logger.info(`[generateCoverLetter] uid=${uid} job=${jobTitle} company=${companyName}`);
-    return { coverLetterId: clRef.id, letterText };
+    functions.logger.info(`[generateCoverLetter] uid=${uid} plan=${userPlan} model=${model} job=${jobTitle}`);
+    return { coverLetterId: clRef.id, letterText, aiModel: model };
   }
 );

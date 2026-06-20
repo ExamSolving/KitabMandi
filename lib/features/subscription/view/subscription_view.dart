@@ -6,6 +6,8 @@ import 'package:kitab_mandi/core/constants/app_color.dart';
 import 'package:kitab_mandi/core/constants/razorpay_config.dart';
 import 'package:kitab_mandi/core/services/subscription_service.dart';
 import 'package:kitab_mandi/features/auth/controller/auth_controller.dart';
+import 'package:kitab_mandi/features/resume/controller/cover_letter_controller.dart';
+import 'package:kitab_mandi/features/resume/controller/resume_controller.dart';
 import 'package:kitab_mandi/widgets/kitab_back_button.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
@@ -112,6 +114,16 @@ class _SubscriptionViewState extends State<SubscriptionView> {
       );
       // Refresh AuthController so the rest of the app sees the new plan.
       await Get.find<AuthController>().fetchUserData();
+
+      // Reload AI section controllers so usage limits, plan badges, and
+      // model tier update instantly — no app restart or navigation needed.
+      await Future.wait([
+        if (Get.isRegistered<ResumeController>())
+          ResumeController.to.reloadAll(),
+        if (Get.isRegistered<CoverLetterController>())
+          CoverLetterController.to.loadCoverLetters(),
+      ]);
+
       if (!mounted) return;
       await _loadSub();
       _showSuccessSheet(_pendingPlan!);

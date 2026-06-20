@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 import 'package:kitab_mandi/core/constants/app_color.dart';
 import 'package:kitab_mandi/features/resume/model/resume_model.dart';
@@ -15,10 +18,38 @@ class ResumePreviewView extends StatefulWidget {
 
 class _ResumePreviewViewState extends State<ResumePreviewView> {
   bool _isDownloading = false;
+  // PDF bytes cached so they are built once and reused for both preview
+  // and download — no redundant local rendering, no API calls after generation.
+  Uint8List? _cachedBytes;
+
+  late final ResumeRecord _record;
+
+  @override
+  void initState() {
+    super.initState();
+    _record = Get.arguments as ResumeRecord;
+    _warmCache();
+  }
+
+  Future<void> _warmCache() async {
+    try {
+      final bytes = await ResumePdfService.generate(_record);
+      if (mounted) setState(() => _cachedBytes = bytes);
+    } catch (e) {
+      if (mounted) {
+        Get.snackbar('Error', 'Could not render PDF: $e',
+            snackPosition: SnackPosition.BOTTOM);
+      }
+    }
+  }
+
+  Future<Uint8List> _pdf(PdfPageFormat _) async {
+    _cachedBytes ??= await ResumePdfService.generate(_record);
+    return _cachedBytes!;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final record = Get.arguments as ResumeRecord;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -37,12 +68,14 @@ class _ResumePreviewViewState extends State<ResumePreviewView> {
                     child: CircularProgressIndicator(
                         strokeWidth: 2, color: AppColors.primary))
                 : GestureDetector(
-                    onTap: () => _download(record),
+                    onTap: _cachedBytes == null ? null : _download,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
-                        color: AppColors.primary,
+                        color: _cachedBytes == null
+                            ? AppColors.primary.withValues(alpha: 0.5)
+                            : AppColors.primary,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Row(
@@ -65,17 +98,17 @@ class _ResumePreviewViewState extends State<ResumePreviewView> {
       body: Column(
         children: [
           // Stats row
-          _StatsRow(record: record, isDark: isDark),
+          _StatsRow(record: _record, isDark: isDark),
 
-          // PDF preview
+          // PDF preview — reuses _cachedBytes, never calls Anthropic
           Expanded(
             child: PdfPreview(
-              build: (_) => ResumePdfService.generate(record),
+              build: _pdf,
               allowPrinting: true,
               allowSharing: true,
               canChangePageFormat: false,
               canDebug: false,
-              pdfFileName: '${_sanitize(record.data.contact.name)}_resume.pdf',
+              pdfFileName: '${_sanitize(_record.data.contact.name)}_resume.pdf',
               actions: const [],
               previewPageMargin: const EdgeInsets.all(8),
             ),
@@ -84,21 +117,21 @@ class _ResumePreviewViewState extends State<ResumePreviewView> {
       ),
 
       // ATS score bottom sheet trigger
-      bottomNavigationBar: _ATSBar(record: record, isDark: isDark),
+      bottomNavigationBar: _ATSBar(record: _record, isDark: isDark),
     );
   }
 
-  Future<void> _download(ResumeRecord record) async {
+  Future<void> _download() async {
+    final bytes = _cachedBytes;
+    if (bytes == null) return;
     setState(() => _isDownloading = true);
     try {
-      final bytes = await ResumePdfService.generate(record);
       await Printing.sharePdf(
         bytes: bytes,
-        filename:
-            '${_sanitize(record.data.contact.name)}_resume.pdf',
+        filename: '${_sanitize(_record.data.contact.name)}_resume.pdf',
       );
     } catch (e) {
-      Get.snackbar('Error', 'Could not generate PDF: $e',
+      Get.snackbar('Error', 'Could not share PDF: $e',
           snackPosition: SnackPosition.BOTTOM);
     } finally {
       if (mounted) setState(() => _isDownloading = false);
@@ -156,6 +189,8 @@ class _StatsRow extends StatelessWidget {
             value: '${d.skills.technical.length}',
             label: 'Skills',
           ),
+          _vDivider(),
+          _AiModelStat(model: record.aiModel),
         ],
       ),
     );
@@ -164,6 +199,34 @@ class _StatsRow extends StatelessWidget {
   Widget _vDivider() => Container(
       height: 28, width: 1,
       color: AppColors.primary.withValues(alpha: 0.2));
+}
+
+class _AiModelStat extends StatelessWidget {
+  final String? model;
+  const _AiModelStat({this.model});
+
+  @override
+  Widget build(BuildContext context) {
+    final isSonnet = model?.contains('sonnet') ?? false;
+    final label = isSonnet ? 'Sonnet' : 'Haiku';
+    final color = isSonnet ? const Color(0xFFF59E0B) : AppColors.primary;
+    final icon = isSonnet
+        ? Icons.workspace_premium_rounded
+        : Icons.auto_awesome_rounded;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(height: 3),
+        Text(label,
+            style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w800, color: color)),
+        Text('AI Model',
+            style: TextStyle(
+                fontSize: 9.5, color: Theme.of(context).hintColor)),
+      ],
+    );
+  }
 }
 
 class _Stat extends StatelessWidget {

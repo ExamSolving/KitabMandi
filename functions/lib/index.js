@@ -2,8 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateCoverLetter = exports.generateResume = exports.onChatMessageCreated = exports.onListingCreated = void 0;
 const functions = require("firebase-functions");
+const params_1 = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const sdk_1 = require("@anthropic-ai/sdk");
+const anthropicKey = (0, params_1.defineSecret)("ANTHROPIC_KEY");
 admin.initializeApp();
 const db = admin.firestore();
 const fcm = admin.messaging();
@@ -331,8 +333,10 @@ SOFT SKILLS: ${softSkills.join(", ")}`;
     prompt += "\n\nReturn ONLY the JSON object. No extra text.";
     return prompt;
 }
-exports.generateResume = functions.https.onCall(async (data, context) => {
-    var _a, _b;
+exports.generateResume = functions
+    .runWith({ secrets: [anthropicKey] })
+    .https.onCall(async (data, context) => {
+    var _a, _b, _c;
     // 1. Auth
     if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "Sign in required");
@@ -367,30 +371,41 @@ exports.generateResume = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError("resource-exhausted", `limit_reached:${plan}:${maxCount}`);
     }
     // 4. Call Claude
-    const apiKey = (_b = functions.config().anthropic) === null || _b === void 0 ? void 0 : _b.key;
+    const apiKey = (_b = anthropicKey.value()) === null || _b === void 0 ? void 0 : _b.trim();
     if (!apiKey) {
         throw new functions.https.HttpsError("internal", "Anthropic API key not configured");
     }
-    const anthropic = new sdk_1.default({ apiKey });
-    const message = await anthropic.messages.create({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 4096,
-        system: RESUME_SYSTEM_PROMPT,
-        messages: [{ role: "user", content: buildResumePrompt(data) }],
-    });
-    const rawText = message.content[0].type === "text" ? message.content[0].text : "";
-    // Strip markdown code fences if present
-    const cleanJson = rawText
-        .replace(/^```(?:json)?\s*/m, "")
-        .replace(/\s*```\s*$/m, "")
-        .trim();
     let generatedData;
     try {
-        generatedData = JSON.parse(cleanJson);
+        const anthropic = new sdk_1.default({ apiKey });
+        const message = await anthropic.messages.create({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 4096,
+            system: RESUME_SYSTEM_PROMPT,
+            messages: [{ role: "user", content: buildResumePrompt(data) }],
+        });
+        const rawText = message.content[0].type === "text" ? message.content[0].text : "";
+        const cleanJson = rawText
+            .replace(/^```(?:json)?\s*/m, "")
+            .replace(/\s*```\s*$/m, "")
+            .trim();
+        try {
+            generatedData = JSON.parse(cleanJson);
+        }
+        catch (_d) {
+            functions.logger.error("[generateResume] JSON parse failed:", rawText);
+            throw new functions.https.HttpsError("internal", "Failed to parse AI response");
+        }
     }
-    catch (_c) {
-        functions.logger.error("[generateResume] JSON parse failed:", rawText);
-        throw new functions.https.HttpsError("internal", "Failed to parse AI response");
+    catch (err) {
+        if (err instanceof functions.https.HttpsError)
+            throw err;
+        const e = err;
+        functions.logger.error("[generateResume] Anthropic error:", e.message);
+        if (e.status === 401) {
+            throw new functions.https.HttpsError("internal", "Invalid Anthropic API key — please reset ANTHROPIC_KEY secret");
+        }
+        throw new functions.https.HttpsError("internal", `AI call failed: ${(_c = e.message) !== null && _c !== void 0 ? _c : "unknown error"}`);
     }
     // 5. Save resume to Firestore
     const resumeRef = db.collection("users").doc(uid).collection("resumes").doc();
@@ -431,8 +446,10 @@ Write a compelling, personalised cover letter that:
 - Length: 230-300 words
 - Do NOT include date, postal address headers, salutation, or sign-off — output only the three body paragraphs
 Return ONLY the cover letter body text. No JSON, no markdown, no labels.`;
-exports.generateCoverLetter = functions.https.onCall(async (data, context) => {
-    var _a, _b;
+exports.generateCoverLetter = functions
+    .runWith({ secrets: [anthropicKey] })
+    .https.onCall(async (data, context) => {
+    var _a, _b, _c;
     if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "Sign in required");
     }
@@ -466,18 +483,29 @@ Projects: ${projects.map((p) => `${p.title} [${p.tech}]`).join("; ") || "None li
 ${jobDescription ? `\nJob description to tailor towards:\n${jobDescription.slice(0, 1000)}` : ""}
 
 Return only the three body paragraphs. No headers, no sign-off.`;
-    const apiKey = (_b = functions.config().anthropic) === null || _b === void 0 ? void 0 : _b.key;
+    const apiKey = (_b = anthropicKey.value()) === null || _b === void 0 ? void 0 : _b.trim();
     if (!apiKey) {
         throw new functions.https.HttpsError("internal", "Anthropic API key not configured");
     }
-    const anthropic = new sdk_1.default({ apiKey });
-    const message = await anthropic.messages.create({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 1024,
-        system: COVER_LETTER_SYSTEM_PROMPT,
-        messages: [{ role: "user", content: userPrompt }],
-    });
-    const letterText = message.content[0].type === "text" ? message.content[0].text.trim() : "";
+    let letterText;
+    try {
+        const anthropic = new sdk_1.default({ apiKey });
+        const message = await anthropic.messages.create({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 1024,
+            system: COVER_LETTER_SYSTEM_PROMPT,
+            messages: [{ role: "user", content: userPrompt }],
+        });
+        letterText = message.content[0].type === "text" ? message.content[0].text.trim() : "";
+    }
+    catch (err) {
+        const e = err;
+        functions.logger.error("[generateCoverLetter] Anthropic error:", e.message);
+        if (e.status === 401) {
+            throw new functions.https.HttpsError("internal", "Invalid Anthropic API key — please reset ANTHROPIC_KEY secret");
+        }
+        throw new functions.https.HttpsError("internal", `AI call failed: ${(_c = e.message) !== null && _c !== void 0 ? _c : "unknown error"}`);
+    }
     // Persist
     const clRef = db
         .collection("users")

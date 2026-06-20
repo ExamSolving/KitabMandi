@@ -95,35 +95,47 @@ class ResumeController extends GetxController {
 
   // ── Load ──────────────────────────────────────────────────────────────────
 
+  /// Call after subscription changes so usage limits and plan-gating
+  /// update immediately without restarting the app.
+  Future<void> reloadAll() => _loadAll();
+
   Future<void> _loadAll() async {
     isLoading.value = true;
     try {
       final uid = _auth.currentUser?.uid;
       if (uid == null) return;
 
-      final userDoc = await _fs.collection('users').doc(uid).get();
-      final userData = userDoc.data() ?? {};
+      // Fetch user doc and resumes in parallel — resumes must be available
+      // before _computeUsage() so Plus plan can count actual documents.
+      final results = await Future.wait([
+        _fs.collection('users').doc(uid).get(),
+        _fs
+            .collection('users')
+            .doc(uid)
+            .collection('resumes')
+            .orderBy('createdAt', descending: true)
+            .get(),
+      ]);
+
+      final userData =
+          ((results[0] as DocumentSnapshot).data() as Map<String, dynamic>?) ??
+              {};
       sub.value = userData['subscription'] as Map<String, dynamic>?;
 
-      _computeUsage(userData);
-
-      final snap = await _fs
-          .collection('users')
-          .doc(uid)
-          .collection('resumes')
-          .orderBy('createdAt', descending: true)
-          .get();
-
-      resumes.value = snap.docs
+      final loaded = (results[1] as QuerySnapshot).docs
           .map((d) => ResumeRecord.fromDoc(
-              Map<String, dynamic>.from(d.data()), d.id))
+              Map<String, dynamic>.from(d.data() as Map), d.id))
           .toList();
+      resumes.value = loaded;
+
+      _computeUsage(userData, loaded);
     } finally {
       isLoading.value = false;
     }
   }
 
-  void _computeUsage(Map<String, dynamic> userData) {
+  void _computeUsage(
+      Map<String, dynamic> userData, List<ResumeRecord> loadedResumes) {
     final plan = SubscriptionService.getPlan(sub.value);
     final isActive = SubscriptionService.isActive(sub.value);
 
@@ -147,12 +159,13 @@ class ResumeController extends GetxController {
       max = 1;
       unlimited = false;
     } else {
-      // Plus plan — monthly
-      final now = DateTime.now();
-      final monthKey =
-          '${now.year}-${now.month.toString().padLeft(2, '0')}';
-      final storedKey = rawUsage['monthKey'] as String?;
-      used = storedKey == monthKey ? ((rawUsage['count'] as int?) ?? 0) : 0;
+      // Plus plan: count actual resume documents created this calendar month.
+      // Using real doc count (not a counter field) means Free-plan generations
+      // this month are automatically included after an upgrade.
+      final monthStart = DateTime(DateTime.now().year, DateTime.now().month, 1);
+      used = loadedResumes
+          .where((r) => !r.createdAt.isBefore(monthStart))
+          .length;
       max = 10;
       unlimited = false;
     }
@@ -201,6 +214,7 @@ class ResumeController extends GetxController {
       final data = Map<String, dynamic>.from(result.data as Map);
 
       final resumeId = data['resumeId'] as String;
+      final aiModel = data['aiModel'] as String?;
       final generated = GeneratedResume.fromMap(
           Map<String, dynamic>.from(data['generatedData'] as Map));
 
@@ -209,6 +223,7 @@ class ResumeController extends GetxController {
         createdAt: DateTime.now(),
         templateId: selectedTemplate.value,
         data: generated,
+        aiModel: aiModel,
       );
 
       resumes.insert(0, record);

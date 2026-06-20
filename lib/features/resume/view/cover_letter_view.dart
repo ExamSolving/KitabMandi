@@ -24,7 +24,18 @@ class _CoverLetterViewState extends State<CoverLetterView> {
     _ctrl = Get.find<CoverLetterController>();
     _resumeCtrl = Get.find<ResumeController>();
 
-    // Auto-select the latest resume if only one exists
+    final args = Get.arguments;
+    if (args is CoverLetterRecord) {
+      // Viewing a saved letter from history — restore fields and show result.
+      _ctrl.generatedLetter.value = args;
+      _ctrl.jobTitleCtrl.text = args.jobTitle;
+      _ctrl.companyCtrl.text = args.companyName;
+      _ctrl.selectedResumeId.value = args.resumeId;
+      return;
+    }
+
+    // New letter flow — clear previous result and auto-select latest resume.
+    _ctrl.generatedLetter.value = null;
     if (_resumeCtrl.resumes.isNotEmpty &&
         _ctrl.selectedResumeId.value.isEmpty) {
       _ctrl.selectedResumeId.value = _resumeCtrl.resumes.first.id;
@@ -323,61 +334,108 @@ class _CoverLetterViewState extends State<CoverLetterView> {
   Widget _buildGenerateButton(bool isDark) {
     return Obx(() {
       final loading = _ctrl.isGenerating.value;
-      return GestureDetector(
-        onTap: loading ? null : _ctrl.generate,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          height: 54,
-          decoration: BoxDecoration(
-            gradient: loading
-                ? null
-                : const LinearGradient(
-                    colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-            color: loading ? Colors.grey.shade300 : null,
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: loading
-                ? []
-                : [
-                    BoxShadow(
-                      color:
-                          const Color(0xFF1565C0).withValues(alpha: 0.4),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
+      final usage = _ctrl.clUsage.value;
+      final limitReached = usage != null && !usage.canGenerate;
+      final disabled = loading || limitReached;
+
+      return Column(
+        children: [
+          GestureDetector(
+            onTap: disabled ? null : _ctrl.generate,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: 54,
+              decoration: BoxDecoration(
+                gradient: disabled
+                    ? null
+                    : const LinearGradient(
+                        colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                color: disabled ? Colors.grey.shade300 : null,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: disabled
+                    ? []
+                    : [
+                        BoxShadow(
+                          color: const Color(0xFF1565C0).withValues(alpha: 0.4),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: loading
+                    ? [
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text('Generating…',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white)),
+                      ]
+                    : limitReached
+                        ? [
+                            Icon(Icons.lock_rounded,
+                                color: Colors.grey.shade500, size: 18),
+                            const SizedBox(width: 8),
+                            Text('Generate Cover Letter',
+                                style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.grey.shade500)),
+                          ]
+                        : [
+                            const Icon(Icons.auto_awesome_rounded,
+                                color: Colors.white, size: 18),
+                            const SizedBox(width: 8),
+                            const Text('Generate Cover Letter',
+                                style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white)),
+                          ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (limitReached)
+            GestureDetector(
+              onTap: () => Get.toNamed('/subscription'),
+              child: RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: const TextStyle(fontSize: 12.5),
+                  children: [
+                    TextSpan(
+                      text: 'Limit reached · ',
+                      style: TextStyle(color: Colors.grey.shade500),
+                    ),
+                    const TextSpan(
+                      text: 'Upgrade to generate more →',
+                      style: TextStyle(
+                        color: Color(0xFF1565C0),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: loading
-                ? [
-                    const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2),
-                    ),
-                    const SizedBox(width: 12),
-                    const Text('Generating…',
-                        style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white)),
-                  ]
-                : [
-                    const Icon(Icons.auto_awesome_rounded,
-                        color: Colors.white, size: 18),
-                    const SizedBox(width: 8),
-                    const Text('Generate Cover Letter',
-                        style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white)),
-                  ],
-          ),
-        ),
+                ),
+              ),
+            )
+          else if (usage != null)
+            Text(
+              '${usage.remaining} left',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+            ),
+        ],
       );
     });
   }
@@ -411,11 +469,19 @@ class _CoverLetterViewState extends State<CoverLetterView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Cover Letter Ready',
-                        style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: theme.colorScheme.onSurface)),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text('Cover Letter Ready',
+                              style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: theme.colorScheme.onSurface)),
+                        ),
+                        const SizedBox(width: 6),
+                        _AiModelBadge(model: letter.aiModel),
+                      ],
+                    ),
                     Text('${letter.jobTitle} · ${letter.companyName}',
                         style: TextStyle(
                             fontSize: 12, color: theme.hintColor)),
@@ -495,18 +561,60 @@ class _CoverLetterViewState extends State<CoverLetterView> {
             ),
           ),
           const SizedBox(height: 10),
-          // Generate another hint
-          Center(
-            child: TextButton.icon(
-              onPressed: _ctrl.resetForm,
-              icon: const Icon(Icons.refresh_rounded, size: 16),
-              label: const Text('Generate another'),
-              style: TextButton.styleFrom(
-                foregroundColor: theme.hintColor,
-                textStyle: const TextStyle(fontSize: 12.5),
+          // Regenerate / upgrade hint
+          Obx(() {
+            final usage = _ctrl.clUsage.value;
+            final limitReached = usage != null && !usage.canGenerate;
+            if (limitReached) {
+              return Center(
+                child: GestureDetector(
+                  onTap: () => Get.toNamed('/subscription'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 9),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1565C0).withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: const Color(0xFF1565C0)
+                              .withValues(alpha: 0.25)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.workspace_premium_rounded,
+                            size: 15, color: Color(0xFF1565C0)),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Upgrade to generate more',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1565C0),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+            return Center(
+              child: TextButton.icon(
+                onPressed: _ctrl.resetForm,
+                icon: const Icon(Icons.refresh_rounded, size: 16),
+                label: Text(
+                  usage != null
+                      ? 'Generate another · ${usage.remaining} left'
+                      : 'Generate another',
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: theme.hintColor,
+                  textStyle: const TextStyle(fontSize: 12.5),
+                ),
               ),
-            ),
-          ),
+            );
+          }),
         ],
       ),
     );
@@ -567,6 +675,40 @@ class _InputTile extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── AI model badge ────────────────────────────────────────────────────────────
+
+class _AiModelBadge extends StatelessWidget {
+  final String? model;
+  const _AiModelBadge({this.model});
+
+  @override
+  Widget build(BuildContext context) {
+    final isSonnet = model?.contains('sonnet') ?? false;
+    final label = isSonnet ? 'Sonnet' : 'Haiku';
+    final color = isSonnet ? const Color(0xFFF59E0B) : const Color(0xFF1565C0);
+    final icon =
+        isSonnet ? Icons.workspace_premium_rounded : Icons.auto_awesome_rounded;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: color),
+          const SizedBox(width: 3),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 10, fontWeight: FontWeight.w700, color: color)),
         ],
       ),
     );

@@ -150,12 +150,14 @@ class ResumeRecord {
   final DateTime createdAt;
   final String templateId;
   final GeneratedResume data;
+  final String? aiModel;
 
   const ResumeRecord({
     required this.id,
     required this.createdAt,
     required this.templateId,
     required this.data,
+    this.aiModel,
   });
 
   factory ResumeRecord.fromDoc(Map<String, dynamic> m, String id) {
@@ -167,6 +169,7 @@ class ResumeRecord {
       templateId: m['templateId'] ?? 'classic',
       data: GeneratedResume.fromMap(
           Map<String, dynamic>.from(m['generatedData'] ?? {})),
+      aiModel: m['aiModel'] as String?,
     );
   }
 }
