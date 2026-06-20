@@ -21,4 +21,5 @@ class AppRoutes {
   static const resume = '/resume';
   static const resumeForm = '/resumeForm';
   static const resumePreview = '/resumePreview';
+  static const coverLetter = '/coverLetter';
 }

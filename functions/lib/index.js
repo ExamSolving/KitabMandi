@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onChatMessageCreated = exports.onListingCreated = void 0;
+exports.generateCoverLetter = exports.generateResume = exports.onChatMessageCreated = exports.onListingCreated = void 0;
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const sdk_1 = require("@anthropic-ai/sdk");
 admin.initializeApp();
 const db = admin.firestore();
 const fcm = admin.messaging();
@@ -266,5 +267,231 @@ exports.onChatMessageCreated = functions.firestore
             functions.logger.error("[onChatMessageCreated] FCM send error:", e.message);
         }
     }
+});
+// ─────────────────────────────────────────────────────────────────────────────
+// generateResume — Callable Function
+// Validates subscription, calls Claude Haiku to build an ATS resume JSON,
+// saves to Firestore, and returns the structured data to the Flutter app.
+//
+// Deploy: firebase deploy --only functions
+// Set API key: firebase functions:config:set anthropic.key="sk-ant-..."
+// ─────────────────────────────────────────────────────────────────────────────
+const RESUME_SYSTEM_PROMPT = `You are an expert ATS (Applicant Tracking System) resume writer and career coach.
+Your job is to generate a highly optimized, keyword-rich resume in structured JSON format.
+
+Rules:
+- Use STAR format for experience bullets (Situation, Task, Action, Result with metrics)
+- Inject relevant keywords from the target JD throughout the resume
+- Write a compelling 3-sentence professional summary
+- Quantify achievements wherever possible (%, numbers, scale)
+- Make every bullet point action-verb-first
+- Return ONLY valid JSON — no markdown fences, no explanation text
+
+JSON Schema:
+{
+  "contact": { "name": string, "email": string, "phone": string, "location": string, "linkedin"?: string, "github"?: string },
+  "summary": string,
+  "education": [{ "degree": string, "institution": string, "year": string, "gpa"?: string }],
+  "skills": { "technical": string[], "soft": string[] },
+  "experience": [{ "title": string, "company": string, "duration": string, "bullets": string[] }],
+  "projects": [{ "title": string, "tech": string, "link"?: string, "bullets": string[] }],
+  "certifications": string[],
+  "keywords_matched": string[]
+}`;
+function buildResumePrompt(data) {
+    const { personalInfo, education, skills, softSkills, experience, projects, certifications, targetJd } = data;
+    let prompt = `Generate an ATS-optimized resume for:
+
+PERSONAL: ${personalInfo.name} | ${personalInfo.email} | ${personalInfo.phone} | ${personalInfo.location}
+${personalInfo.linkedin ? `LinkedIn: ${personalInfo.linkedin}` : ""}
+${personalInfo.github ? `GitHub: ${personalInfo.github}` : ""}
+
+EDUCATION: ${education.degree} from ${education.institution} (${education.year})${education.gpa ? ` | GPA: ${education.gpa}` : ""}
+
+TECHNICAL SKILLS: ${skills.join(", ")}
+SOFT SKILLS: ${softSkills.join(", ")}`;
+    if (experience.length > 0) {
+        prompt += "\n\nEXPERIENCE:\n";
+        experience.forEach((e) => {
+            prompt += `- ${e.title} at ${e.company} (${e.duration}): ${e.description}\n`;
+        });
+    }
+    if (projects.length > 0) {
+        prompt += "\n\nPROJECTS:\n";
+        projects.forEach((p) => {
+            prompt += `- ${p.title} [${p.tech}]${p.link ? ` (${p.link})` : ""}: ${p.description}\n`;
+        });
+    }
+    if (certifications && certifications.length > 0) {
+        prompt += `\n\nCERTIFICATIONS: ${certifications.join(", ")}`;
+    }
+    if (targetJd && targetJd.trim()) {
+        prompt += `\n\nTARGET JOB DESCRIPTION (tailor resume keywords to this):\n${targetJd.trim()}`;
+    }
+    prompt += "\n\nReturn ONLY the JSON object. No extra text.";
+    return prompt;
+}
+exports.generateResume = functions.https.onCall(async (data, context) => {
+    var _a, _b;
+    // 1. Auth
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "Sign in required");
+    }
+    const uid = context.auth.uid;
+    // 2. Load user + subscription
+    const userDoc = await db.collection("users").doc(uid).get();
+    const userData = userDoc.data() || {};
+    const sub = (userData.subscription || {});
+    const plan = sub.plan || "free";
+    // Subscription limits
+    const monthLimits = {
+        free: 0, // tracked by countLifetime, not monthly
+        plus_monthly: 10, plus_annual: 10,
+        pro_monthly: 9999, pro_annual: 9999,
+    };
+    const isFreePlan = plan === "free";
+    const maxCount = isFreePlan ? 1 : ((_a = monthLimits[plan]) !== null && _a !== void 0 ? _a : 1);
+    // 3. Check usage
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const usageRaw = (userData.resumeUsage || {});
+    let currentCount;
+    if (isFreePlan) {
+        currentCount = usageRaw.countLifetime || 0;
+    }
+    else {
+        currentCount =
+            usageRaw.monthKey === monthKey ? (usageRaw.count || 0) : 0;
+    }
+    if (currentCount >= maxCount) {
+        throw new functions.https.HttpsError("resource-exhausted", `limit_reached:${plan}:${maxCount}`);
+    }
+    // 4. Call Claude
+    const apiKey = (_b = functions.config().anthropic) === null || _b === void 0 ? void 0 : _b.key;
+    if (!apiKey) {
+        throw new functions.https.HttpsError("internal", "Anthropic API key not configured");
+    }
+    const anthropic = new sdk_1.default({ apiKey });
+    const message = await anthropic.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 4096,
+        system: RESUME_SYSTEM_PROMPT,
+        messages: [{ role: "user", content: buildResumePrompt(data) }],
+    });
+    const rawText = message.content[0].type === "text" ? message.content[0].text : "";
+    // Strip markdown code fences if present
+    const cleanJson = rawText
+        .replace(/^```(?:json)?\s*/m, "")
+        .replace(/\s*```\s*$/m, "")
+        .trim();
+    let generatedData;
+    try {
+        generatedData = JSON.parse(cleanJson);
+    }
+    catch (_c) {
+        functions.logger.error("[generateResume] JSON parse failed:", rawText);
+        throw new functions.https.HttpsError("internal", "Failed to parse AI response");
+    }
+    // 5. Save resume to Firestore
+    const resumeRef = db.collection("users").doc(uid).collection("resumes").doc();
+    await resumeRef.set({
+        id: resumeRef.id,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        templateId: data.templateId || "classic",
+        inputData: data,
+        generatedData,
+        status: "completed",
+    });
+    // 6. Update usage counter
+    if (isFreePlan) {
+        await db.collection("users").doc(uid).update({
+            "resumeUsage.countLifetime": admin.firestore.FieldValue.increment(1),
+        });
+    }
+    else {
+        await db.collection("users").doc(uid).update({
+            resumeUsage: { count: currentCount + 1, monthKey },
+        });
+    }
+    functions.logger.info(`[generateResume] uid=${uid} plan=${plan} count=${currentCount + 1}`);
+    return { resumeId: resumeRef.id, generatedData };
+});
+// ─────────────────────────────────────────────────────────────────────────────
+// generateCoverLetter — Callable Function
+// Reads the user's existing resume from Firestore, calls Claude to write a
+// personalised cover letter, saves it, and returns the text to the app.
+// ─────────────────────────────────────────────────────────────────────────────
+const COVER_LETTER_SYSTEM_PROMPT = `You are an expert career coach and professional writer specialising in cover letters.
+Write a compelling, personalised cover letter that:
+- Is exactly 3 paragraphs long
+- Paragraph 1: A strong opening hook naming the role and company, and why the applicant is excited about it
+- Paragraph 2: 2-3 specific achievements or skills from the resume that directly match the role
+- Paragraph 3: A confident, action-oriented closing with a call to action
+- Tone: Professional yet warm and personal
+- Length: 230-300 words
+- Do NOT include date, postal address headers, salutation, or sign-off — output only the three body paragraphs
+Return ONLY the cover letter body text. No JSON, no markdown, no labels.`;
+exports.generateCoverLetter = functions.https.onCall(async (data, context) => {
+    var _a, _b;
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "Sign in required");
+    }
+    const uid = context.auth.uid;
+    const { resumeId, jobTitle, companyName, jobDescription } = data;
+    if (!resumeId || !jobTitle || !companyName) {
+        throw new functions.https.HttpsError("invalid-argument", "resumeId, jobTitle and companyName are required");
+    }
+    // Load the resume the user selected
+    const resumeDoc = await db
+        .collection("users")
+        .doc(uid)
+        .collection("resumes")
+        .doc(resumeId)
+        .get();
+    if (!resumeDoc.exists) {
+        throw new functions.https.HttpsError("not-found", "Resume not found");
+    }
+    const gd = resumeDoc.data().generatedData;
+    const contact = gd.contact || {};
+    const skills = (((_a = gd.skills) === null || _a === void 0 ? void 0 : _a.technical) || []).slice(0, 8);
+    const experience = gd.experience || [];
+    const projects = gd.projects || [];
+    const summary = gd.summary || "";
+    const userPrompt = `Write a cover letter for ${contact.name || "the applicant"} applying for the role of ${jobTitle} at ${companyName}.
+
+Professional summary: ${summary}
+Technical skills: ${skills.join(", ")}
+Experience: ${experience.map((e) => `${e.title} at ${e.company} (${e.duration})`).join("; ") || "None listed"}
+Projects: ${projects.map((p) => `${p.title} [${p.tech}]`).join("; ") || "None listed"}
+${jobDescription ? `\nJob description to tailor towards:\n${jobDescription.slice(0, 1000)}` : ""}
+
+Return only the three body paragraphs. No headers, no sign-off.`;
+    const apiKey = (_b = functions.config().anthropic) === null || _b === void 0 ? void 0 : _b.key;
+    if (!apiKey) {
+        throw new functions.https.HttpsError("internal", "Anthropic API key not configured");
+    }
+    const anthropic = new sdk_1.default({ apiKey });
+    const message = await anthropic.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1024,
+        system: COVER_LETTER_SYSTEM_PROMPT,
+        messages: [{ role: "user", content: userPrompt }],
+    });
+    const letterText = message.content[0].type === "text" ? message.content[0].text.trim() : "";
+    // Persist
+    const clRef = db
+        .collection("users")
+        .doc(uid)
+        .collection("coverLetters")
+        .doc();
+    await clRef.set({
+        resumeId,
+        jobTitle,
+        companyName,
+        letterText,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    functions.logger.info(`[generateCoverLetter] uid=${uid} job=${jobTitle} company=${companyName}`);
+    return { coverLetterId: clRef.id, letterText };
 });
 //# sourceMappingURL=index.js.map

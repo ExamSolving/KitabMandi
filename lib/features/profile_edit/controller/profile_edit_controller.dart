@@ -286,7 +286,7 @@ class ProfileEditController extends GetxController {
       // 3. Delete all subcollections under the user document so the parent doc
       //    is fully removed (Firestore ghost-documents appear when subcollections
       //    survive after the parent is deleted).
-      for (final sub in ['resumes', 'wishlist', 'notifications']) {
+      for (final sub in ['resumes', 'wishlist', 'notifications', 'coverLetters']) {
         final snap =
             await fs.collection('users').doc(uid).collection(sub).get();
         for (final doc in snap.docs) {

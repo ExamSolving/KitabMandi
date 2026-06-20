@@ -507,3 +507,107 @@ export const generateResume = functions.https.onCall(
     return { resumeId: resumeRef.id, generatedData };
   }
 );
+
+// ─────────────────────────────────────────────────────────────────────────────
+// generateCoverLetter — Callable Function
+// Reads the user's existing resume from Firestore, calls Claude to write a
+// personalised cover letter, saves it, and returns the text to the app.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const COVER_LETTER_SYSTEM_PROMPT = `You are an expert career coach and professional writer specialising in cover letters.
+Write a compelling, personalised cover letter that:
+- Is exactly 3 paragraphs long
+- Paragraph 1: A strong opening hook naming the role and company, and why the applicant is excited about it
+- Paragraph 2: 2-3 specific achievements or skills from the resume that directly match the role
+- Paragraph 3: A confident, action-oriented closing with a call to action
+- Tone: Professional yet warm and personal
+- Length: 230-300 words
+- Do NOT include date, postal address headers, salutation, or sign-off — output only the three body paragraphs
+Return ONLY the cover letter body text. No JSON, no markdown, no labels.`;
+
+interface CoverLetterInput {
+  resumeId: string;
+  jobTitle: string;
+  companyName: string;
+  jobDescription?: string;
+}
+
+export const generateCoverLetter = functions.https.onCall(
+  async (data: CoverLetterInput, context: functions.https.CallableContext) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError("unauthenticated", "Sign in required");
+    }
+    const uid = context.auth.uid;
+    const { resumeId, jobTitle, companyName, jobDescription } = data;
+
+    if (!resumeId || !jobTitle || !companyName) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "resumeId, jobTitle and companyName are required"
+      );
+    }
+
+    // Load the resume the user selected
+    const resumeDoc = await db
+      .collection("users")
+      .doc(uid)
+      .collection("resumes")
+      .doc(resumeId)
+      .get();
+
+    if (!resumeDoc.exists) {
+      throw new functions.https.HttpsError("not-found", "Resume not found");
+    }
+
+    const gd = resumeDoc.data()!.generatedData as Record<string, unknown>;
+    const contact = (gd.contact as Record<string, string>) || {};
+    const skills = ((gd.skills as Record<string, string[]>)?.technical || []).slice(0, 8);
+    const experience = (gd.experience as Array<Record<string, string>>) || [];
+    const projects = (gd.projects as Array<Record<string, string>>) || [];
+    const summary = (gd.summary as string) || "";
+
+    const userPrompt = `Write a cover letter for ${contact.name || "the applicant"} applying for the role of ${jobTitle} at ${companyName}.
+
+Professional summary: ${summary}
+Technical skills: ${skills.join(", ")}
+Experience: ${experience.map((e) => `${e.title} at ${e.company} (${e.duration})`).join("; ") || "None listed"}
+Projects: ${projects.map((p) => `${p.title} [${p.tech}]`).join("; ") || "None listed"}
+${jobDescription ? `\nJob description to tailor towards:\n${jobDescription.slice(0, 1000)}` : ""}
+
+Return only the three body paragraphs. No headers, no sign-off.`;
+
+    const apiKey = functions.config().anthropic?.key;
+    if (!apiKey) {
+      throw new functions.https.HttpsError("internal", "Anthropic API key not configured");
+    }
+
+    const anthropic = new Anthropic({ apiKey });
+    const message = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 1024,
+      system: COVER_LETTER_SYSTEM_PROMPT,
+      messages: [{ role: "user", content: userPrompt }],
+    });
+
+    const letterText =
+      message.content[0].type === "text" ? message.content[0].text.trim() : "";
+
+    // Persist
+    const clRef = db
+      .collection("users")
+      .doc(uid)
+      .collection("coverLetters")
+      .doc();
+
+    await clRef.set({
+      resumeId,
+      jobTitle,
+      companyName,
+      letterText,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    functions.logger.info(`[generateCoverLetter] uid=${uid} job=${jobTitle} company=${companyName}`);
+    return { coverLetterId: clRef.id, letterText };
+  }
+);

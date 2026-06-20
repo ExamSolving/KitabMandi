@@ -24,6 +24,7 @@ import 'package:kitab_mandi/features/seller/view/seller_listing_view.dart';
 import 'package:kitab_mandi/features/splash/binding/splash_binding.dart';
 import 'package:kitab_mandi/features/splash/view/splash_view.dart';
 import 'package:kitab_mandi/features/resume/binding/resume_binding.dart';
+import 'package:kitab_mandi/features/resume/view/cover_letter_view.dart';
 import 'package:kitab_mandi/features/resume/view/resume_form_view.dart';
 import 'package:kitab_mandi/features/resume/view/resume_preview_view.dart';
 import 'package:kitab_mandi/features/subscription/view/subscription_view.dart';
@@ -119,6 +120,11 @@ class AppPages {
     GetPage(
       name: AppRoutes.resumePreview,
       page: () => const ResumePreviewView(),
+    ),
+    GetPage(
+      name: AppRoutes.coverLetter,
+      page: () => const CoverLetterView(),
+      binding: ResumeBinding(),
     ),
   ];
 }
