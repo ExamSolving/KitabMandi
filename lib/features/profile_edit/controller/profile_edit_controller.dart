@@ -239,18 +239,32 @@ class ProfileEditController extends GetxController {
       barrierDismissible: false,
     );
 
+    final storage = FirebaseStorage.instance;
+
+    Future<void> safeDeleteStorageUrl(String url) async {
+      if (url.isEmpty) return;
+      try {
+        await storage.refFromURL(url).delete();
+      } catch (_) {}
+    }
+
     try {
-      // 1. Delete all listings posted by this user.
+      // 1. Delete all listings posted by this user + their Storage images.
       final listingsSnap = await fs
           .collection('listings')
           .where('seller.uid', isEqualTo: uid)
           .get();
       for (final doc in listingsSnap.docs) {
+        final images =
+            List<String>.from(doc.data()['images'] as List? ?? []);
+        for (final url in images) {
+          await safeDeleteStorageUrl(url);
+        }
         await doc.reference.delete();
       }
 
-      // 2. Delete all chats (and their messages subcollection) where user is
-      //    a participant.
+      // 2. Delete all chats where user is a participant, their messages, and
+      //    any images those messages reference in Storage.
       final chatsSnap = await fs
           .collection('chats')
           .where('participants', arrayContains: uid)
@@ -259,6 +273,11 @@ class ProfileEditController extends GetxController {
         final msgsSnap =
             await chatDoc.reference.collection('messages').get();
         for (final msg in msgsSnap.docs) {
+          final data = msg.data();
+          if (data['type'] == 'image') {
+            await safeDeleteStorageUrl(
+                data['imageUrl'] as String? ?? '');
+          }
           await msg.reference.delete();
         }
         await chatDoc.reference.delete();
@@ -279,12 +298,9 @@ class ProfileEditController extends GetxController {
       //    are gone, so no ghost document remains in the console.
       await fs.collection('users').doc(uid).delete();
 
-      // 5. Delete avatar from Storage (ignore if it never existed).
+      // 5. Delete avatar from Storage.
       try {
-        await FirebaseStorage.instance
-            .ref()
-            .child('users/$uid/avatar.jpg')
-            .delete();
+        await storage.ref().child('users/$uid/avatar.jpg').delete();
       } catch (_) {}
 
       // 6. Delete Firebase Auth account — must be last authenticated call.
