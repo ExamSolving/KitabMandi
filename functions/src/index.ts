@@ -1,6 +1,9 @@
 import * as functions from "firebase-functions";
+import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import Anthropic from "@anthropic-ai/sdk";
+
+const anthropicKey = defineSecret("ANTHROPIC_KEY");
 
 admin.initializeApp();
 
@@ -408,7 +411,9 @@ SOFT SKILLS: ${softSkills.join(", ")}`;
   return prompt;
 }
 
-export const generateResume = functions.https.onCall(
+export const generateResume = functions
+  .runWith({ secrets: [anthropicKey] })
+  .https.onCall(
   async (data: ResumeInput, context: functions.https.CallableContext) => {
     // 1. Auth
     if (!context.auth) {
@@ -452,7 +457,7 @@ export const generateResume = functions.https.onCall(
     }
 
     // 4. Call Claude
-    const apiKey = functions.config().anthropic?.key;
+    const apiKey = anthropicKey.value();
     if (!apiKey) {
       throw new functions.https.HttpsError("internal", "Anthropic API key not configured");
     }
@@ -532,7 +537,9 @@ interface CoverLetterInput {
   jobDescription?: string;
 }
 
-export const generateCoverLetter = functions.https.onCall(
+export const generateCoverLetter = functions
+  .runWith({ secrets: [anthropicKey] })
+  .https.onCall(
   async (data: CoverLetterInput, context: functions.https.CallableContext) => {
     if (!context.auth) {
       throw new functions.https.HttpsError("unauthenticated", "Sign in required");
@@ -576,7 +583,7 @@ ${jobDescription ? `\nJob description to tailor towards:\n${jobDescription.slice
 
 Return only the three body paragraphs. No headers, no sign-off.`;
 
-    const apiKey = functions.config().anthropic?.key;
+    const apiKey = anthropicKey.value();
     if (!apiKey) {
       throw new functions.https.HttpsError("internal", "Anthropic API key not configured");
     }
