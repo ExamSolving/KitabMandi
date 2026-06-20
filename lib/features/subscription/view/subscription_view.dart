@@ -214,14 +214,19 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                 ),
                 const SizedBox(height: 20),
 
+                // ── Feature comparison strip ─────────────────────────────────
+                _FeatureCompareStrip(isDark: isDark),
+                const SizedBox(height: 20),
+
                 // ── Plan cards ──────────────────────────────────────────────
                 _PlanCard(
                   title: 'Free',
                   price: '₹0',
                   period: 'forever',
                   color: Colors.grey,
+                  listingFeature: '2 active listings',
+                  resumeFeature: '1 AI resume (lifetime)',
                   features: const [
-                    '2 active listings',
                     'Basic chat',
                     'Standard visibility',
                   ],
@@ -236,11 +241,12 @@ class _SubscriptionViewState extends State<SubscriptionView> {
 
                 _PlanCard(
                   title: 'Plus',
-                  price: _annual ? '₹249' : '₹29',
-                  period: _annual ? '/year  (~₹20.75/mo)' : '/month',
+                  price: _annual ? '₹699' : '₹79',
+                  period: _annual ? '/year  (~₹58/mo · save 26%)' : '/month',
                   color: AppColors.primary,
+                  listingFeature: 'Unlimited listings',
+                  resumeFeature: '10 AI resumes / month',
                   features: const [
-                    'Unlimited listings',
                     'All chat features',
                     'Priority visibility',
                   ],
@@ -266,11 +272,12 @@ class _SubscriptionViewState extends State<SubscriptionView> {
 
                 _PlanCard(
                   title: 'Pro',
-                  price: _annual ? '₹399' : '₹49',
-                  period: _annual ? '/year  (~₹33.25/mo)' : '/month',
+                  price: _annual ? '₹1,199' : '₹149',
+                  period: _annual ? '/year  (~₹100/mo · save 33%)' : '/month',
                   color: const Color(0xFFF57C00),
+                  listingFeature: 'Unlimited listings',
+                  resumeFeature: 'Unlimited AI resumes',
                   features: const [
-                    'Everything in Plus',
                     '3 featured boosts/month',
                     'Trusted Seller badge',
                   ],
@@ -329,7 +336,7 @@ class _CurrentPlanBanner extends StatelessWidget {
 
     String subtitle;
     if (isFree) {
-      subtitle = 'You can post up to ${RazorpayConfig.freeListingLimit} listings. Upgrade to post more.';
+      subtitle = 'Up to ${RazorpayConfig.freeListingLimit} listings & 1 AI resume lifetime. Upgrade for more.';
     } else if (expiresAt != null) {
       final d = expiresAt!;
       subtitle = 'Active until ${d.day}/${d.month}/${d.year}';
@@ -421,7 +428,7 @@ class _BillingToggle extends StatelessWidget {
       child: Row(
         children: [
           _Tab(label: 'Monthly', selected: !annual, onTap: () => onChanged(false), isDark: isDark),
-          _Tab(label: 'Annual  🎉 Save ~28%', selected: annual, onTap: () => onChanged(true), isDark: isDark),
+          _Tab(label: 'Annual  🎉 Save up to 33%', selected: annual, onTap: () => onChanged(true), isDark: isDark),
         ],
       ),
     );
@@ -480,6 +487,8 @@ class _PlanCard extends StatelessWidget {
   final String price;
   final String period;
   final Color color;
+  final String listingFeature;
+  final String resumeFeature;
   final List<String> features;
   final bool isCurrent;
   final bool isPopular;
@@ -492,6 +501,8 @@ class _PlanCard extends StatelessWidget {
     required this.price,
     required this.period,
     required this.color,
+    required this.listingFeature,
+    required this.resumeFeature,
     required this.features,
     required this.isCurrent,
     required this.isPopular,
@@ -606,25 +617,51 @@ class _PlanCard extends StatelessWidget {
             ),
             const SizedBox(height: 14),
 
-            // Features
-            ...features.map(
-              (f) => Padding(
-                padding: const EdgeInsets.only(bottom: 7),
-                child: Row(
-                  children: [
-                    Icon(Icons.check_circle_rounded, size: 16, color: color),
-                    const SizedBox(width: 8),
-                    Text(
-                      f,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isDark ? Colors.white70 : Colors.black87,
-                      ),
-                    ),
-                  ],
+            // ── Highlighted feature pills ──────────────────────────────────
+            _FeaturePill(
+              icon: Icons.storefront_rounded,
+              label: listingFeature,
+              color: color,
+              isDark: isDark,
+            ),
+            const SizedBox(height: 6),
+            _FeaturePill(
+              icon: Icons.description_rounded,
+              label: resumeFeature,
+              color: color,
+              isDark: isDark,
+            ),
+
+            if (features.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Divider(
+                  height: 1,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.06),
                 ),
               ),
-            ),
+              // ── Other features ────────────────────────────────────────────
+              ...features.map(
+                (f) => Padding(
+                  padding: const EdgeInsets.only(bottom: 7),
+                  child: Row(
+                    children: [
+                      Icon(Icons.check_circle_rounded, size: 16, color: color),
+                      const SizedBox(width: 8),
+                      Text(
+                        f,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
 
             if (onTap != null) ...[
               const SizedBox(height: 16),
@@ -662,6 +699,208 @@ class _PlanCard extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Feature pill — highlighted listing / resume row inside a plan card
+// ─────────────────────────────────────────────────────────────────────────────
+class _FeaturePill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final bool isDark;
+
+  const _FeaturePill({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isDark ? 0.14 : 0.07),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 15, color: color),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Feature comparison strip — quick side-by-side for Listings vs AI Resumes
+// ─────────────────────────────────────────────────────────────────────────────
+class _FeatureCompareStrip extends StatelessWidget {
+  final bool isDark;
+  const _FeatureCompareStrip({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = isDark ? const Color(0xFF1A1D23) : Colors.white;
+    final border = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.black.withValues(alpha: 0.06);
+    final headerColor = isDark ? Colors.white38 : Colors.black38;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: border),
+      ),
+      child: Column(
+        children: [
+          // Header row
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+            child: Row(
+              children: [
+                const SizedBox(width: 110),
+                _ColHeader('Free', headerColor),
+                _ColHeader('Plus', headerColor),
+                _ColHeader('Pro', headerColor),
+              ],
+            ),
+          ),
+          Divider(height: 1, color: border),
+          _CompareRow(
+            icon: Icons.storefront_rounded,
+            feature: 'Listings',
+            free: '2',
+            plus: 'Unlimited',
+            pro: 'Unlimited',
+            isDark: isDark,
+            freeColor: Colors.grey,
+            paidColor: AppColors.primary,
+          ),
+          Divider(height: 1, color: border),
+          _CompareRow(
+            icon: Icons.description_rounded,
+            feature: 'AI Resumes',
+            free: '1 lifetime',
+            plus: '10/month',
+            pro: 'Unlimited',
+            isDark: isDark,
+            freeColor: Colors.grey,
+            paidColor: AppColors.primary,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ColHeader extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _ColHeader(this.label, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: color,
+          letterSpacing: 0.4,
+        ),
+      ),
+    );
+  }
+}
+
+class _CompareRow extends StatelessWidget {
+  final IconData icon;
+  final String feature;
+  final String free;
+  final String plus;
+  final String pro;
+  final bool isDark;
+  final Color freeColor;
+  final Color paidColor;
+
+  const _CompareRow({
+    required this.icon,
+    required this.feature,
+    required this.free,
+    required this.plus,
+    required this.pro,
+    required this.isDark,
+    required this.freeColor,
+    required this.paidColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = isDark ? Colors.white70 : Colors.black87;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: isDark ? Colors.white38 : Colors.black38),
+          const SizedBox(width: 6),
+          SizedBox(
+            width: 74,
+            child: Text(feature,
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: textColor)),
+          ),
+          Expanded(
+            child: Text(free,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: freeColor)),
+          ),
+          Expanded(
+            child: Text(plus,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: paidColor)),
+          ),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(pro,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFFF57C00))),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -847,7 +1086,7 @@ class _SuccessSheet extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'You\'re now on the ${SubscriptionService.planLabel(planKey)} plan. Enjoy unlimited listings!',
+            'You\'re now on the ${SubscriptionService.planLabel(planKey)} plan. Enjoy unlimited listings and more AI resumes!',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13.5,

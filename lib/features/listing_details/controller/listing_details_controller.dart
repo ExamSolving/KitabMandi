@@ -7,6 +7,7 @@ import 'package:kitab_mandi/features/dashboard/controller/home_controller.dart';
 import 'package:kitab_mandi/features/dashboard/controller/my_ads_controller.dart';
 import 'package:kitab_mandi/features/dashboard/model/listing_model.dart';
 import 'package:kitab_mandi/features/listing/domain/repositories/i_listing_repository.dart';
+import 'package:kitab_mandi/routes/app_routes.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ListingDetailsController extends GetxController {
@@ -44,22 +45,27 @@ class ListingDetailsController extends GetxController {
       await _listingRepo.deleteListing(docId, images);
 
       if (Get.isDialogOpen ?? false) Get.back();
-      Get.snackbar(
-        'Deleted',
-        'Listing removed successfully',
-        snackPosition: SnackPosition.BOTTOM,
-      );
 
-      await Future.delayed(const Duration(milliseconds: 600));
-      if (Get.isOverlaysOpen) Get.back();
-      Get.back(result: true);
-
+      // Refresh home and my-ads feeds before navigating away.
       if (Get.isRegistered<HomeController>()) {
-        Get.find<HomeController>().fetchTopViewedListings();
+        final hc = Get.find<HomeController>();
+        hc.fetchAllListings();
+        hc.fetchTopViewedListings();
       }
       if (Get.isRegistered<MyAdsController>()) {
         Get.find<MyAdsController>().fetchMyAds();
       }
+
+      // Navigate to dashboard, clearing the detail screen from the stack.
+      Get.offAllNamed(AppRoutes.dashboard);
+
+      Get.snackbar(
+        'Deleted',
+        'Listing removed successfully',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF2E7D32),
+        colorText: Colors.white,
+      );
     } catch (e) {
       debugPrint('DELETE ERROR: $e');
       if (Get.isDialogOpen ?? false) Get.back();

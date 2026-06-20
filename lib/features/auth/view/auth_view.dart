@@ -20,6 +20,9 @@ class _AuthViewState extends State<AuthView> with TickerProviderStateMixin {
   final AuthController _ctrl = Get.find<AuthController>();
   final LanguageController _langCtrl = Get.find<LanguageController>();
 
+  // Lives in State so it's created/destroyed with the widget, not the permanent controller.
+  final _formKey = GlobalKey<FormState>();
+
   // ── Controllers ─────────────────────────────────────────────────────────────
   late final AnimationController _entryCtrl;
   late final AnimationController _floatCtrl;
@@ -224,6 +227,7 @@ class _AuthViewState extends State<AuthView> with TickerProviderStateMixin {
                     isDark: isDark,
                     cardBg: cardBg,
                     theme: theme,
+                    formKey: _formKey,
                   ),
                 ),
               ),
@@ -330,12 +334,14 @@ class _FormCard extends StatelessWidget {
   final bool isDark;
   final Color cardBg;
   final ThemeData theme;
+  final GlobalKey<FormState> formKey;
 
   const _FormCard({
     required this.ctrl,
     required this.isDark,
     required this.cardBg,
     required this.theme,
+    required this.formKey,
   });
 
   @override
@@ -367,7 +373,7 @@ class _FormCard extends StatelessWidget {
             bottomInset + 28,
           ),
           child: Form(
-            key: ctrl.formKey,
+            key: formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -557,7 +563,7 @@ class _FormCard extends StatelessWidget {
                   isLoading: ctrl.isLoading.value,
                   onPressed: () {
                     FocusScope.of(context).unfocus();
-                    if (ctrl.formKey.currentState!.validate()) {
+                    if (formKey.currentState!.validate()) {
                       ctrl.submit();
                     }
                   },

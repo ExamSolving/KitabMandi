@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:kitab_mandi/core/constants/app_color.dart';
+import 'package:kitab_mandi/core/services/device_service.dart';
 import 'package:kitab_mandi/core/services/location_service.dart';
 import 'package:kitab_mandi/core/storage/location_storage.dart';
 import 'package:kitab_mandi/core/utils/app_snackbar.dart';
@@ -580,6 +581,16 @@ class SellerController extends GetxController {
     return true;
   }
 
+  Future<void> _stampDeviceLimit() async {
+    try {
+      final deviceId = await DeviceService.getDeviceId();
+      await FirebaseFirestore.instance
+          .collection('device_limits')
+          .doc(deviceId)
+          .set({'lastListingAt': FieldValue.serverTimestamp()}, SetOptions(merge: true));
+    } catch (_) {}
+  }
+
   bool _err(String msg) {
     AppSnackbar.error(msg);
     return false;
@@ -668,9 +679,10 @@ class SellerController extends GetxController {
           'views': 0,
           'viewedBy': [],
         });
-        // Stamp the user doc so the dashboard can enforce the 24-hour limit
-        // synchronously from the already-loaded userData on the next sell tap.
+        // Stamp user doc (account-level) and device_limits (device-level) so
+        // switching Gmail accounts on the same device doesn't bypass the limit.
         await _authRepo.updateLastListingAt(user.uid);
+        _stampDeviceLimit(); // fire-and-forget; don't block the UX
         await Get.find<AuthController>().fetchUserData();
 
         Get.offAllNamed(AppRoutes.dashboard);

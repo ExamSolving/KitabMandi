@@ -23,6 +23,9 @@ import 'package:kitab_mandi/features/dashboard/view/dashboard_view.dart';
 import 'package:kitab_mandi/features/seller/view/seller_listing_view.dart';
 import 'package:kitab_mandi/features/splash/binding/splash_binding.dart';
 import 'package:kitab_mandi/features/splash/view/splash_view.dart';
+import 'package:kitab_mandi/features/resume/binding/resume_binding.dart';
+import 'package:kitab_mandi/features/resume/view/resume_form_view.dart';
+import 'package:kitab_mandi/features/resume/view/resume_preview_view.dart';
 import 'package:kitab_mandi/features/subscription/view/subscription_view.dart';
 import 'package:kitab_mandi/features/wishlist/view/wishlist_view.dart';
 import 'package:kitab_mandi/features/wrapper/wrapper_view.dart';
@@ -52,7 +55,12 @@ class AppPages {
     GetPage(
       name: AppRoutes.dashboard,
       page: () => const DashboardView(),
-      bindings: [DashboardBinding(), HomeBinding(), ProfileBinding(), ChatBinding()],
+      bindings: [
+        DashboardBinding(),
+        HomeBinding(),
+        ProfileBinding(),
+        ChatBinding(),
+      ],
     ),
 
     GetPage(
@@ -94,10 +102,7 @@ class AppPages {
       page: () => HelpSupportView(),
       binding: HelpSupportBinding(),
     ),
-    GetPage(
-      name: AppRoutes.notifications,
-      page: () => NotificationView(),
-    ),
+    GetPage(name: AppRoutes.notifications, page: () => NotificationView()),
     GetPage(
       name: AppRoutes.editProfile,
       page: () => ProfileEditView(),
@@ -105,9 +110,15 @@ class AppPages {
         Get.lazyPut(() => ProfileEditController(Get.find()));
       }),
     ),
+    GetPage(name: AppRoutes.subscription, page: () => const SubscriptionView()),
     GetPage(
-      name: AppRoutes.subscription,
-      page: () => const SubscriptionView(),
+      name: AppRoutes.resumeForm,
+      page: () => const ResumeFormView(),
+      binding: ResumeBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.resumePreview,
+      page: () => const ResumePreviewView(),
     ),
   ];
 }

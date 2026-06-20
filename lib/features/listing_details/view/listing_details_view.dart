@@ -1,15 +1,14 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:kitab_mandi/core/constants/app_color.dart';
 import 'package:kitab_mandi/features/dashboard/controller/chat_controller.dart';
 import 'package:kitab_mandi/features/dashboard/model/listing_model.dart';
 import 'package:kitab_mandi/features/listing_details/controller/listing_details_controller.dart';
 import 'package:kitab_mandi/routes/app_routes.dart';
-import 'package:kitab_mandi/widgets/app_button.dart';
 import 'package:kitab_mandi/widgets/app_cached_image_network.dart';
 import 'package:kitab_mandi/widgets/app_image_view.dart';
-import 'package:kitab_mandi/widgets/app_text.dart';
 
 class ListingDetailsView extends StatefulWidget {
   final ListingModel listing;
@@ -31,400 +30,661 @@ class _ListingDetailsViewState extends State<ListingDetailsView> {
 
   @override
   void initState() {
-    controller.incrementViews(widget.docId);
     super.initState();
+    controller.incrementViews(widget.docId);
   }
 
-  Color _bg(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFF0F1115)
-      : Colors.white;
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
-  Color _card(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFF1A1D23)
-      : Colors.white;
-
-  Color _textSecondary(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-      ? Colors.white60
-      : Colors.black54;
-
-  @override
-  Widget build(BuildContext context) {
-    final images = List<String>.from(widget.listing.images);
-
-    return Scaffold(
-      backgroundColor: _bg(context),
-      // ================= APP BAR =================
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: Text('ad_details'.tr),
-      ),
-
-      body: Column(
-        children: [
-          // ================= IMAGE SLIDER =================
-          Stack(
-            children: [
-              CarouselSlider(
-                options: CarouselOptions(
-                  height: 260,
-                  viewportFraction: 1,
-                  onPageChanged: (index, _) => controller.changeIndex(index),
-                ),
-                items: images.map((img) {
-                  return GestureDetector(
-                    onTap: () {
-                      Get.to(
-                        () => FullScreenImageView(
-                          images: images,
-                          initialIndex: images.indexOf(img),
-                        ),
-                      );
-                    },
-                    child: AppCachedImageNetwork(
-                      width: MediaQuery.of(context).size.width,
-                      fit: BoxFit.cover,
-                      imageUrl: img,
-                    ),
-                  );
-                }).toList(),
-              ),
-
-              //  DOTS
-              Positioned(
-                bottom: 12,
-                left: 0,
-                right: 0,
-                child: Obx(
-                  () => Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(images.length, (index) {
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        width: controller.currentIndex.value == index ? 10 : 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: controller.currentIndex.value == index
-                              ? AppColors.primaryDark
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // ================= DETAILS =================
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  //  PRICE
-
-                  ///  VIEWS
-                  Row(
-                    mainAxisAlignment: .spaceBetween,
-                    children: [
-                      AppText(
-                        "₹ ${widget.listing.price}",
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.visibility_rounded,
-                              size: 16,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 6),
-
-                            /// 👁 VIEWS COUNT
-                            Text(
-                              formatViews(widget.listing.views),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  //  TITLE
-                  AppText(
-                    widget.listing.title,
-                    maxLines: 20,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  //  LOCATION (FIXED OVERFLOW )
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.location_on, size: 16),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: AppText(
-                          widget.listing.location['fullAddress'] ?? "",
-                          maxLines: 2,
-
-                          style: TextStyle(color: _textSecondary(context)),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  //  DETAILS CARD
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: _card(context),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        _row(context, 'category'.tr, widget.listing.mainCategory),
-                        _row(
-                          context,
-                          _getSubTitle(widget.listing),
-                          widget.listing.subCategory,
-                        ),
-
-                        if (widget.listing.childCategory.isNotEmpty)
-                          _row(
-                            context,
-                            _getChildTitle(widget.listing),
-                            widget.listing.childCategory,
-                          ),
-
-                        _row(context, 'condition'.tr, widget.listing.condition),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  //  DESCRIPTION
-                  AppText(
-                    'description'.tr,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  AppText(
-                    widget.listing.description,
-                    maxLines: 100,
-                    style: TextStyle(
-                      height: 1.5,
-                      color: _textSecondary(context),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-
-                  const SizedBox(height: 90),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-
-      // ================= BOTTOM BUTTONS =================
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
-        decoration: BoxDecoration(
-          color: _card(context),
-          boxShadow: [
-            BoxShadow(color: AppColors.black.withValues(alpha: 0.05), blurRadius: 10),
-          ],
-        ),
-        child: Builder(
-          builder: (context) {
-            final currentUid = controller.currentUser?.uid;
-            final sellerUid = widget.listing.seller['uid'];
-
-            ///  CHECK OWNER
-            final isOwner = currentUid == sellerUid;
-
-            if (isOwner) {
-              // ================= OWNER UI =================
-              final isSold = widget.listing.isSold == true;
-              return Row(
-                children: [
-                  // ✏️ EDIT — disabled once the listing is marked sold
-                  Expanded(
-                    child: AppButton(
-                      text: 'edit'.tr,
-                      onPressed: isSold
-                          ? null
-                          : () {
-                              Get.toNamed(
-                                AppRoutes.addListing,
-                                arguments: {"listing": widget.listing},
-                              );
-                            },
-                    ),
-                  ),
-
-                  const SizedBox(width: 10),
-
-                  // 🗑 DELETE
-                  Expanded(
-                    child: Obx(
-                      () => AppButton(
-                        text: 'remove'.tr,
-                        isLoading: controller.isDeleting.value,
-                        backgroundColor: AppColors.secondaryDark,
-                        onPressed: () {
-                          controller.confirmDelete(widget.listing);
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            } else {
-              // ================= OTHER USER UI =================
-              return Row(
-                children: [
-                  // 💬 CHAT
-                  Expanded(
-                    child: AppButton(
-                      backgroundColor: AppColors.secondaryDark,
-                      text: 'chat_seller'.tr,
-                      onPressed: () async {
-                        await chatController.startChat(widget.listing);
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(width: 10),
-
-                  // 📞 CALL
-                  Expanded(
-                    child: AppButton(
-                      text: 'call_seller'.tr,
-                      backgroundColor: Colors.green,
-                      onPressed: () {
-                        controller.makePhoneCall(
-                          widget.listing.seller['phone'],
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              );
-            }
-          },
-        ),
-      ),
-    );
-  }
-
-  String _getSubTitle(ListingModel listing) {
-    switch (listing.mainCategory) {
-      case "School Books":
+  String _subTitle(ListingModel l) {
+    switch (l.mainCategory) {
+      case 'School Books':
         return 'board'.tr;
-      case "Academic Books":
+      case 'Academic Books':
         return 'stream'.tr;
-      case "Competitive Exams":
+      case 'Competitive Exams':
         return 'exam_type'.tr;
       default:
         return 'sub_category'.tr;
     }
   }
 
-  String _getChildTitle(ListingModel listing) {
-    switch (listing.mainCategory) {
-      case "School Books":
+  String _childTitle(ListingModel l) {
+    switch (l.mainCategory) {
+      case 'School Books':
         return 'class_label'.tr;
-      case "Academic Books":
+      case 'Academic Books':
         return 'branch'.tr;
-      case "Competitive Exams":
+      case 'Competitive Exams':
         return 'exam'.tr;
       default:
         return 'type'.tr;
     }
   }
 
-  //  ROW FIXED RESPONSIVE
-  Widget _row(BuildContext context, String title, dynamic value) {
-    return Visibility(
-      visible: value.toString().isNotEmpty ? true : false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
+  String _fmtViews(int v) {
+    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M views';
+    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K views';
+    return '$v views';
+  }
+
+  Color _conditionColor(String c) {
+    switch (c.toLowerCase()) {
+      case 'new':
+        return const Color(0xFF10B981);
+      case 'like new':
+        return const Color(0xFF3B82F6);
+      default:
+        return const Color(0xFFF59E0B);
+    }
+  }
+
+  // ── Build ──────────────────────────────────────────────────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final size = MediaQuery.of(context).size;
+    final topPad = MediaQuery.of(context).padding.top;
+
+    final images = List<String>.from(widget.listing.images);
+    // Responsive image height: 75% of screen width, minimum 260
+    final imageHeight = (size.width * 0.78).clamp(260.0, 340.0) + topPad;
+
+    final bg = isDark ? const Color(0xFF0F1115) : const Color(0xFFF5F6FA);
+    final cardBg = isDark ? const Color(0xFF1A1D23) : Colors.white;
+    final subText = isDark ? Colors.white60 : Colors.black54;
+    final onSurface = isDark ? Colors.white : const Color(0xFF1A1D23);
+
+    final sellerName =
+        widget.listing.seller['name']?.toString().trim() ?? '';
+    final initial =
+        sellerName.isNotEmpty ? sellerName[0].toUpperCase() : '?';
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        backgroundColor: bg,
+        extendBodyBehindAppBar: true,
+        // Transparent floating app bar — back button overlays the hero image.
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          leading: GestureDetector(
+            onTap: Get.back,
+            child: Container(
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.42),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white, size: 18),
+            ),
+          ),
+        ),
+
+        body: Column(
           children: [
-            Expanded(
-              flex: 4,
-              child: AppText(
-                title,
-                style: TextStyle(color: Colors.grey.shade500),
+            // ── Hero image ─────────────────────────────────────────────────
+            GestureDetector(
+              // Single tap handler on the whole image area — uses the reactive
+              // current index so it always opens the page the user is on.
+              onTap: () {
+                if (images.isNotEmpty) {
+                  Get.to(() => FullScreenImageView(
+                        images: images,
+                        initialIndex: controller.currentIndex.value,
+                      ));
+                }
+              },
+              child: SizedBox(
+              height: imageHeight,
+              child: Stack(
+                children: [
+                  // Carousel — items are plain images, no nested GestureDetector
+                  CarouselSlider(
+                    options: CarouselOptions(
+                      height: imageHeight,
+                      viewportFraction: 1,
+                      onPageChanged: (i, _) => controller.changeIndex(i),
+                    ),
+                    items: images.isNotEmpty
+                        ? images.map((img) => AppCachedImageNetwork(
+                              width: size.width,
+                              fit: BoxFit.cover,
+                              imageUrl: img,
+                            )).toList()
+                        : [
+                            Container(
+                              color: isDark
+                                  ? const Color(0xFF1A1D23)
+                                  : const Color(0xFFF0F0F0),
+                              child: Icon(Icons.menu_book_rounded,
+                                  size: 64,
+                                  color: AppColors.primary
+                                      .withValues(alpha: 0.3)),
+                            ),
+                          ],
+                  ),
+
+                  // Bottom gradient — taller so it covers the full info bar
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: imageHeight * 0.60,
+                    child: const DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.transparent, Color(0xDD000000)],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Single bottom info bar: views → price + condition → dots
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Views pill
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.45),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.visibility_rounded,
+                                    size: 13, color: Colors.white70),
+                                const SizedBox(width: 5),
+                                Text(
+                                  _fmtViews(widget.listing.views),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 6),
+
+                        // Price (left) + Condition badge (right)
+                        Padding(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 16),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                '₹${widget.listing.price}',
+                                style: const TextStyle(
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: -0.5,
+                                  shadows: [
+                                    Shadow(
+                                        blurRadius: 12,
+                                        color: Colors.black45),
+                                  ],
+                                ),
+                              ),
+                              const Spacer(),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: _conditionColor(
+                                      widget.listing.condition),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: _conditionColor(
+                                              widget.listing.condition)
+                                          .withValues(alpha: 0.4),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  widget.listing.condition,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Dots — only when multiple images
+                        if (images.length > 1) ...[
+                          const SizedBox(height: 8),
+                          Obx(() => Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.center,
+                                children: List.generate(images.length,
+                                    (i) {
+                                  final active =
+                                      controller.currentIndex.value == i;
+                                  return AnimatedContainer(
+                                    duration: const Duration(
+                                        milliseconds: 280),
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 3),
+                                    height: 5,
+                                    width: active ? 20 : 5,
+                                    decoration: BoxDecoration(
+                                      borderRadius:
+                                          BorderRadius.circular(10),
+                                      color: active
+                                          ? Colors.white
+                                          : Colors.white
+                                              .withValues(alpha: 0.45),
+                                    ),
+                                  );
+                                }),
+                              )),
+                        ],
+
+                        const SizedBox(height: 14),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            Expanded(
-              flex: 6,
-              child: AppText(
-                value?.toString() ?? "",
-                align: TextAlign.end,
+            ), // GestureDetector
 
-                maxLines: 1,
+            // ── Scrollable content ────────────────────────────────────────
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    Text(
+                      widget.listing.title,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: onSurface,
+                        height: 1.3,
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Location
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.location_on_rounded,
+                            size: 15, color: AppColors.primary),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            widget.listing.location['fullAddress'] ?? '',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontSize: 13, color: subText, height: 1.4),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Book details card
+                    Container(
+                      decoration: BoxDecoration(
+                        color: cardBg,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.06)
+                              : Colors.black.withValues(alpha: 0.06),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          _DetailRow(
+                            label: 'category'.tr,
+                            value: widget.listing.mainCategory,
+                            icon: Icons.category_rounded,
+                            isDark: isDark,
+                            isLast: false,
+                          ),
+                          _DetailRow(
+                            label: _subTitle(widget.listing),
+                            value: widget.listing.subCategory,
+                            icon: Icons.bookmark_rounded,
+                            isDark: isDark,
+                            isLast:
+                                widget.listing.childCategory.isEmpty,
+                          ),
+                          if (widget.listing.childCategory.isNotEmpty)
+                            _DetailRow(
+                              label: _childTitle(widget.listing),
+                              value: widget.listing.childCategory,
+                              icon: Icons.menu_book_rounded,
+                              isDark: isDark,
+                              isLast: true,
+                            ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Description
+                    Text(
+                      'description'.tr,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.listing.description,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        height: 1.65,
+                        color: subText,
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Seller card
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: cardBg,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.06)
+                              : Colors.black.withValues(alpha: 0.06),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 22,
+                            backgroundColor:
+                                AppColors.primary.withValues(alpha: 0.12),
+                            child: Text(
+                              initial,
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  sellerName.isNotEmpty
+                                      ? sellerName
+                                      : 'Unknown',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: onSurface,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Listed by seller',
+                                  style: TextStyle(
+                                      fontSize: 12, color: subText),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.verified_rounded,
+                              size: 20, color: AppColors.primary),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
           ],
         ),
+
+        // ── Bottom action bar ──────────────────────────────────────────────
+        bottomNavigationBar: Builder(
+          builder: (ctx) {
+            final currentUid = controller.currentUser?.uid;
+            final isOwner = currentUid == widget.listing.seller['uid'];
+            final isSold = widget.listing.isSold == true;
+            final bottomPad = MediaQuery.of(ctx).padding.bottom;
+
+            return Container(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPad + 12),
+              decoration: BoxDecoration(
+                color: cardBg,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black
+                        .withValues(alpha: isDark ? 0.3 : 0.07),
+                    blurRadius: 20,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: isOwner
+                  ? Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: isSold
+                                ? null
+                                : () => Get.toNamed(
+                                      AppRoutes.addListing,
+                                      arguments: {
+                                        'listing': widget.listing
+                                      },
+                                    ),
+                            icon: const Icon(Icons.edit_rounded, size: 17),
+                            label: Text('edit'.tr),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 13),
+                              foregroundColor: AppColors.primary,
+                              side: BorderSide(
+                                  color: AppColors.primary
+                                      .withValues(alpha: 0.5)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Obx(
+                            () => ElevatedButton.icon(
+                              onPressed: controller.isDeleting.value
+                                  ? null
+                                  : () => controller
+                                      .confirmDelete(widget.listing),
+                              icon: controller.isDeleting.value
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white),
+                                    )
+                                  : const Icon(Icons.delete_rounded,
+                                      size: 17),
+                              label: Text('remove'.tr),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red.shade600,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 13),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(12)),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () async =>
+                                chatController.startChat(widget.listing),
+                            icon: const Icon(
+                                Icons.chat_bubble_rounded,
+                                size: 17),
+                            label: Text('chat_seller'.tr),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 13),
+                              foregroundColor: AppColors.primary,
+                              side: BorderSide(
+                                  color: AppColors.primary
+                                      .withValues(alpha: 0.5)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => controller.makePhoneCall(
+                                widget.listing.seller['phone']),
+                            icon: const Icon(Icons.call_rounded,
+                                size: 17),
+                            label: Text('call_seller'.tr),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF10B981),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 13),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+            );
+          },
+        ),
       ),
     );
   }
+}
 
-  String formatViews(int views) {
-    if (views >= 1000000) {
-      return "${(views / 1000000).toStringAsFixed(1)}M";
-    } else if (views >= 1000) {
-      return "${(views / 1000).toStringAsFixed(1)}K";
-    } else {
-      return views.toString();
-    }
+// ── Detail row inside the book-info card ──────────────────────────────────────
+class _DetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final bool isDark;
+  final bool isLast;
+
+  const _DetailRow({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.isDark,
+    required this.isLast,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (value.trim().isEmpty) return const SizedBox.shrink();
+    return Column(
+      children: [
+        Padding(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          child: Row(
+            children: [
+              Icon(icon,
+                  size: 16,
+                  color: isDark ? Colors.white38 : Colors.black38),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.white54 : Colors.black45,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : const Color(0xFF1A1D23),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (!isLast)
+          Divider(
+            height: 1,
+            indent: 40,
+            endIndent: 14,
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.black.withValues(alpha: 0.06),
+          ),
+      ],
+    );
   }
 }

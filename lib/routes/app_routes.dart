@@ -18,4 +18,7 @@ class AppRoutes {
   static const notifications = '/notifications';
   static const editProfile = '/editProfile';
   static const subscription = '/subscription';
+  static const resume = '/resume';
+  static const resumeForm = '/resumeForm';
+  static const resumePreview = '/resumePreview';
 }

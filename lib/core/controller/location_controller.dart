@@ -206,7 +206,10 @@ class LocationController extends GetxController {
     }
   }
 
-  /// 🔄 RESET EVERYTHING
+  /// 🔄 RESET (logout) — clears in-memory state and recent search history.
+  /// Location data (coordinates + selected label) is intentionally kept in
+  /// Hive so the same user re-logging in restores their location instantly
+  /// without needing a slow GPS re-detection.
   void reset() {
     selectedLocations.clear();
     recentLocations.clear();
@@ -214,7 +217,7 @@ class LocationController extends GetxController {
     latitude.value = 0.0;
     longitude.value = 0.0;
 
-    LocationStorage.clearAll();
+    LocationStorage.clearRecent();
 
     debugPrint("Location reset");
   }

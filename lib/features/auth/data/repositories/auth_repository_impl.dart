@@ -17,15 +17,13 @@ class AuthRepositoryImpl implements IAuthRepository {
   Future<void> signInWithEmail({
     required String email,
     required String password,
-  }) =>
-      _ds.signInWithEmail(email: email, password: password);
+  }) => _ds.signInWithEmail(email: email, password: password);
 
   @override
   Future<void> createAccount({
     required String email,
     required String password,
-  }) =>
-      _ds.createAccount(email: email, password: password);
+  }) => _ds.createAccount(email: email, password: password);
 
   @override
   Future<void> sendPasswordResetEmail(String email) =>
@@ -54,11 +52,10 @@ class AuthRepositoryImpl implements IAuthRepository {
   Future<void> signInWithGoogleCredential({
     required String? idToken,
     required String? accessToken,
-  }) =>
-      _ds.signInWithGoogleCredential(
-        idToken: idToken,
-        accessToken: accessToken,
-      );
+  }) => _ds.signInWithGoogleCredential(
+    idToken: idToken,
+    accessToken: accessToken,
+  );
 
   @override
   Future<bool> isGoogleSignedIn() => _ds.isGoogleSignedIn();
@@ -74,15 +71,14 @@ class AuthRepositoryImpl implements IAuthRepository {
     required String email,
     required String photoUrl,
     required bool isGoogleUser,
-  }) =>
-      _ds.saveUserProfile(
-        uid: uid,
-        name: name,
-        phone: phone,
-        email: email,
-        photoUrl: photoUrl,
-        isGoogleUser: isGoogleUser,
-      );
+  }) => _ds.saveUserProfile(
+    uid: uid,
+    name: name,
+    phone: phone,
+    email: email,
+    photoUrl: photoUrl,
+    isGoogleUser: isGoogleUser,
+  );
 
   @override
   Future<Map<String, dynamic>?> getUserProfile(String uid) =>
@@ -93,8 +89,7 @@ class AuthRepositoryImpl implements IAuthRepository {
       _ds.isUserProfileComplete(uid);
 
   @override
-  Future<void> updateLastListingAt(String uid) =>
-      _ds.updateLastListingAt(uid);
+  Future<void> updateLastListingAt(String uid) => _ds.updateLastListingAt(uid);
 
   @override
   Future<bool> isPhoneTaken(String phone, {String? excludeUid}) =>

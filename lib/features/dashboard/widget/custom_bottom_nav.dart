@@ -121,9 +121,9 @@ class _CustomBottomNavState extends State<CustomBottomNav>
                     const SizedBox(width: 62),
                     Expanded(
                       child: _NavItem(
-                        selectedIcon: Icons.storefront_rounded,
-                        unselectedIcon: Icons.storefront_outlined,
-                        label: 'my_ads'.tr,
+                        selectedIcon: Icons.description_rounded,
+                        unselectedIcon: Icons.description_outlined,
+                        label: 'AI Resume',
                         index: 2,
                         currentIndex: widget.currentIndex,
                         onTap: _onTabTap,

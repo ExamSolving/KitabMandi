@@ -11,13 +11,14 @@ class AuthRemoteDataSource {
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
     GoogleSignIn? googleSignIn,
-  })  : _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance,
-        _googleSignIn = googleSignIn ??
-            GoogleSignIn(
-              serverClientId:
-                  '136794753205-210rggct227ahdu5t70ckn30rejonctk.apps.googleusercontent.com',
-            );
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _firestore = firestore ?? FirebaseFirestore.instance,
+       _googleSignIn =
+           googleSignIn ??
+           GoogleSignIn(
+             serverClientId:
+                 '136794753205-210rggct227ahdu5t70ckn30rejonctk.apps.googleusercontent.com',
+           );
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
   User? get currentUser => _auth.currentUser;
@@ -25,14 +26,12 @@ class AuthRemoteDataSource {
   Future<void> signInWithEmail({
     required String email,
     required String password,
-  }) =>
-      _auth.signInWithEmailAndPassword(email: email, password: password);
+  }) => _auth.signInWithEmailAndPassword(email: email, password: password);
 
   Future<void> createAccount({
     required String email,
     required String password,
-  }) =>
-      _auth.createUserWithEmailAndPassword(email: email, password: password);
+  }) => _auth.createUserWithEmailAndPassword(email: email, password: password);
 
   Future<void> sendPasswordResetEmail(String email) =>
       _auth.sendPasswordResetEmail(email: email);
@@ -102,10 +101,10 @@ class AuthRemoteDataSource {
 
   /// Stamps the user doc with the current server time so the daily-limit
   /// check in the dashboard can be done synchronously from userData.
-  Future<void> updateLastListingAt(String uid) =>
-      _firestore.collection('users').doc(uid).update({
-        'lastListingAt': FieldValue.serverTimestamp(),
-      });
+  Future<void> updateLastListingAt(String uid) => _firestore
+      .collection('users')
+      .doc(uid)
+      .update({'lastListingAt': FieldValue.serverTimestamp()});
 
   /// Returns true if the phone number is already stored on any user document
   /// other than [excludeUid] (pass the current user's UID on profile edits).

@@ -1,10 +1,13 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:kitab_mandi/features/auth/controller/auth_controller.dart';
 import 'package:kitab_mandi/features/auth/domain/repositories/i_auth_repository.dart';
+import 'package:kitab_mandi/routes/app_routes.dart';
 
 class ProfileEditController extends GetxController {
   final IAuthRepository _authRepo;
@@ -207,6 +210,128 @@ class ProfileEditController extends GetxController {
     if (v == null || v.trim().isEmpty) return 'Phone number is required';
     if (v.trim().length != 10) return 'Enter a valid 10-digit phone number';
     return null;
+  }
+
+  // ── Delete account ────────────────────────────────────────────────────────
+
+  Future<void> deleteAccount() async {
+    final user = _authRepo.currentUser;
+    if (user == null) return;
+    final uid = user.uid;
+    final fs = FirebaseFirestore.instance;
+
+    // Show non-dismissible progress dialog.
+    Get.dialog(
+      PopScope(
+        canPop: false,
+        child: AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          content: const Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text('Deleting account…'),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
+    try {
+      // 1. Delete all listings posted by this user.
+      final listingsSnap = await fs
+          .collection('listings')
+          .where('seller.uid', isEqualTo: uid)
+          .get();
+      for (final doc in listingsSnap.docs) {
+        await doc.reference.delete();
+      }
+
+      // 2. Delete all chats (and their messages subcollection) where user is
+      //    a participant.
+      final chatsSnap = await fs
+          .collection('chats')
+          .where('participants', arrayContains: uid)
+          .get();
+      for (final chatDoc in chatsSnap.docs) {
+        final msgsSnap =
+            await chatDoc.reference.collection('messages').get();
+        for (final msg in msgsSnap.docs) {
+          await msg.reference.delete();
+        }
+        await chatDoc.reference.delete();
+      }
+
+      // 3. Delete all subcollections under the user document so the parent doc
+      //    is fully removed (Firestore ghost-documents appear when subcollections
+      //    survive after the parent is deleted).
+      for (final sub in ['resumes', 'wishlist', 'notifications']) {
+        final snap =
+            await fs.collection('users').doc(uid).collection(sub).get();
+        for (final doc in snap.docs) {
+          await doc.reference.delete();
+        }
+      }
+
+      // 4. Delete Firestore user document — now safe since all subcollections
+      //    are gone, so no ghost document remains in the console.
+      await fs.collection('users').doc(uid).delete();
+
+      // 5. Delete avatar from Storage (ignore if it never existed).
+      try {
+        await FirebaseStorage.instance
+            .ref()
+            .child('users/$uid/avatar.jpg')
+            .delete();
+      } catch (_) {}
+
+      // 6. Delete Firebase Auth account — must be last authenticated call.
+      await _authRepo.deleteCurrentUser();
+
+      // Close the loading dialog then navigate; the auth-state listener in
+      // WrapperView will redirect to login automatically.
+      Get.close(1);
+      Get.offAllNamed(AppRoutes.wrapper);
+    } on FirebaseAuthException catch (e) {
+      Get.close(1);
+      if (e.code == 'requires-recent-login') {
+        Get.dialog(
+          AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            title: const Text('Sign In Again',
+                style: TextStyle(fontWeight: FontWeight.w700)),
+            content: const Text(
+              'For security, please sign out and sign back in before deleting your account.',
+              style: TextStyle(fontSize: 13.5, height: 1.5),
+            ),
+            actions: [
+              TextButton(
+                onPressed: Get.back,
+                child: const Text('OK',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+        );
+      } else {
+        Get.snackbar('Error', e.message ?? 'Failed to delete account.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white);
+      }
+    } catch (_) {
+      Get.close(1);
+      Get.snackbar(
+        'Error',
+        'Failed to delete account. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 }
 

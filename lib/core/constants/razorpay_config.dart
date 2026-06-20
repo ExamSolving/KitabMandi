@@ -9,10 +9,10 @@ class RazorpayConfig {
   static const String appName = 'KitabMandi';
 
   // ── Prices (in paise — ₹1 = 100 paise) ──────────────────────────────────
-  static const int plusMonthly = 2900;  // ₹29 / month
-  static const int proMonthly  = 4900;  // ₹49 / month
-  static const int plusAnnual  = 24900; // ₹249 / year  (~₹20.75/month)
-  static const int proAnnual   = 39900; // ₹399 / year  (~₹33.25/month)
+  static const int plusMonthly =  7900;  // ₹79  / month
+  static const int proMonthly  = 14900;  // ₹149 / month
+  static const int plusAnnual  = 69900;  // ₹699  / year  (~₹58.25/month, save 26%)
+  static const int proAnnual   = 119900; // ₹1,199 / year (~₹99.92/month, save 33%)
 
   // ── Plan keys stored in Firestore ────────────────────────────────────────
   static const String planFree        = 'free';

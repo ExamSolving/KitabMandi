@@ -38,8 +38,6 @@ class AuthController extends GetxController {
   String _pendingEmail = '';
   String _pendingPassword = '';
 
-  final formKey = GlobalKey<FormState>();
-
   // ── Form controllers ──────────────────────────────────────────────────────
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
@@ -133,7 +131,6 @@ class AuthController extends GetxController {
     isLogin.toggle();
     isGoogleUser.value = false;
     clearAllFields();
-    formKey.currentState?.reset();
   }
 
   void togglePassword() => obscurePassword.toggle();
@@ -153,7 +150,6 @@ class AuthController extends GetxController {
   // ── Submit ────────────────────────────────────────────────────────────────
   Future<void> submit() async {
     FocusManager.instance.primaryFocus?.unfocus();
-    if (!formKey.currentState!.validate()) return;
     if (isLogin.value) {
       await login();
     } else {

@@ -211,7 +211,7 @@ class ListingGridCard extends StatelessWidget {
 
             // ── Details ────────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(11, 10, 11, 12),
+              padding: const EdgeInsets.fromLTRB(11, 8, 11, 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -227,7 +227,7 @@ class ListingGridCard extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 4),
 
                   // Title (2 lines)
                   Text(
@@ -237,12 +237,12 @@ class ListingGridCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      height: 1.35,
+                      height: 1.3,
                       color: theme.colorScheme.onSurface,
                     ),
                   ),
 
-                  const SizedBox(height: 9),
+                  const SizedBox(height: 7),
 
                   // Location row
                   _MetaRow(
@@ -257,7 +257,7 @@ class ListingGridCard extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
 
                   // Distance row
                   _MetaRow(
@@ -270,6 +270,20 @@ class ListingGridCard extends StatelessWidget {
                         color: primary.withValues(alpha: 0.85),
                         fontWeight: FontWeight.w500,
                       ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 3),
+
+                  // Listed by row
+                  _MetaRow(
+                    icon: Icons.person_outline_rounded,
+                    iconColor: theme.hintColor,
+                    child: Text(
+                      'Listed by ${listingModel.seller['name']?.toString().isNotEmpty == true ? listingModel.seller['name'] : 'Unknown'}',
+                      style: TextStyle(fontSize: 11, color: theme.hintColor),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],

@@ -6,12 +6,14 @@ import 'package:kitab_mandi/core/constants/app_color.dart';
 import 'package:kitab_mandi/core/services/fcm_service.dart';
 import 'package:kitab_mandi/core/services/sold_cleanup_service.dart';
 import 'package:kitab_mandi/core/services/update_service.dart';
+import 'package:kitab_mandi/core/services/device_service.dart';
+import 'package:kitab_mandi/core/services/subscription_service.dart';
 import 'package:kitab_mandi/features/auth/controller/auth_controller.dart';
 import 'package:kitab_mandi/features/dashboard/binding/chat_binding.dart';
 import 'package:kitab_mandi/features/dashboard/binding/dashboard_binding.dart';
 import 'package:kitab_mandi/features/dashboard/binding/home_binding.dart';
 import 'package:kitab_mandi/features/dashboard/binding/profile_binding.dart';
-import 'package:kitab_mandi/features/dashboard/view/my_ads_view.dart';
+import 'package:kitab_mandi/features/resume/view/resume_view.dart';
 import 'package:kitab_mandi/features/dashboard/view/home_view.dart';
 import 'package:kitab_mandi/features/dashboard/view/profile_view.dart';
 import 'package:kitab_mandi/features/dashboard/view/chat_view.dart';
@@ -49,7 +51,7 @@ class _DashboardViewState extends State<DashboardView> {
     ProfileBinding().dependencies();
     ChatBinding().dependencies();
 
-    pages = [HomeView(), ChatView(), MyAdsView(), ProfileView()];
+    pages = [HomeView(), ChatView(), const ResumeView(), ProfileView()];
 
     // If the app was launched by tapping a notification while terminated,
     // navigate to the correct screen once the dashboard is fully rendered.
@@ -68,23 +70,56 @@ class _DashboardViewState extends State<DashboardView> {
     });
   }
 
-  void onCenterTap() {
+  void onCenterTap() => _handleCenterTap();
+
+  Future<void> _handleCenterTap() async {
     final userData = Get.find<AuthController>().userData.value;
+    final sub = userData?['subscription'] as Map<String, dynamic>?;
+
+    // Paid users have no posting restriction — go straight to form.
+    if (SubscriptionService.isActive(sub)) {
+      Get.toNamed(AppRoutes.addListing);
+      return;
+    }
+
+    // Device-level check: catches users who switch Gmail accounts on the same
+    // device to bypass the 30-day free limit.
+    try {
+      final deviceId = await DeviceService.getDeviceId();
+      final doc = await FirebaseFirestore.instance
+          .collection('device_limits')
+          .doc(deviceId)
+          .get();
+      if (doc.exists) {
+        final raw = doc.data()?['lastListingAt'];
+        if (raw != null) {
+          final lastAt = (raw as Timestamp).toDate();
+          final elapsed = DateTime.now().difference(lastAt);
+          if (elapsed.inDays < 30) {
+            _showFreeLimitSheet(30 - elapsed.inDays);
+            return;
+          }
+        }
+      }
+    } catch (_) {
+      // If device check fails, fall through to account-level check.
+    }
+
+    // Account-level check (covers the window before device_limits is stamped).
     final raw = userData?['lastListingAt'];
     if (raw != null) {
       final lastAt = (raw as Timestamp).toDate();
       final elapsed = DateTime.now().difference(lastAt);
-      if (elapsed.inSeconds < const Duration(hours: 24).inSeconds) {
-        _showDailyLimitSheet(const Duration(hours: 24) - elapsed);
+      if (elapsed.inDays < 30) {
+        _showFreeLimitSheet(30 - elapsed.inDays);
         return;
       }
     }
+
     Get.toNamed(AppRoutes.addListing);
   }
 
-  void _showDailyLimitSheet(Duration remaining) {
-    final hours = remaining.inHours;
-    final minutes = remaining.inMinutes % 60;
+  void _showFreeLimitSheet(int daysLeft) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? const Color(0xFF1A1D23) : Colors.white;
     final textColor = isDark ? Colors.white : const Color(0xFF1A1D23);
@@ -125,20 +160,20 @@ class _DashboardViewState extends State<DashboardView> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFFF6B35), Color(0xFFFF9A5C)],
+                  colors: [AppColors.primary, AppColors.primaryDark],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFF6B35).withValues(alpha: 0.35),
+                    color: AppColors.primary.withValues(alpha: 0.35),
                     blurRadius: 22,
                     offset: const Offset(0, 8),
                   ),
                 ],
               ),
               child: const Icon(
-                Icons.hourglass_top_rounded,
+                Icons.workspace_premium_rounded,
                 color: Colors.white,
                 size: 38,
               ),
@@ -147,7 +182,7 @@ class _DashboardViewState extends State<DashboardView> {
 
             // Title
             Text(
-              'Daily Limit Reached',
+              'Free Plan Limit Reached',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
@@ -158,41 +193,36 @@ class _DashboardViewState extends State<DashboardView> {
 
             // Subtitle
             Text(
-              'Free accounts can post 1 listing every 24 hours.',
-              style: TextStyle(
-                fontSize: 14,
-                color: subColor,
-                height: 1.5,
-              ),
+              'Free accounts can post 1 listing every 30 days.\nUpgrade to post unlimited books anytime.',
+              style: TextStyle(fontSize: 14, color: subColor, height: 1.5),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
 
-            // Countdown pill
+            // Days remaining info pill
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFFFF6B35).withValues(alpha: 0.1),
+                color: AppColors.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: const Color(0xFFFF6B35).withValues(alpha: 0.3),
+                  color: AppColors.primary.withValues(alpha: 0.25),
                 ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.timer_outlined,
-                    size: 18,
-                    color: Color(0xFFFF6B35),
-                  ),
+                  const Icon(Icons.calendar_today_rounded,
+                      size: 16, color: AppColors.primary),
                   const SizedBox(width: 8),
-                  Text(
-                    'Next listing available in ${hours}h ${minutes}m',
-                    style: const TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFFFF6B35),
+                  Flexible(
+                    child: Text(
+                      'Next free listing available in $daysLeft day${daysLeft == 1 ? '' : 's'}',
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                 ],
@@ -214,23 +244,18 @@ class _DashboardViewState extends State<DashboardView> {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.2),
-                ),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(
-                        Icons.workspace_premium_rounded,
-                        size: 18,
-                        color: AppColors.primary,
-                      ),
+                      const Icon(Icons.workspace_premium_rounded,
+                          size: 18, color: AppColors.primary),
                       const SizedBox(width: 8),
                       Text(
-                        'With Premium you get',
+                        'Upgrade Premium & get',
                         style: TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w800,
@@ -242,7 +267,12 @@ class _DashboardViewState extends State<DashboardView> {
                   const SizedBox(height: 14),
                   const _PremiumPerk(
                     icon: Icons.all_inclusive_rounded,
-                    text: 'Unlimited listings per day',
+                    text: 'Unlimited listings — no waiting',
+                  ),
+                  const SizedBox(height: 8),
+                  const _PremiumPerk(
+                    icon: Icons.description_rounded,
+                    text: 'AI Resume Builder (Plus & Pro)',
                   ),
                   const SizedBox(height: 8),
                   const _PremiumPerk(
@@ -252,7 +282,7 @@ class _DashboardViewState extends State<DashboardView> {
                   const SizedBox(height: 8),
                   const _PremiumPerk(
                     icon: Icons.verified_rounded,
-                    text: 'Verified seller badge',
+                    text: 'Trusted Seller badge',
                   ),
                 ],
               ),
@@ -265,15 +295,12 @@ class _DashboardViewState extends State<DashboardView> {
               child: ElevatedButton.icon(
                 onPressed: () {
                   Get.back();
-                  // TODO: navigate to premium upgrade screen when available
+                  Get.toNamed(AppRoutes.subscription);
                 },
                 icon: const Icon(Icons.rocket_launch_rounded, size: 18),
                 label: const Text(
-                  'Upgrade to Premium — Coming Soon',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  'Upgrade Premium',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
@@ -298,11 +325,8 @@ class _DashboardViewState extends State<DashboardView> {
                   foregroundColor: subColor,
                 ),
                 child: const Text(
-                  "Got it, I'll wait",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  'Maybe Later',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
