@@ -65,6 +65,11 @@ class _ListingDetailsViewState extends State<ListingDetailsView> {
     }
   }
 
+  bool _canEdit(DateTime? createdAt) {
+    if (createdAt == null) return true;
+    return DateTime.now().difference(createdAt).inHours < 3;
+  }
+
   String _fmtViews(int v) {
     if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M views';
     if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K views';
@@ -516,29 +521,59 @@ class _ListingDetailsViewState extends State<ListingDetailsView> {
                   ? Row(
                       children: [
                         Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: isSold
-                                ? null
-                                : () => Get.toNamed(
-                                      AppRoutes.addListing,
-                                      arguments: {
-                                        'listing': widget.listing
-                                      },
-                                    ),
-                            icon: const Icon(Icons.edit_rounded, size: 17),
-                            label: Text('edit'.tr),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 13),
-                              foregroundColor: AppColors.primary,
-                              side: BorderSide(
-                                  color: AppColors.primary
-                                      .withValues(alpha: 0.5)),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(12)),
-                            ),
-                          ),
+                          child: Builder(builder: (context) {
+                            final editAllowed = !isSold &&
+                                _canEdit(widget.listing.createdAt);
+                            return Tooltip(
+                              message: isSold
+                                  ? 'Listing is sold'
+                                  : !_canEdit(widget.listing.createdAt)
+                                      ? 'Editing locked after 3 hours'
+                                      : '',
+                              child: OutlinedButton.icon(
+                                onPressed: editAllowed
+                                    ? () => Get.toNamed(
+                                          AppRoutes.addListing,
+                                          arguments: {
+                                            'listing': widget.listing
+                                          },
+                                        )
+                                    : null,
+                                icon: Icon(
+                                  editAllowed
+                                      ? Icons.edit_rounded
+                                      : Icons.lock_rounded,
+                                  size: 17,
+                                ),
+                                label: Text(
+                                  editAllowed
+                                      ? 'edit'.tr
+                                      : 'Locked',
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 13),
+                                  foregroundColor: editAllowed
+                                      ? AppColors.primary
+                                      : (isDark
+                                          ? Colors.white38
+                                          : Colors.black38),
+                                  side: BorderSide(
+                                    color: editAllowed
+                                        ? AppColors.primary
+                                            .withValues(alpha: 0.5)
+                                        : (isDark
+                                                ? Colors.white
+                                                : Colors.black)
+                                            .withValues(alpha: 0.15),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(12)),
+                                ),
+                              ),
+                            );
+                          }),
                         ),
                         const SizedBox(width: 12),
                         Expanded(

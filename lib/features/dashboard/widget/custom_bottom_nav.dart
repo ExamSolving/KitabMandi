@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:kitab_mandi/core/constants/app_color.dart';
 
@@ -100,8 +101,8 @@ class _CustomBottomNavState extends State<CustomBottomNav>
                   children: [
                     Expanded(
                       child: _NavItem(
-                        selectedIcon: Icons.home_rounded,
-                        unselectedIcon: Icons.home_outlined,
+                        selectedIcon: FontAwesomeIcons.houseChimney,
+                        unselectedIcon: FontAwesomeIcons.house,
                         label: 'home'.tr,
                         index: 0,
                         currentIndex: widget.currentIndex,
@@ -110,8 +111,8 @@ class _CustomBottomNavState extends State<CustomBottomNav>
                     ),
                     Expanded(
                       child: _NavItem(
-                        selectedIcon: Icons.forum_rounded,
-                        unselectedIcon: Icons.forum_outlined,
+                        selectedIcon: FontAwesomeIcons.commentDots,
+                        unselectedIcon: FontAwesomeIcons.comment,
                         label: 'chat'.tr,
                         index: 1,
                         currentIndex: widget.currentIndex,
@@ -121,8 +122,8 @@ class _CustomBottomNavState extends State<CustomBottomNav>
                     const SizedBox(width: 62),
                     Expanded(
                       child: _NavItem(
-                        selectedIcon: Icons.description_rounded,
-                        unselectedIcon: Icons.description_outlined,
+                        selectedIcon: FontAwesomeIcons.wandMagicSparkles,
+                        unselectedIcon: FontAwesomeIcons.wandMagic,
                         label: 'AI Resume',
                         index: 2,
                         currentIndex: widget.currentIndex,
@@ -131,8 +132,8 @@ class _CustomBottomNavState extends State<CustomBottomNav>
                     ),
                     Expanded(
                       child: _NavItem(
-                        selectedIcon: Icons.person_rounded,
-                        unselectedIcon: Icons.person_outline_rounded,
+                        selectedIcon: FontAwesomeIcons.circleUser,
+                        unselectedIcon: FontAwesomeIcons.user,
                         label: 'profile'.tr,
                         index: 3,
                         currentIndex: widget.currentIndex,
@@ -171,10 +172,12 @@ class _CustomBottomNavState extends State<CustomBottomNav>
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.add_rounded,
-                      color: Colors.white,
-                      size: 28,
+                    child: const Center(
+                      child: FaIcon(
+                        FontAwesomeIcons.plus,
+                        color: Colors.white,
+                        size: 22,
+                      ),
                     ),
                   ),
                 ),
@@ -254,10 +257,10 @@ class _NavItem extends StatelessWidget {
                   child: FadeTransition(opacity: anim, child: child),
                 );
               },
-              child: Icon(
+              child: FaIcon(
                 isSelected ? selectedIcon : unselectedIcon,
                 key: ValueKey(isSelected),
-                size: 23,
+                size: 20,
                 color: isSelected ? primary : inactiveColor,
               ),
             ),

@@ -381,7 +381,10 @@ class _MissionCard extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 'what_we_stand_for'.tr,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),
@@ -408,12 +411,36 @@ class _FeaturesGrid extends StatelessWidget {
   const _FeaturesGrid({required this.isDark, required this.theme});
 
   static List<({IconData icon, String label, String desc})> _items() => [
-    (icon: Icons.swap_horiz_rounded, label: 'feature_buy_sell'.tr, desc: 'feature_buy_sell_desc'.tr),
-    (icon: Icons.chat_bubble_outline_rounded, label: 'feature_live_chat'.tr, desc: 'feature_live_chat_desc'.tr),
-    (icon: Icons.location_on_rounded, label: 'feature_near_you'.tr, desc: 'feature_near_you_desc'.tr),
-    (icon: Icons.lock_outline_rounded, label: 'feature_secure'.tr, desc: 'feature_secure_desc'.tr),
-    (icon: Icons.photo_camera_outlined, label: 'feature_easy_upload'.tr, desc: 'feature_easy_upload_desc'.tr),
-    (icon: Icons.search_rounded, label: 'feature_smart_search'.tr, desc: 'feature_smart_search_desc'.tr),
+    (
+      icon: Icons.swap_horiz_rounded,
+      label: 'feature_buy_sell'.tr,
+      desc: 'feature_buy_sell_desc'.tr,
+    ),
+    (
+      icon: Icons.chat_bubble_outline_rounded,
+      label: 'feature_live_chat'.tr,
+      desc: 'feature_live_chat_desc'.tr,
+    ),
+    (
+      icon: Icons.location_on_rounded,
+      label: 'feature_near_you'.tr,
+      desc: 'feature_near_you_desc'.tr,
+    ),
+    (
+      icon: Icons.lock_outline_rounded,
+      label: 'feature_secure'.tr,
+      desc: 'feature_secure_desc'.tr,
+    ),
+    (
+      icon: Icons.photo_camera_outlined,
+      label: 'feature_easy_upload'.tr,
+      desc: 'feature_easy_upload_desc'.tr,
+    ),
+    (
+      icon: Icons.search_rounded,
+      label: 'feature_smart_search'.tr,
+      desc: 'feature_smart_search_desc'.tr,
+    ),
   ];
 
   @override
@@ -527,8 +554,8 @@ class _ContactCard extends StatelessWidget {
           _ContactRow(
             icon: Icons.email_outlined,
             label: 'email_support'.tr,
-            value: 'support@kitabmandi.com',
-            onTap: () => _launch('mailto:support@kitabmandi.com'),
+            value: 'examsolvingofficial@gmail.com',
+            onTap: () => _launch('mailto:examsolvingofficial@gmail.com'),
             isDark: isDark,
             theme: theme,
             showDivider: true,
@@ -536,8 +563,8 @@ class _ContactCard extends StatelessWidget {
           _ContactRow(
             icon: Icons.language_rounded,
             label: 'website'.tr,
-            value: 'www.kitabmandi.in',
-            onTap: () => _launch('https://www.kitabmandi.in'),
+            value: 'www.appvora.in',
+            onTap: () => _launch('https://www.appvora.in'),
             isDark: isDark,
             theme: theme,
             showDivider: false,

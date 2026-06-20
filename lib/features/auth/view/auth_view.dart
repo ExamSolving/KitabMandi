@@ -184,13 +184,27 @@ class _AuthViewState extends State<AuthView> with TickerProviderStateMixin {
                                     // Glow ring
                                     _LogoRing(),
                                     const SizedBox(height: 18),
-                                    Text(
-                                      'app_name'.tr,
-                                      style: const TextStyle(
-                                        fontSize: 29,
-                                        fontWeight: FontWeight.w800,
-                                        color: Colors.white,
-                                        letterSpacing: 0.6,
+                                    RichText(
+                                      text: const TextSpan(
+                                        style: TextStyle(
+                                          fontSize: 29,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 0.6,
+                                        ),
+                                        children: [
+                                          TextSpan(
+                                            text: 'Kitab',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: 'Mandi',
+                                            style: TextStyle(
+                                              color: AppColors.secondaryLight,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                     const SizedBox(height: 8),

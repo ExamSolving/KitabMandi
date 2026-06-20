@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:kitab_mandi/core/controller/filter_controller.dart';
@@ -261,7 +262,13 @@ class HomeController extends GetxController {
     _beginLoad();
     try {
       final all = await _listingRepo.getListings();
-      allListings.value = all;
+      final myUid = FirebaseAuth.instance.currentUser?.uid;
+      // Hide the current user's own listings from browse/all-listings screens.
+      allListings.value = myUid != null
+          ? all
+              .where((l) => l.seller['uid']?.toString() != myUid)
+              .toList()
+          : all;
       applyAllFilters();
     } catch (_) {
       hasError.value = true;
